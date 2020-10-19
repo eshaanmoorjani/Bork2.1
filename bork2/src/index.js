@@ -1,10 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
-import App from './App';
+import App from './pages/Login';
 import * as serviceWorker from './serviceWorker';
 import {auth} from './services/firebase'
-import loginButtonTransition from './LoginFirebase'
+import loginButtonTransition from './pages/LoginFirebase'
 
 ReactDOM.render(
   <App />,

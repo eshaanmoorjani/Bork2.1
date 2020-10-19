@@ -1,18 +1,7 @@
-import './App.css';
+import './Login.css';
 import React, { Component } from 'react';
-import { Button, Form, Container, Row, Col} from 'react-bootstrap';
-import  'bootstrap/dist/css/bootstrap.min.css';
-
-export function App() {
-  return (
-    <div className="App">
-      <BorkHeader />
-      <BorkDescription />
-      <InputBoxes />
-    </div>
-  );
-}
-
+import { Button, Form, Container, Row, Col } from 'react-bootstrap';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 export function App() {
   return (
@@ -40,14 +29,24 @@ function InputBoxes() {
   return (<Form inline className="fixed-bottom" id="input">
     <Container fluid>
     <Row>
-      <Col>
+      <Col md="auto">
         <Form.Label id="inputForm">Username</Form.Label>
         <Form.Control id="username" type="username" placeholder="Your Username" size="lg"/> 
       </Col>
 
       <Col md="auto">
-        <Form.Label id="inputForm">Tags</Form.Label>
+        <Form.Label id="inputForm">Custom Tags</Form.Label>
         <Form.Control id="tags" type="tags" placeholder="Enter tags" size="lg"/> 
+      </Col>
+
+      <Col md="auto">
+        <Form.Label id="inputForm"> </Form.Label>
+        <GenerateTagForms tags={["Among Us", "League of Legends", "Valorant"]}/>
+      </Col>
+
+      <Col md="auto">
+        <Form.Label id="inputForm"> </Form.Label>
+        <GenerateTagForms tags={["Brawl", "Overwatch", "CS:GO"]}/>
       </Col>
 
       <Col md="auto">
@@ -55,13 +54,30 @@ function InputBoxes() {
         <Button id="submit_button" variant="info" size="lg" >Submit</Button>
       </Col>
 
-      <Col>
+      <Col md="auto">
         <Form.Label id="inputForm"> </Form.Label>
         <NoUsernameWarning />
       </Col>
+
     </Row>
     </Container>
   </Form>);
+}
+
+function GenerateTagForms({tags}) {
+  const tagForms = tags.map((tag) => 
+    <Form.Check
+      inline
+      label={tag}
+      type="checkbox"
+      onChange={handleChange}
+    />
+  );
+  return (tagForms);
+}
+
+function handleChange() {
+
 }
 
 
