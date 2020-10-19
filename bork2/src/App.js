@@ -1,58 +1,59 @@
 import logo from './logo.svg';
 import './App.css';
-
 import React, { Component } from 'react';
-// import {
-//   Route,
-//   BrowserRouter as Router,
-//   Switch,
-//   Redirect,
-// } from "react-router-dom";
-//import Home from './pages/Home';
-//import Chat from './pages/Chat';
-//import Signup from './pages/Signup';
-//import Login from './pages/Login';
-import { auth } from './services/firebase';
-
-
+import { Button, Form, Container, Row, Col} from 'react-bootstrap';
+import  'bootstrap/dist/css/bootstrap.min.css';
+import {auth} from 'firebase';
 
 export function App() {
   return (
     <div className="App">
-      <script src="https://www.gstatic.com/firebasejs/7.24.0/firebase-app.js"></script>
       <BorkHeader />
       <BorkDescription />
-      <UsernameBox />
-      <TagBox />
-
+      <InputBoxes />
     </div>
   );
 }
 
 function BorkHeader() {
-  return (<h1>Bork</h1>);
+  return (<h1 id="header">Bork</h1>);
 }
 
 function BorkDescription() {
-  return (<h2>Bork matches gamers to other gamers. Find Among Us lobbies, Valorant teams, and more!</h2>);
+  return (<h2>Bork matches gamers to other gamers. Find Among Us lobbies, Valorant teams, and some fun people to chill with!</h2>);
 }
 
-function UsernameBox() {
-  return (<form>
-    <label id="username">
-      Username
-      <input type="text" username="Username" />
-    </label>
-  </form>);
+function NoUsernameWarning() {
+  return (<p id="no-username-warning"></p>);
 }
 
-function TagBox() {
-  return (<form>
-    <label id="tags">
-      Tags
-      <input type="text" tags="Tags"/>
-    </label>
-  </form>);
+function InputBoxes() {
+  return (<Form inline className="fixed-bottom" id="input">
+    <Container fluid>
+    <Row>
+      <Col>
+        <Form.Label id="inputForm">Username</Form.Label>
+        <Form.Control id="username" type="username" placeholder="Your Username" size="lg"/> 
+      </Col>
+
+      <Col md="auto">
+        <Form.Label id="inputForm">Tags</Form.Label>
+        <Form.Control id="tags" type="tags" placeholder="Enter tags" size="lg"/> 
+      </Col>
+
+      <Col md="auto">
+        <Form.Label id="inputForm">Bork!</Form.Label>
+        <Button id="submit_button" variant="info" size="lg" >Submit</Button>
+      </Col>
+
+      <Col>
+        <Form.Label id="inputForm"> </Form.Label>
+        <NoUsernameWarning />
+      </Col>
+    </Row>
+    </Container>
+  </Form>);
 }
+
 
 export default App;
