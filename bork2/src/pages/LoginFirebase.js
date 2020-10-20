@@ -11,8 +11,9 @@ export function loginButtonTransition() {
         if(username_box.value != "") { // add other username criteria later
             console.log("signed in a user");
             auth.signInAnonymously();
-            const tags = getCheckedTags();
-            writeUserData(auth.currentUser.uid, document.getElementById("username").value, tags)
+            const premadeTags = getCheckedTags();
+            const customTags = getCustomTags();
+            writeUserData(auth.currentUser.uid, document.getElementById("username").value, premadeTags, customTags)
         }
         else {
             document.getElementById("no-username-warning").innerText = "Username cannot be empty. ";
@@ -36,20 +37,29 @@ export function loginButtonTransition() {
 }
 
 function getCheckedTags() {
+    // pre-made tags
     var checkBoxes = document.getElementsByName("tag_checkbox");
-    var checkedBoxes = [];
+    var checkedTags = [];
     for (var i = 0; i < checkBoxes.length; i++) {
         if (checkBoxes[i].checked) {
-            checkedBoxes.push(checkBoxes[i].id);
+            checkedTags.push(checkBoxes[i].id);
         }
     }
-    return checkedBoxes.length > 0 ? checkedBoxes : null;
+    
+    return checkedTags.length > 0 ? checkedTags : null;
 }
 
-function writeUserData(userId, username, tags) {
+function getCustomTags() {
+    // convert tags to all lowercase and no whitespace, separate by commas 
+    const customTags = document.getElementById("customTags").value.replace(/ /g, '').toLowerCase().split(","); 
+    return customTags;
+}
+
+function writeUserData(userId, username, premadeTags, customTags) {
     db.ref('users/' + userId).set({
         username: username,
-        tags: tags
+        premade_tags: premadeTags,
+        custom_tags: customTags,
     });
 }
 export default loginButtonTransition;

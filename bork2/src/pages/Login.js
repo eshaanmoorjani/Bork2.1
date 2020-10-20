@@ -35,8 +35,8 @@ function InputBoxes() {
       </Col>
 
       <Col md="auto">
-        <Form.Label id="inputForm">Custom Tags</Form.Label>
-        <Form.Control id="tags" type="tags" placeholder="Enter tags" size="lg"/> 
+        <Form.Label id="inputForm">Comma Separated Tags</Form.Label>
+        <Form.Control id="customTags" type="tags" placeholder="Enter tags" size="lg"/> 
       </Col>
 
       <GenerateTagBoxes tags={["Among Us", "League of Legends", "Valorant", "Brawl", "Overwatch", "CS:GO"]} />
@@ -88,7 +88,7 @@ class GenerateTagBoxes extends Component {
     }
     return (tagForms);
   }
-  
+
   render() {
     return (this.callMakeTagBoxes());
   }
