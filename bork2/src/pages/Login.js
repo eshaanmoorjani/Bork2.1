@@ -39,15 +39,7 @@ function InputBoxes() {
         <Form.Control id="tags" type="tags" placeholder="Enter tags" size="lg"/> 
       </Col>
 
-      <Col md="auto">
-        <Form.Label id="inputForm"> </Form.Label>
-        <GenerateTagForms tags={["Among Us", "League of Legends", "Valorant"]}/>
-      </Col>
-
-      <Col md="auto">
-        <Form.Label id="inputForm"> </Form.Label>
-        <GenerateTagForms tags={["Brawl", "Overwatch", "CS:GO"]}/>
-      </Col>
+      <GenerateTagBoxes tags={["Among Us", "League of Legends", "Valorant", "Brawl", "Overwatch", "CS:GO"]} />
 
       <Col md="auto">
         <Form.Label id="inputForm">Bork!</Form.Label>
@@ -64,13 +56,43 @@ function InputBoxes() {
   </Form>);
 }
 
-function GenerateTagForms({tags}) {
-  const tagForms = tags.map((tag) => 
-    <TagBox tag={tag}/>
-  );
-  return (tagForms);
-}
 
+class GenerateTagBoxes extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      tagBoxes: [],
+    };
+    this.callMakeTagBoxes = this.callMakeTagBoxes.bind(this);
+    this.makeTagBoxes = this.makeTagBoxes.bind(this);
+  }
+  
+  callMakeTagBoxes() {
+    const cols = []
+    for (var i = 0; i < this.props.tags.length; i += 3) { // i += 3 means 3 tags per line
+      const end = Math.min(this.props.tags.length, i + 3);
+      cols.push(<Col md="auto">
+        <Form.Label id="inputForm"> </Form.Label>
+        {this.makeTagBoxes(this.props.tags.slice(i, end))}
+      </Col>)
+    }
+    return (cols);
+  }
+
+  makeTagBoxes(tagSubarray) {
+    const tagForms = []
+    for (var i = 0; i < tagSubarray.length; i++) {
+      const tag = <TagBox tag={tagSubarray[i]} />;
+      tagForms.push(tag);
+      this.state.tagBoxes.push(tag);
+    }
+    return (tagForms);
+  }
+  
+  render() {
+    return (this.callMakeTagBoxes());
+  }
+}
 
 class TagBox extends Component {
   constructor(props) {
@@ -88,11 +110,13 @@ class TagBox extends Component {
   
   render() {
     return (
-      <Form.Check>
-        inline
-        label = this.tag
-        type="checkbox"
-      </Form.Check>
+        <Form.Check
+          inline
+          id={this.tag}
+          label={this.tag}
+          name="tag_checkbox"
+          type="checkbox"
+        />
     );
   }
 }
