@@ -66,18 +66,35 @@ function InputBoxes() {
 
 function GenerateTagForms({tags}) {
   const tagForms = tags.map((tag) => 
-    <Form.Check
-      inline
-      label={tag}
-      type="checkbox"
-      onChange={handleChange}
-    />
+    <TagBox tag={tag}/>
   );
   return (tagForms);
 }
 
-function handleChange() {
 
+class TagBox extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      checked: false,
+    };
+    this.tag = props.tag;
+    this.handleChange = this.handleChange.bind(this);
+  }
+
+  handleChange() {
+    this.setState({checked: !this.state.checked})
+  }
+  
+  render() {
+    return (
+      <Form.Check>
+        inline
+        label = this.tag
+        type="checkbox"
+      </Form.Check>
+    );
+  }
 }
 
 
