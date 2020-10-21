@@ -11,9 +11,6 @@ export function loginButtonTransition() {
         if(username_box.value != "") { // add other username criteria later
             console.log("signed in a user");
             auth.signInAnonymously();
-            const premadeTags = getCheckedTags();
-            const customTags = getCustomTags();
-            writeUserData(auth.currentUser.uid, document.getElementById("username").value, premadeTags, customTags)
         }
         else {
             document.getElementById("no-username-warning").innerText = "Username cannot be empty. ";
@@ -27,8 +24,12 @@ export function loginButtonTransition() {
     auth.onAuthStateChanged(firebaseUser => {
         console.log("auth changed")
         if(firebaseUser) {
-            const userId = firebaseUser.uid;
-            // logged in --> move to the next page
+            // if authunticated --> move to the next page
+
+            const premadeTags = getCheckedTags();
+            const customTags = getCustomTags();
+            writeUserData(firebaseUser.uid, document.getElementById("username").value, premadeTags, customTags)
+
         }   
         else {
             // logout button
