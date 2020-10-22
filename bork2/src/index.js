@@ -5,14 +5,27 @@ import App from './pages/Login';
 import ChatApp from './pages/Chat';
 import * as serviceWorker from './serviceWorker';
 import {auth} from './services/firebase'
-import loginButtonTransition from './pages/LoginFirebase'
+import {loginButtonTransition} from './pages/LoginFirebase'
 
-ReactDOM.render(
-  <App />,
-  document.getElementById('root')
-);
+// AUTH LISTENER
+auth.onAuthStateChanged(firebaseUser => {
+  console.log("auth changed")
+  if(firebaseUser) {
+    // if authunticated --> move to the next page
+    ReactDOM.render(
+      <ChatApp />,
+      document.getElementById('root')
+    );
+  }   
+  else {
+    ReactDOM.render(
+      <App />,
+      document.getElementById('root')
+    );
+    loginButtonTransition()
+  }
+});
 
-loginButtonTransition()
 
 // If you want your app to work offline and load faster, you can change
 // unregister() to register() below. Note this comes with some pitfalls.

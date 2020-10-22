@@ -1,6 +1,6 @@
 export const firebase = require('firebase');
 const config = {
-    apiKey: "AIzaSyBvlbmnAkD3djSVXyuNHANG2alZZMRkppg",
+    apiKey: "AIzaSyBriNz3DFDo1ra0CmHC0_ZpoCYnonSWOoo",
     authDomain: "bork-cc.firebaseapp.com",
     projectId: "bork-cc",
     databaseURL: "https://bork-cc.firebaseio.com"

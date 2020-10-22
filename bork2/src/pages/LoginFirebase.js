@@ -1,5 +1,5 @@
 import {auth, db, firebase} from '../services/firebase';
-import React from 'react';
+
 export function loginButtonTransition() {
     // GET ELEMENTS
     const btnLogin = document.getElementById('submit_button')
@@ -10,7 +10,17 @@ export function loginButtonTransition() {
         const username_box = document.getElementById("username");
         if(username_box.value != "") { // add other username criteria later
             console.log("signed in a user");
+            const premadeTags = getCheckedTags();
+            const customTags = getCustomTags();
+            const username = document.getElementById("username").value
+
             auth.signInAnonymously();
+            auth.onAuthStateChanged(function(firebaseUser) {
+                if(firebaseUser) {
+                    writeUserData(firebaseUser.uid, username, premadeTags, customTags)
+                    assignNextChat(username);
+                }
+            });
         }
         else {
             document.getElementById("no-username-warning").innerText = "Username cannot be empty. ";
@@ -20,27 +30,10 @@ export function loginButtonTransition() {
 
     // CLICK LOGOUT EVENT LISTENER -- TBD
 
-    // AUTH LISTENER
-    auth.onAuthStateChanged(firebaseUser => {
-        console.log("auth changed")
-        if(firebaseUser) {
-            // if authunticated --> move to the next page
-
-            const premadeTags = getCheckedTags();
-            const customTags = getCustomTags();
-            const username = document.getElementById("username").value
-            writeUserData(firebaseUser.uid, username, premadeTags, customTags)
-
-            moveToChat(username);
-        }   
-        else {
-            // logout button
-        }
-    });
 }
 
 // call firebase callable function to move to the next page
-function moveToChat(username) {
+function assignNextChat(username) {
     const submitButton = document.getElementById("submit_button");
     const sayHello = firebase.functions().httpsCallable('sayHello');
     sayHello({username: username}).then(result => {
