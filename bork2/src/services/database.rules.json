@@ -1,0 +1,16 @@
+{
+  "rules": {
+    ".read": "auth!=null",
+    ".write": "auth!=null"
+  }
+}
+  
+// {
+//   "rules": {
+//     "users": {
+//       "$uid": {
+//         ".write": "$uid === auth.uid"
+//       }
+//     }
+//   }
+// }
