@@ -13,7 +13,7 @@ export function App() {
   );
 }
 
-function BorkHeader() {
+export function BorkHeader() {
   return (<h1 id="header">Bork</h1>);
 }
 

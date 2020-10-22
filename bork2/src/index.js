@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 import App from './pages/Login';
+import ChatApp from './pages/Chat';
 import * as serviceWorker from './serviceWorker';
 import {auth} from './services/firebase'
 import loginButtonTransition from './pages/LoginFirebase'

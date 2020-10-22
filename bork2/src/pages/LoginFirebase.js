@@ -1,4 +1,4 @@
-import {auth, db} from '../services/firebase';
+import {auth, db, firebase} from '../services/firebase';
 import React from 'react';
 export function loginButtonTransition() {
     // GET ELEMENTS
@@ -28,12 +28,23 @@ export function loginButtonTransition() {
 
             const premadeTags = getCheckedTags();
             const customTags = getCustomTags();
-            writeUserData(firebaseUser.uid, document.getElementById("username").value, premadeTags, customTags)
+            const username = document.getElementById("username").value
+            writeUserData(firebaseUser.uid, username, premadeTags, customTags)
 
+            moveToChat(username);
         }   
         else {
             // logout button
         }
+    });
+}
+
+// call firebase callable function to move to the next page
+function moveToChat(username) {
+    const submitButton = document.getElementById("submit_button");
+    const sayHello = firebase.functions().httpsCallable('sayHello');
+    sayHello({username: username}).then(result => {
+        alert(result.data)
     });
 }
 
@@ -51,16 +62,21 @@ function getCheckedTags() {
 }
 
 function getCustomTags() {
-    // convert tags to all lowercase and no whitespace, separate by commas 
-    const customTags = document.getElementById("customTags").value.replace(/ /g, '').toLowerCase().split(","); 
-    return customTags;
+    // convert tags to all lowercase and no whitespace, separate by commas
+    const customTags = document.getElementById("customTags").value
+    if(customTags == "") {
+        return null
+    }
+    const customTagsArray = customTags.replace(/ /g, '').toLowerCase().split(","); 
+    return customTagsArray;
 }
 
 function writeUserData(userId, username, premadeTags, customTags) {
-    db.ref('users/' + userId).set({
+    db.collection("users/").add({
         username: username,
         premade_tags: premadeTags,
-        custom_tags: customTags,
-    });
+        custom_tags: customTags
+    })
 }
+
 export default loginButtonTransition;
