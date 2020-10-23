@@ -30,13 +30,11 @@
     display: flex;
     flex-flow: column wrap;
     justify-content: space-between;
-    width: 1000px;
-    margin: 25px 25px;
-    height: 800px;
+    width: 800px;
+    height: 920px;
     border: var(--border);
     border-radius: 5px;
     background: var(--msger-bg);
-    box-shadow: 0 15px 15px -5px rgba(0, 0, 0, 0.2);
   }
   
   .msger-header {
@@ -46,6 +44,7 @@
     border-bottom: var(--border);
     background: #eee;
     color: #666;
+    text-align: center;
   }
   
   .msger-chat {

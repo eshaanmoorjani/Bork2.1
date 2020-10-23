@@ -1,20 +1,22 @@
 import React, { Component } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import {auth, db, firebase} from '../services/firebase';
 
 import './Chat.css';
 import { BorkHeader } from './Login';
+import { Button } from 'react-bootstrap';
 
 class ChatApp extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            userID: "1111",
-            participants: new Set(),
+            chatID: "0",
+            userID: auth.currentUser.uid,
             messages: {
                 "1": {
                     message: "I am dogshit at VALORANT",
                     username: "Vijen",
-                    userID: "1111",
+                    userID: auth.currentUser.uid,
                     time: "5:35 pm",
                 },
                 "2": {
@@ -24,7 +26,7 @@ class ChatApp extends Component {
                     time: "5:36 pm",
                 }
             }, // messageID: {message: "a", username: "vijen", userID: "q3d8ds", time: "12:08:2032"}
-        }
+        };
     }
     
     makeChat() {
@@ -43,8 +45,8 @@ class ChatApp extends Component {
             </main>
 
             <form class="msger-inputarea">
-                <input type="text" class="msger-input" placeholder="Send a message, you cunt"/>
-                <button type="submit" class="msger-send-btn">Send</button>
+                <input type="text" id="input" class="msger-input" placeholder="Send a message, you cunt"/>
+                <Button type="submit" class="msger-send-btn" onClick={handleClick(this.state.chatID, this.state.userID)}>Send</Button>
             </form>
             </section>
         );
@@ -62,12 +64,12 @@ class ChatApp extends Component {
             <div class={rightOrLeft}>
                 <div class="msg-bubble">
                     <div class="msg-info">
-                        <div class="msg-info-name">{messageData["username"]}</div>
-                        <div class="msg-info-time">{messageData["time"]}</div>
+                        <div class="msg-info-name">{messageData.username}</div>
+                        <div class="msg-info-time">{messageData.time}</div>
                     </div>
 
                     <div class="msg-text">
-                        {messageData["message"]}
+                        {messageData.message}
                     </div>
                 </div>
             </div>
@@ -87,4 +89,33 @@ class ChatApp extends Component {
     }
 }
 
+function handleClick(chatID, userID) {
+    console.log("YOU SHOULD SEE ME")
+    function handleClickForReal() {
+        const message = document.getElementById("input").value;
+        console.log("MESSAGE: ", message);
+        console.log("USERID: ", userID);
+
+        db.collection("chats/").doc(chatID).collection("messages/").add({
+            content: message,
+            timestamp: "12:12:00",
+            userID: userID,
+            username: "vijen the peejen",
+        });
+    }
+    return handleClickForReal;
+}
+
 export default ChatApp;
+
+
+
+// const userID = auth.currentUser.uid;
+//         // create database listener to check if a user has been assigned a room
+//         db.collection("users/").doc(userID).onSnapshot(function(doc) {
+//             const chatID = doc.get("chat_id");
+//             this.state = {
+//                 chatID: "0", //chatID
+//                 userID: userID,
+//                 messages: db.collection("chats/").doc(chatID).get("messages"),
+//          }

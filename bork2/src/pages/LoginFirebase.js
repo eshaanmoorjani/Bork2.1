@@ -35,8 +35,8 @@ export function loginButtonTransition() {
 // call firebase callable function to move to the next page
 function assignNextChat(username) {
     const submitButton = document.getElementById("submit_button");
-    const sayHello = firebase.functions().httpsCallable('sayHello');
-    sayHello({username: username}).then(result => {
+    const assignChatroom = firebase.functions().httpsCallable('assignChatroom');
+    assignChatroom({username: username}).then(result => {
         alert(result.data)
     });
 }
@@ -61,7 +61,8 @@ function getCustomTags() {
         return null
     }
     const customTagsArray = customTags.replace(/ /g, '').toLowerCase().split(","); 
-    return customTagsArray;
+
+    return [...new Set(customTagsArray)];
 }
 
 function writeUserData(userId, username, premadeTags, customTags) {
