@@ -6,7 +6,10 @@ import ChatApp from './pages/Chat';
 import * as serviceWorker from './serviceWorker';
 import {auth} from './services/firebase'
 import {loginButtonTransition} from './pages/LoginFirebase'
+import {userUpdateListener} from './pages/AssignChatroom.js'
 
+
+userUpdateListener();
 // AUTH LISTENER
 auth.onAuthStateChanged(firebaseUser => {
   console.log("auth changed")

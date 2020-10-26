@@ -9,46 +9,65 @@ import { Button } from 'react-bootstrap';
 class ChatApp extends Component {
     constructor(props) {
         super(props);
+        var date = new Date();
         this.state = {
             chatID: "0",
             userID: auth.currentUser.uid,
+            numParticipants: 0,
+            lastMessageTime: Math.floor(date.getTime() / 1000),
+            numMessages: 2,
             messages: {
                 "1": {
-                    message: "I am dogshit at VALORANT",
+                    content: "I am dogshit at VALORANT",
                     username: "Vijen",
                     userID: auth.currentUser.uid,
-                    time: "5:35 pm",
+                    timestamp: {
+                        seconds: "123",
+                        nanoseconds: "123000",
+                    }
                 },
                 "2": {
-                    message: "I agree.",
+                    content: "I agree.",
                     username: "Drmoor",
                     userID: "2222",
-                    time: "5:36 pm",
+                    timestamp: {
+                        seconds: "321",
+                        nanoseconds: "321000",
+                    }
                 }
             }, // messageID: {message: "a", username: "vijen", userID: "q3d8ds", time: "12:08:2032"}
         };
+        this.getMessage = this.getMessage.bind(this);
+        this.handleClick = this.handleClick.bind(this);
+        this.handleEnter = this.handleEnter.bind(this);
+        this.getMessage();
     }
     
     makeChat() {
-        return (<section class="msger">
-            <header class="msger-header">
-                <div class="msger-header-title">
-                <i class="fas fa-comment-alt"></i> Bork.cc
-                </div>
-                <div class="msger-header-options">
-                <span><i class="fas fa-cog"></i></span>
-                </div>
-            </header>
-
+        return (
+        <section class="msger">
             <main class="msger-chat">    
                 {this.makeAllMessages()}
             </main>
 
-            <form class="msger-inputarea">
+            <form class="msger-inputarea" onSubmit={this.handleEnter}>
                 <input type="text" id="input" class="msger-input" placeholder="Send a message, you cunt"/>
-                <Button type="submit" class="msger-send-btn" onClick={handleClick(this.state.chatID, this.state.userID)}>Send</Button>
+                <Button type="button" class="msger-send-btn" onClick={this.handleClick}>Send</Button>
             </form>
-            </section>
+        </section>
+        );
+    }
+
+    makeHeader() {
+        return (
+        <header class="msger-header">
+            <div class="msger-header-title">
+            <i class="fas fa-comment-alt"></i> Bork.cc
+            </div>
+            <div class="msger-header-options">
+            <span><i class="fas fa-cog"></i></span>
+            </div>
+        </header>
         );
     }
 
@@ -65,11 +84,11 @@ class ChatApp extends Component {
                 <div class="msg-bubble">
                     <div class="msg-info">
                         <div class="msg-info-name">{messageData.username}</div>
-                        <div class="msg-info-time">{messageData.time}</div>
+                        <div class="msg-info-time">{messageData.timestamp.seconds}</div>
                     </div>
 
                     <div class="msg-text">
-                        {messageData.message}
+                        {messageData.content}
                     </div>
                 </div>
             </div>
@@ -85,37 +104,73 @@ class ChatApp extends Component {
     }
 
     render() {
-        return this.makeChat(this.state.messages);
+        return (
+            <div>
+                {this.makeHeader()}
+                {this.makeChat(this.state.messages)}
+            </div>
+            );
     }
-}
 
-function handleClick(chatID, userID) {
-    console.log("YOU SHOULD SEE ME")
-    function handleClickForReal() {
-        const message = document.getElementById("input").value;
-        console.log("MESSAGE: ", message);
-        console.log("USERID: ", userID);
-
-        db.collection("chats/").doc(chatID).collection("messages/").add({
-            content: message,
-            timestamp: "12:12:00",
-            userID: userID,
-            username: "vijen the peejen",
+    getMessage() {
+        const ref = firebase.firestore().collection("chats").doc(this.state.chatID).collection("messages");
+        ref.onSnapshot(collection => {
+            // var changes = collection.docChanges();
+            // changes.forEach(function(change) {
+            //     console.log("here");
+            //     const data = change.doc.data();
+            //     console.log(this);
+            //     if (data.timestamp.seconds >= this.state.lastMessageTime) {
+            //         this.setState({lastMessageTime: data.timestamp.seconds});
+            //         this.setState({
+            //             ...this.state,
+            //             messages: {
+            //                 ...this.state.messages,
+            //                 [this.state.numMessages + 1]: data,
+            //             }
+            //         });
+            //         this.state.numMessages += 1;
+            //     }
+            // })
+            collection.forEach(doc => {
+                const data = doc.data();
+                console.log(data.timestamp);
+                if (data.timestamp.seconds >= this.state.lastMessageTime) {
+                    this.setState({lastMessageTime: data.timestamp.seconds});
+                    this.setState({
+                        ...this.state,
+                        messages: {
+                            ...this.state.messages,
+                            [this.state.numMessages + 1]: data,
+                        }
+                    });
+                    this.state.numMessages += 1;
+                }
+            });
         });
     }
-    return handleClickForReal;
+
+    
+    handleClick() {
+        const inputForm = document.getElementById("input");
+        const message = inputForm.value;
+        inputForm.value = "";
+        if (message != "") {
+            db.collection("chats/").doc(this.state.chatID).collection("messages/").add({
+                content: message,
+                timestamp: new Date(),
+                userID: this.state.userID,
+                username: "vijen the peejen",
+            });
+        }
+    }
+
+    handleEnter(event) {
+        event.preventDefault();
+        this.handleClick();
+    }
+
 }
 
+
 export default ChatApp;
-
-
-
-// const userID = auth.currentUser.uid;
-//         // create database listener to check if a user has been assigned a room
-//         db.collection("users/").doc(userID).onSnapshot(function(doc) {
-//             const chatID = doc.get("chat_id");
-//             this.state = {
-//                 chatID: "0", //chatID
-//                 userID: userID,
-//                 messages: db.collection("chats/").doc(chatID).get("messages"),
-//          }

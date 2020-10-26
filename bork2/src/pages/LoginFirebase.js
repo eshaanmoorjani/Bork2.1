@@ -17,7 +17,7 @@ export function loginButtonTransition() {
             auth.signInAnonymously();
             auth.onAuthStateChanged(function(firebaseUser) {
                 if(firebaseUser) {
-                    writeUserData(firebaseUser.uid, username, premadeTags, customTags)
+                    writeUserData(username, premadeTags, customTags) // transform this into a back-end function
                     assignNextChat(username);
                 }
             });
@@ -35,10 +35,10 @@ export function loginButtonTransition() {
 // call firebase callable function to move to the next page
 function assignNextChat(username) {
     const submitButton = document.getElementById("submit_button");
-    const assignChatroom = firebase.functions().httpsCallable('assignChatroom');
-    assignChatroom({username: username}).then(result => {
-        alert(result.data)
-    });
+    // const assignChatroom = firebase.functions().httpsCallable('assignChatroom');
+    // assignChatroom({username: username}).then(result => {
+    //     alert(result.data)
+    // });
 }
 
 function getCheckedTags() {
@@ -65,7 +65,8 @@ function getCustomTags() {
     return [...new Set(customTagsArray)];
 }
 
-function writeUserData(userId, username, premadeTags, customTags) {
+function writeUserData(username, premadeTags, customTags) {
+    auth.currentUser.chatId = null
     db.collection("users/").add({
         username: username,
         premade_tags: premadeTags,
