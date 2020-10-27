@@ -51,14 +51,14 @@ function getCheckedTags() {
         }
     }
     
-    return checkedTags.length > 0 ? checkedTags : null;
+    return checkedTags.length > 0 ? checkedTags : [];
 }
 
 function getCustomTags() {
     // convert tags to all lowercase and no whitespace, separate by commas
     const customTags = document.getElementById("customTags").value
     if(customTags == "") {
-        return null
+        return []
     }
     const customTagsArray = customTags.replace(/ /g, '').toLowerCase().split(","); 
 

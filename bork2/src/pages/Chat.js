@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Component, useRef } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import {auth, db, firebase} from '../services/firebase';
 
@@ -15,26 +15,9 @@ class ChatApp extends Component {
             userID: auth.currentUser.uid,
             numParticipants: 0,
             lastMessageTime: Math.floor(date.getTime() / 1000),
-            numMessages: 2,
+            numMessagesSent: 2, // sent and received only works with single chat room--need to save this to the database, just like participants
+            numMessagesReceived: 2,
             messages: {
-                "1": {
-                    content: "I am dogshit at VALORANT",
-                    username: "Vijen",
-                    userID: auth.currentUser.uid,
-                    timestamp: {
-                        seconds: "123",
-                        nanoseconds: "123000",
-                    }
-                },
-                "2": {
-                    content: "I agree.",
-                    username: "Drmoor",
-                    userID: "2222",
-                    timestamp: {
-                        seconds: "321",
-                        nanoseconds: "321000",
-                    }
-                }
             }, // messageID: {message: "a", username: "vijen", userID: "q3d8ds", time: "12:08:2032"}
         };
         this.getMessage = this.getMessage.bind(this);
@@ -45,9 +28,12 @@ class ChatApp extends Component {
     
     makeChat() {
         return (
-        <section class="msger">
+        <section class="msger" id="chatbox">
             <main class="msger-chat">    
                 {this.makeAllMessages()}
+                {// <div ref={(el) => {this.messagesEnd = el}}></div> 
+                }
+                <div id="dummyScroll"></div>
             </main>
 
             <form class="msger-inputarea" onSubmit={this.handleEnter}>
@@ -56,6 +42,14 @@ class ChatApp extends Component {
             </form>
         </section>
         );
+    }
+
+    // auto scroll down
+    componentDidUpdate() {
+        const scrollDiv = document.getElementById("dummyScroll");
+        if (scrollDiv != null) {
+            scrollDiv.scrollIntoView(true, { behavior: "smooth" });
+        }
     }
 
     makeHeader() {
@@ -113,54 +107,38 @@ class ChatApp extends Component {
     }
 
     getMessage() {
-        const ref = firebase.firestore().collection("chats").doc(this.state.chatID).collection("messages");
+        const ref = firebase.firestore().collection("chats").doc(this.state.chatID).collection("messages").orderBy("timestamp", "desc").limit(1);
         ref.onSnapshot(collection => {
-            // var changes = collection.docChanges();
-            // changes.forEach(function(change) {
-            //     console.log("here");
-            //     const data = change.doc.data();
-            //     console.log(this);
-            //     if (data.timestamp.seconds >= this.state.lastMessageTime) {
-            //         this.setState({lastMessageTime: data.timestamp.seconds});
-            //         this.setState({
-            //             ...this.state,
-            //             messages: {
-            //                 ...this.state.messages,
-            //                 [this.state.numMessages + 1]: data,
-            //             }
-            //         });
-            //         this.state.numMessages += 1;
-            //     }
-            // })
             collection.forEach(doc => {
                 const data = doc.data();
-                console.log(data.timestamp);
-                if (data.timestamp.seconds >= this.state.lastMessageTime) {
+                //if (data.timestamp.seconds >= this.state.lastMessageTime && data.messageNumber == this.state.numMessagesSent) {
                     this.setState({lastMessageTime: data.timestamp.seconds});
                     this.setState({
                         ...this.state,
                         messages: {
                             ...this.state.messages,
-                            [this.state.numMessages + 1]: data,
+                            [this.state.numMessagesReceived + 1]: data,
                         }
                     });
-                    this.state.numMessages += 1;
-                }
+                    this.state.numMessagesReceived += 1;
+                    console.log(data);
+                //}
             });
         });
     }
-
     
     handleClick() {
         const inputForm = document.getElementById("input");
         const message = inputForm.value;
         inputForm.value = "";
         if (message != "") {
+            this.state.numMessagesSent += 1;
             db.collection("chats/").doc(this.state.chatID).collection("messages/").add({
                 content: message,
                 timestamp: new Date(),
                 userID: this.state.userID,
                 username: "vijen the peejen",
+                messageNumber: this.state.numMessagesSent,
             });
         }
     }
@@ -169,8 +147,6 @@ class ChatApp extends Component {
         event.preventDefault();
         this.handleClick();
     }
-
 }
-
 
 export default ChatApp;
