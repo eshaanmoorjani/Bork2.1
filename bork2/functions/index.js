@@ -15,7 +15,11 @@ const firestore = admin.firestore();
 exports.assignChatroom = functions.firestore.document('users/{userId}').onWrite(async (change, context) => {
     const userId = context.params.userId;
     const userInfo = change.after.data();
-    // console.log(userInfo)
+    console.log(userInfo)
+    if(userInfo['chat_id'] !== undefined) {
+        console.log("this solved the issue")
+        return null;
+    }
 
     const premadeTags = userInfo.premade_tags
     const customTags = userInfo.custom_tags
@@ -25,17 +29,17 @@ exports.assignChatroom = functions.firestore.document('users/{userId}').onWrite(
     // iterate through every chat that exists, and see which one fits the tag
     // create new chat for custom tag or 
 
-    var chatId = await findBestChat(userTags)
+    var chatId = await findBestChat(userTags, userId, username)
     
     // create a new chat for the person
     if(chatId === null) {
-        const newChatId = firestore.collection('chats').document().getId();
-        console.log(newChatId)
-        firestore.collection("chats/").add({
-            num_participants: 1,
-            tags: userTags,
-            participants: [username]
-        })
+        // console.log("chatId is null")
+        // chatId = firestore.collection('chats').doc().documentId()
+        // console.log("new chatid: ",chatId)
+        // firestore.collection("chats").document(chatId).add({
+        //     num_participants: 1,
+        //     tags: userTags
+        // })
         // modify the chatId
     }
 
@@ -49,36 +53,44 @@ exports.assignChatroom = functions.firestore.document('users/{userId}').onWrite(
         return null
     })
     .catch(function(error) {
-        console.log("fuck firebase brah")
         console.log(error)
     })
 });
 
-async function findBestChat(userTags) {
+async function findBestChat(userTags, userId, username) {
     // get every chat room where num_participants < 10
     return firestore.collection("chats").where("num_participants", "<", 10).get()
         .then(function(querySnapshot) {
-            var bestChatId = "";
-            var bestChatScore = 0;
-
             var chatId = "0"
             var chatTags = []
             var score = 0
             // Not developing code in this fashion b/c we are just focusing on Among Us
-            querySnapshot.forEach(function(doc) {
+            for (var i in querySnapshot.docs) {
+                const doc = querySnapshot.docs[i]
+
                 chatId = doc.id
                 chatTags = doc.tags
                 score = 1 // chatScore(chatId, chatTags)
-                console.log(doc.id, " => ", doc.data());
+                // console.log(doc.id, " => ", doc.data());
 
                 // short circuit if the perfect room is found
-                if(score === userTags.length) {
-                    console.log("will add them to this chat: ", chatId)
+                if(score === 1) { // score === userTags.length) {
+                    console.log("will add "+userId+" to this chat: ", chatId)
                     // increase the number of participants
+                    firestore.collection('chats').doc(chatId).update({
+                        num_participants: admin.firestore.FieldValue.increment(1)
+                    })
+
+                    firestore.collection('chats').doc(chatId).collection('participants').doc(userId).set({
+                        user_id: userId,
+                        username: username
+                    })
+                    console.log("before");
                     return chatId;
                 }
-            });
-            return null;
+            }
+
+            return null
         })
         .catch(function(error) {
             console.log("Error: ", error)
@@ -94,14 +106,14 @@ function chatScore(chatTags, userTags) {
  * Run once a day at midnight, to cleanup the users
  * Manually run the task here https://console.cloud.google.com/cloudscheduler
  */
-exports.accountcleanup = functions.pubsub.schedule('every day 00:00').onRun(async context => {
-    // Fetch all user details.
-    const inactiveUsers = await getInactiveUsers();
-    // Use a pool so that we delete maximum `MAX_CONCURRENT` users in parallel.
-    const promisePool = new PromisePool(() => deleteInactiveUser(inactiveUsers), MAX_CONCURRENT);
-    await promisePool.start();
-    console.log('User cleanup finished');
-});
+// exports.accountcleanup = functions.pubsub.schedule('every 5 minutes').onRun(async context => {
+//     // Fetch all user details.
+//     const inactiveUsers = await getInactiveUsers();
+//     // Use a pool so that we delete maximum `MAX_CONCURRENT` users in parallel.
+//     const promisePool = new PromisePool(() => deleteInactiveUser(inactiveUsers), MAX_CONCURRENT);
+//     await promisePool.start();
+//     console.log('User cleanup finished');
+// });
 
 /**
  * Deletes one inactive user from the list.

@@ -10,13 +10,15 @@ class ChatApp extends Component {
     constructor(props) {
         super(props);
         var date = new Date();
+        const userID = auth.currentUser.uid;
         this.state = {
-            chatID: "0",
-            userID: auth.currentUser.uid,
+            chatID: this.props.chatID,
+            userID: userID,
+            username: this.props.username,
             numParticipants: 0,
             lastMessageTime: Math.floor(date.getTime() / 1000),
-            numMessagesSent: 2, // sent and received only works with single chat room--need to save this to the database, just like participants
-            numMessagesReceived: 2,
+            numMessagesSent: 0, // might not need this but whatever
+            numMessagesReceived: 0,
             messages: {
             }, // messageID: {message: "a", username: "vijen", userID: "q3d8ds", time: "12:08:2032"}
         };
@@ -111,7 +113,6 @@ class ChatApp extends Component {
         ref.onSnapshot(collection => {
             collection.forEach(doc => {
                 const data = doc.data();
-                //if (data.timestamp.seconds >= this.state.lastMessageTime && data.messageNumber == this.state.numMessagesSent) {
                     this.setState({lastMessageTime: data.timestamp.seconds});
                     this.setState({
                         ...this.state,
@@ -122,7 +123,6 @@ class ChatApp extends Component {
                     });
                     this.state.numMessagesReceived += 1;
                     console.log(data);
-                //}
             });
         });
     }
@@ -137,7 +137,7 @@ class ChatApp extends Component {
                 content: message,
                 timestamp: new Date(),
                 userID: this.state.userID,
-                username: "vijen the peejen",
+                username: this.state.username,
                 messageNumber: this.state.numMessagesSent,
             });
         }

@@ -17,7 +17,7 @@ export function loginButtonTransition() {
             auth.signInAnonymously();
             auth.onAuthStateChanged(function(firebaseUser) {
                 if(firebaseUser) {
-                    writeUserData(username, premadeTags, customTags) // transform this into a back-end function
+                    writeUserData(firebaseUser.uid, username, premadeTags, customTags) // transform this into a back-end function
                     assignNextChat(username);
                 }
             });
@@ -65,9 +65,11 @@ function getCustomTags() {
     return [...new Set(customTagsArray)];
 }
 
-function writeUserData(username, premadeTags, customTags) {
+function writeUserData(userId, username, premadeTags, customTags) {
     auth.currentUser.chatId = null
-    db.collection("users/").add({
+    console.log('userid: ',userId)
+    db.collection("users").doc(userId)
+        .set({
         username: username,
         premade_tags: premadeTags,
         custom_tags: customTags
