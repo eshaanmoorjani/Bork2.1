@@ -4,7 +4,7 @@ import {auth, db, firebase} from '../services/firebase';
 
 import './Chat.css';
 import { BorkHeader } from './Login';
-import { Button } from 'react-bootstrap';
+import { Button, Navbar, Nav, NavDropdown, Form, FormControl, NavItem } from 'react-bootstrap';
 
 class ChatApp extends Component {
     constructor(props) {
@@ -21,8 +21,12 @@ class ChatApp extends Component {
             numMessagesReceived: 0,
             messages: {
             }, // messageID: {message: "a", username: "vijen", userID: "q3d8ds", time: "12:08:2032"}
+            participants: {
+
+            },
         };
         this.getMessage = this.getMessage.bind(this);
+        this.getParticipants = this.getParticipants.bind(this);
         this.handleSend = this.handleSend.bind(this);
         this.handleEnter = this.handleEnter.bind(this);
         this.handleLogout = this.handleLogout.bind(this);
@@ -95,10 +99,31 @@ class ChatApp extends Component {
         return allMessages;
     }
 
-    makeLogoutButton() {
+    makeNavbar() {
         return (
-            <div class="logoutButton">
-                <Button onClick={this.handleLogout}>Logout</Button>
+            <div class="navbar">
+                <Navbar fixed="top" bg="light" variant="light" expand="lg">
+                    <Navbar.Brand>Meet.Game</Navbar.Brand>
+                    <Navbar.Toggle aria-controls="basic-navbar-nav" />
+                    <Navbar.Collapse id="basic-navbar-nav">
+                        <Nav className="mr-auto">
+                            <NavItem class="lobbyTag">Among us</NavItem>
+                        </Nav>
+                        <Nav>
+                            <NavDropdown title="Lobby Information" id="basic-nav-dropdown">
+                                {this.getParticipants()}
+                                <NavDropdown.Item>Among us</NavDropdown.Item>
+                                <NavDropdown.Item>Another action</NavDropdown.Item>
+                                <NavDropdown.Item>Something</NavDropdown.Item>
+                                <NavDropdown.Divider />
+                                <NavDropdown.Item>Separated link</NavDropdown.Item>
+                            </NavDropdown>
+                        </Nav>
+                        <Form inline>
+                            <Button variant="danger" onClick={this.handleLogout}>Logout</Button>
+                        </Form>
+                    </Navbar.Collapse>
+                </Navbar>
             </div>
         );
     }
@@ -106,8 +131,7 @@ class ChatApp extends Component {
     render() {
         return (
             <div>
-                {this.makeLogoutButton()}
-                {this.makeHeader()}
+                {this.makeNavbar()}
                 {this.makeChat(this.state.messages)}
             </div>
             );
@@ -130,6 +154,25 @@ class ChatApp extends Component {
             });
         });
     }
+
+    //doenst work rn
+    getParticipants() {
+        const ref = firebase.firestore().collection("chats").doc(this.state.chatID).collection("participants").orderBy("timestamp").limit(1);
+        ref.onSnapshot(collection => {
+            collection.forEach(doc => {
+                const data = doc.data();
+                console.log(data);
+                this.setState({
+                    ...this.state,
+                    numParticipants: this.state.numParticipants + 1,
+                    participants: {
+                        ...this.state.participants,
+                        [data.user_id]: data.username,
+                    },
+                });
+            });
+        });
+    }
     
     handleSend() {
         const inputForm = document.getElementById("input");
@@ -147,7 +190,6 @@ class ChatApp extends Component {
         }
     }
     
-    //if logout, delete user authentication from databse
     handleLogout() {
         firebase.auth().signOut().then(function() {
         })

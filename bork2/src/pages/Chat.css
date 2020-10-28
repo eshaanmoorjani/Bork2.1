@@ -28,30 +28,19 @@
   
   .msger {
     position: relative;
-    left: 26.25%;
     display: flex;
     flex-flow: column wrap;
     justify-content: space-between;
+    margin: 5%;
     width: 800px;
-    height: 840px;
+    height: 850px;
     border: var(--border);
     border-radius: 5px;
     background: var(--msger-bg);
   }
-  
-  .msger-header {
-    justify-content: space-between;
-    border-bottom: var(--border);
-    background: #eee;
-    color: #666;
+
+  .lobbyTag {
     text-align: center;
-    font-size: 50px;
-    width: 1680px;
-  }
-  
-  .logoutButton {
-    position: absolute;
-    margin: 20px;
   }
 
   .msger-chat {
