@@ -13,14 +13,14 @@ auth.onAuthStateChanged(firebaseUser => {
   console.log("auth changed")
   if(firebaseUser) { // and firebaseUser.assignedToChat
 
-    // create a listener because client writes to database --> cloud function is called --> userId is assigned
+    // create a listener because client writes to database --> cloud function is called --> chatId is assigned
     db.collection("users").doc(auth.currentUser.uid).onSnapshot(function(doc) {
       const data = doc.data();
       if (data.chat_id != null) {
         const assignedChatID = data.chat_id;
         const username = data.username;
         ReactDOM.render(
-          <ChatApp chatID={assignedChatID} username={username}/>,
+          <ChatApp chatID={assignedChatID} username={username} joinTime={new Date()}/>,
           document.getElementById('root')
         );
       }

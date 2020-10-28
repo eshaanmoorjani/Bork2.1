@@ -87,6 +87,12 @@
     align-items: center;
     margin-bottom: 10px;
   }
+
+  .msg-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
   .msg-info-name {
     margin-right: 10px;
     font-weight: bold;

@@ -1,4 +1,4 @@
-import React, { Component, useRef } from 'react';
+import React, { Component } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import {auth, db, firebase} from '../services/firebase';
 
@@ -16,14 +16,14 @@ class ChatApp extends Component {
             userID: userID,
             username: this.props.username,
             numParticipants: 0,
+            joinTime: this.props.joinTime,
             lastMessageTime: Math.floor(date.getTime() / 1000),
             numMessagesSent: 0, // might not need this but whatever
             numMessagesReceived: 0,
             messages: {
             }, // messageID: {message: "a", username: "vijen", userID: "q3d8ds", time: "12:08:2032"}
             participants: {
-
-            },
+            }, // usernames
         };
         this.getMessage = this.getMessage.bind(this);
         this.getParticipants = this.getParticipants.bind(this);
@@ -31,6 +31,7 @@ class ChatApp extends Component {
         this.handleEnter = this.handleEnter.bind(this);
         this.handleLogout = this.handleLogout.bind(this);
         this.getMessage();
+        this.getParticipants();
     }
     
     makeChat() {
@@ -70,6 +71,7 @@ class ChatApp extends Component {
         );
     }
 
+    // need to make multiple lines of text if too long
     makeMessageBubble(messageID) {
         const messageData = this.state.messages[messageID];
         var rightOrLeft = assignRightOrLeft(messageData, this.state.userID);
@@ -82,7 +84,6 @@ class ChatApp extends Component {
                         <div class="msg-info-name">{messageData.username}</div>
                         <div class="msg-info-time">{timeFormatted}</div>
                     </div>
-
                     <div class="msg-text">
                         {messageData.content}
                     </div>
@@ -110,13 +111,8 @@ class ChatApp extends Component {
                             <NavItem class="lobbyTag">Among us</NavItem>
                         </Nav>
                         <Nav>
-                            <NavDropdown title="Lobby Information" id="basic-nav-dropdown">
-                                {this.getParticipants()}
-                                <NavDropdown.Item>Among us</NavDropdown.Item>
-                                <NavDropdown.Item>Another action</NavDropdown.Item>
-                                <NavDropdown.Item>Something</NavDropdown.Item>
-                                <NavDropdown.Divider />
-                                <NavDropdown.Item>Separated link</NavDropdown.Item>
+                            <NavDropdown title="Participants" id="participants-dropdown">
+                                {this.makeParticipants()}
                             </NavDropdown>
                         </Nav>
                         <Form inline>
@@ -155,9 +151,9 @@ class ChatApp extends Component {
         });
     }
 
-    //doenst work rn
     getParticipants() {
-        const ref = firebase.firestore().collection("chats").doc(this.state.chatID).collection("participants").orderBy("timestamp").limit(1);
+        console.log("im getting the participants");
+        const ref = firebase.firestore().collection("chats").doc(this.state.chatID).collection("participants").orderBy("timestamp");
         ref.onSnapshot(collection => {
             collection.forEach(doc => {
                 const data = doc.data();
@@ -172,6 +168,15 @@ class ChatApp extends Component {
                 });
             });
         });
+    }
+
+    makeParticipants() {
+        const participants = this.state.participants;
+        var dropDown = [];
+        for (var userID in participants) {
+            dropDown.push(<NavDropdown.Item>{participants[userID]}</NavDropdown.Item>);
+        }
+        return dropDown;
     }
     
     handleSend() {
