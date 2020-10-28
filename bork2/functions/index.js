@@ -83,7 +83,8 @@ async function findBestChat(userTags, userId, username) {
 
                     firestore.collection('chats').doc(chatId).collection('participants').doc(userId).set({
                         user_id: userId,
-                        username: username
+                        username: username,
+                        time_joined: new Date()
                     })
                     console.log("before");
                     return chatId;
