@@ -1,4 +1,5 @@
 const functions = require('firebase-functions');
+const firebase_tools = require('firebase-tools');
 const admin = require('firebase-admin');
 admin.initializeApp();
 
@@ -9,6 +10,36 @@ const firestore = admin.firestore();
 //     console.log('This will be run every 5 minutes!');
 //     return null;
 // });
+
+exports.deleteUserInformation = functions.https.onCall((data, context) => {
+    const userId = data.userId;
+    const chatId = data.chatId;
+    
+    return null; // make sure to return a promise
+    // // delete the user document
+    // const userDeletePath = firestore.collection('users').doc(userId)
+    // await firebase_tools.firestore
+    //   .delete(userDeletePath, {
+    //     project: process.env.GCLOUD_PROJECT,
+    //     recursive: true,
+    //     yes: true,
+    //     token: functions.config().fb.token
+    //   });
+
+    // // delete them from the chat
+    // await firestore.collection('chats').doc(chatId).update({
+    //     num_participants: admin.firestore.FieldValue.increment(-1)
+    // });
+
+    // const chatDeletePath = firestore.collection('chats').doc('chatId').collection('participants').doc(userId)
+    // await firebase_tools.firestore
+    //     .delete(chatDeletePath, {
+    //     project: process.env.GCLOUD_PROJECT,
+    //     recursive: true,
+    //     yes: true,
+    //     token: functions.config().fb.token
+    // });
+});
 
 
 // listens for changes to the number of users and then finds the best chat for them
@@ -33,6 +64,17 @@ exports.assignChatroom = functions.firestore.document('users/{userId}').onWrite(
     
     // create a new chat for the person
     if(chatId === null) {
+        chatId = await firestore.collection("chats").add({
+            num_participants: 1,
+            tags: userTags
+        })
+        .then(function(docRef) {
+            chatId = docRef.id
+            return docRef.id;
+        })
+        .catch(function(error) {
+            console.error("Error adding document: ",error)
+        });
         // console.log("chatId is null")
         // chatId = firestore.collection('chats').doc().documentId()
         // console.log("new chatid: ",chatId)
@@ -42,6 +84,8 @@ exports.assignChatroom = functions.firestore.document('users/{userId}').onWrite(
         // })
         // modify the chatId
     }
+
+    console.log("CHATID: ",chatId)
 
     firestore.collection("users").doc(userId).update({
         // username: username,
@@ -53,7 +97,15 @@ exports.assignChatroom = functions.firestore.document('users/{userId}').onWrite(
         return null
     })
     .catch(function(error) {
+        console.log('fuck firebase brah')
         console.log(error)
+    })
+
+    
+    firestore.collection('chats').doc(chatId).collection('participants').doc(userId).set({
+        user_id: userId,
+        username: username,
+        timestamp: new Date(),
     })
 });
 
@@ -81,16 +133,6 @@ async function findBestChat(userTags, userId, username) {
                         num_participants: admin.firestore.FieldValue.increment(1)
                     })
 
-                    firestore.collection('chats').doc(chatId).collection('participants').doc(userId).set({
-                        user_id: userId,
-                        username: username,
-<<<<<<< HEAD
-                        timestamp: new Date(),
-=======
-                        time_joined: new Date()
->>>>>>> 3b541b4f43849b9ccb6a2d14ae9022263c33cabc
-                    })
-                    console.log("before");
                     return chatId;
                 }
             }

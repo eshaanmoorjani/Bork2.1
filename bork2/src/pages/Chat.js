@@ -57,7 +57,7 @@ class ChatApp extends Component {
         }
     }
 
-    // bork header
+    // bork header, not being used rn, using navbar
     makeHeader() {
         return (
         <header class="msger-header">
@@ -111,6 +111,9 @@ class ChatApp extends Component {
                             <NavItem class="lobbyTag">Among us</NavItem>
                         </Nav>
                         <Nav>
+                            {this.displayCapacity()}
+                        </Nav>
+                        <Nav>
                             <NavDropdown title="Participants" id="participants-dropdown">
                                 {this.makeParticipants()}
                             </NavDropdown>
@@ -131,6 +134,15 @@ class ChatApp extends Component {
                 {this.makeChat(this.state.messages)}
             </div>
             );
+    }
+
+    // every room 10 people max for now 
+    displayCapacity() {
+        return (
+        <div id="capacity">
+            {this.state.numParticipants}/10
+        </div>
+        );
     }
 
     getMessage() {
@@ -155,12 +167,14 @@ class ChatApp extends Component {
         console.log("im getting the participants");
         const ref = firebase.firestore().collection("chats").doc(this.state.chatID).collection("participants").orderBy("timestamp");
         ref.onSnapshot(collection => {
+            var participants = 0;
             collection.forEach(doc => {
+                participants++;
                 const data = doc.data();
                 console.log(data);
                 this.setState({
                     ...this.state,
-                    numParticipants: this.state.numParticipants + 1,
+                    numParticipants: participants,
                     participants: {
                         ...this.state.participants,
                         [data.user_id]: data.username,
@@ -195,8 +209,21 @@ class ChatApp extends Component {
         }
     }
     
+    // this deletes from local participants, need to delete from DATABASE
     handleLogout() {
-        firebase.auth().signOut().then(function() {
+        console.log("a")
+        const deleteInfo = firebase.functions().httpsCallable('deleteUserInformation')
+        console.log("b")
+        deleteInfo({userId: this.state.userID, chatId: this.state.chatID}).then(result => {
+            console.log("b.5");
+            console.log(result.data); // Will tell you if they signed them out or not
+        })
+        .catch(function (error) {
+            console.log(error);
+        });
+        console.log("c");
+        firebase.auth().signOut().then(() => {
+            
         })
         .catch(function (error) {
             console.log("ERROR:", error);
