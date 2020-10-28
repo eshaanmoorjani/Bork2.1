@@ -75,12 +75,19 @@ class ChatApp extends Component {
         } else {
             rightOrLeft = "msg left-msg";
         }
+        var date = new Date(messageData.timestamp.seconds * 1000);
+        var timeFormatted = date.toTimeString().substr(0,5);
+        if (timeFormatted.substr(0, 2) <= 12) {
+            timeFormatted += " am";
+        } else {
+            timeFormatted = timeFormatted.substr(0, 2) % 12 + timeFormatted.substr(2, 5) + " pm";
+        }
         return (
             <div class={rightOrLeft}>
                 <div class="msg-bubble">
                     <div class="msg-info">
                         <div class="msg-info-name">{messageData.username}</div>
-                        <div class="msg-info-time">{messageData.timestamp.seconds}</div>
+                        <div class="msg-info-time">{timeFormatted}</div>
                     </div>
 
                     <div class="msg-text">
