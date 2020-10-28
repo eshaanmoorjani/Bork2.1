@@ -49,6 +49,11 @@
     width: 1680px;
   }
   
+  .logoutButton {
+    position: absolute;
+    margin: 20px;
+  }
+
   .msger-chat {
     flex: 1;
     overflow-y: auto;

@@ -23,8 +23,9 @@ class ChatApp extends Component {
             }, // messageID: {message: "a", username: "vijen", userID: "q3d8ds", time: "12:08:2032"}
         };
         this.getMessage = this.getMessage.bind(this);
-        this.handleClick = this.handleClick.bind(this);
+        this.handleSend = this.handleSend.bind(this);
         this.handleEnter = this.handleEnter.bind(this);
+        this.handleLogout = this.handleLogout.bind(this);
         this.getMessage();
     }
     
@@ -33,14 +34,11 @@ class ChatApp extends Component {
         <section class="msger" id="chatbox">
             <main class="msger-chat">    
                 {this.makeAllMessages()}
-                {// <div ref={(el) => {this.messagesEnd = el}}></div> 
-                }
                 <div id="dummyScroll"></div>
             </main>
-
             <form class="msger-inputarea" onSubmit={this.handleEnter}>
                 <input type="text" id="input" class="msger-input" placeholder="Send a message, you cunt"/>
-                <Button type="button" class="msger-send-btn" onClick={this.handleClick}>Send</Button>
+                <Button type="button" class="msger-send-btn" onClick={this.handleSend}>Send</Button>
             </form>
         </section>
         );
@@ -54,14 +52,15 @@ class ChatApp extends Component {
         }
     }
 
+    // bork header
     makeHeader() {
         return (
         <header class="msger-header">
             <div class="msger-header-title">
-            <i class="fas fa-comment-alt"></i> Bork.cc
+                <i class="fas fa-comment-alt"></i> Bork.cc
             </div>
             <div class="msger-header-options">
-            <span><i class="fas fa-cog"></i></span>
+                <span><i class="fas fa-cog"></i></span>
             </div>
         </header>
         );
@@ -69,19 +68,9 @@ class ChatApp extends Component {
 
     makeMessageBubble(messageID) {
         const messageData = this.state.messages[messageID];
-        var rightOrLeft = "";
-        if (messageData["userID"] == this.state["userID"]) {
-            rightOrLeft = "msg right-msg";
-        } else {
-            rightOrLeft = "msg left-msg";
-        }
+        var rightOrLeft = assignRightOrLeft(messageData, this.state.userID);
         var date = new Date(messageData.timestamp.seconds * 1000);
-        var timeFormatted = date.toTimeString().substr(0,5);
-        if (timeFormatted.substr(0, 2) <= 12) {
-            timeFormatted += " am";
-        } else {
-            timeFormatted = timeFormatted.substr(0, 2) % 12 + timeFormatted.substr(2, 5) + " pm";
-        }
+        var timeFormatted = getFormattedTime(date);
         return (
             <div class={rightOrLeft}>
                 <div class="msg-bubble">
@@ -106,9 +95,18 @@ class ChatApp extends Component {
         return allMessages;
     }
 
+    makeLogoutButton() {
+        return (
+            <div class="logoutButton">
+                <Button onClick={this.handleLogout}>Logout</Button>
+            </div>
+        );
+    }
+
     render() {
         return (
             <div>
+                {this.makeLogoutButton()}
                 {this.makeHeader()}
                 {this.makeChat(this.state.messages)}
             </div>
@@ -129,12 +127,11 @@ class ChatApp extends Component {
                         }
                     });
                     this.state.numMessagesReceived += 1;
-                    console.log(data);
             });
         });
     }
     
-    handleClick() {
+    handleSend() {
         const inputForm = document.getElementById("input");
         const message = inputForm.value;
         inputForm.value = "";
@@ -149,11 +146,40 @@ class ChatApp extends Component {
             });
         }
     }
+    
+    //if logout, delete user authentication from databse
+    handleLogout() {
+        firebase.auth().signOut().then(function() {
+        })
+        .catch(function (error) {
+            console.log("ERROR:", error);
+        })
+    }
 
     handleEnter(event) {
         event.preventDefault();
-        this.handleClick();
+        this.handleSend();
     }
+}
+
+function getFormattedTime(date) {
+    var timeFormatted = date.toTimeString().substr(0,5);
+    if (timeFormatted.substr(0, 2) <= 12) {
+        timeFormatted += " am";
+    } else {
+        timeFormatted = timeFormatted.substr(0, 2) % 12 + timeFormatted.substr(2, 5) + " pm";
+    }
+    return timeFormatted
+}
+
+function assignRightOrLeft(messageData, userID) {
+    var rightOrLeft = "";
+    if (messageData["userID"] == userID) {
+        rightOrLeft = "msg right-msg";
+    } else {
+        rightOrLeft = "msg left-msg";
+    }
+    return rightOrLeft;
 }
 
 export default ChatApp;

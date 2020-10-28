@@ -16,23 +16,15 @@ auth.onAuthStateChanged(firebaseUser => {
     // create a listener because client writes to database --> cloud function is called --> userId is assigned
     db.collection("users").doc(auth.currentUser.uid).onSnapshot(function(doc) {
       const data = doc.data();
-      console.log("DOC DATA:", data);
-      if (data.chat_id != null && data.chat_id != "not_a_id") {
-        console.log("CHATID WAS NOT NULL");
+      if (data.chat_id != null) {
         const assignedChatID = data.chat_id;
         const username = data.username;
-        console.log(username);
-        console.log("ASSIGNED CHATID:", assignedChatID);
         ReactDOM.render(
           <ChatApp chatID={assignedChatID} username={username}/>,
           document.getElementById('root')
         );
       }
     }) 
-    // if authunticated --> move to the next page
-    // Have a listener for changes made to the 'users/{userId}/' AND 'users/{userId}/chatId' exists
-    // Have a listener for changes made to the 'users/{userId}/', get the chatID, and pass it as a prop to chatApp
-
   }   
   else {
     ReactDOM.render(
