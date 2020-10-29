@@ -68,8 +68,8 @@ function getCustomTags() {
 function writeUserData(userId, username, premadeTags, customTags) {
     auth.currentUser.chatId = null
     console.log('userid: ',userId)
-    db.collection("users").doc(userId)
-        .set({
+    db.collection("users").doc(userId).set({
+        user_id: userId,
         username: username,
         premade_tags: premadeTags,
         custom_tags: customTags

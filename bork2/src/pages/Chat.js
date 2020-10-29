@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import {auth, db, firebase} from '../services/firebase';
+import {auth, db, functions} from '../services/firebase';
 
 import './Chat.css';
 import { BorkHeader } from './Login';
@@ -146,7 +146,7 @@ class ChatApp extends Component {
     }
 
     getMessage() {
-        const ref = firebase.firestore().collection("chats").doc(this.state.chatID).collection("messages").orderBy("timestamp", "desc").limit(1);
+        const ref = db.collection("chats").doc(this.state.chatID).collection("messages").orderBy("timestamp", "desc").limit(1);
         ref.onSnapshot(collection => {
             collection.forEach(doc => {
                 const data = doc.data();
@@ -165,7 +165,7 @@ class ChatApp extends Component {
 
     getParticipants() {
         console.log("im getting the participants");
-        const ref = firebase.firestore().collection("chats").doc(this.state.chatID).collection("participants").orderBy("timestamp");
+        const ref = db.collection("chats").doc(this.state.chatID).collection("participants").orderBy("timestamp");
         ref.onSnapshot(collection => {
             var participants = 0;
             collection.forEach(doc => {
@@ -206,23 +206,26 @@ class ChatApp extends Component {
                 username: this.state.username,
                 messageNumber: this.state.numMessagesSent,
             });
+            db.collection("chats").doc(this.state.chatID).update({
+                last_message_time: new Date()
+            })
         }
     }
     
     // this deletes from local participants, need to delete from DATABASE
     handleLogout() {
         console.log("a")
-        const deleteInfo = firebase.functions().httpsCallable('deleteUserInformation')
+        const deleteInfo = functions.httpsCallable('deleteUserInformation')
         console.log("b")
         deleteInfo({userId: this.state.userID, chatId: this.state.chatID}).then(result => {
-            console.log("b.5");
+            console.log("b.5")
             console.log(result.data); // Will tell you if they signed them out or not
         })
         .catch(function (error) {
             console.log(error);
         });
         console.log("c");
-        firebase.auth().signOut().then(() => {
+        auth.signOut().then(() => {
             
         })
         .catch(function (error) {

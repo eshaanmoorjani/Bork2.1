@@ -1,46 +1,36 @@
 const functions = require('firebase-functions');
-const firebase_tools = require('firebase-tools');
+// const firebase_tools = require('firebase-tools');
+// const promisePool = require('es6-promise-pool');
 const admin = require('firebase-admin');
 admin.initializeApp();
 
 const firestore = admin.firestore();
 
-// // deletes chats with 0 people every 5 minutes
-// exports.deleteChats = functions.pubsub.schedule('every 5 minutes').onRun((context) => {
-//     console.log('This will be run every 5 minutes!');
-//     return null;
-// });
-
-exports.deleteUserInformation = functions.https.onCall((data, context) => {
+exports.deleteUserInfo = functions.https.onCall(async (data, context) => {
     const userId = data.userId;
     const chatId = data.chatId;
-    
-    return null; // make sure to return a promise
-    // // delete the user document
-    // const userDeletePath = firestore.collection('users').doc(userId)
-    // await firebase_tools.firestore
-    //   .delete(userDeletePath, {
-    //     project: process.env.GCLOUD_PROJECT,
-    //     recursive: true,
-    //     yes: true,
-    //     token: functions.config().fb.token
-    //   });
-
-    // // delete them from the chat
-    // await firestore.collection('chats').doc(chatId).update({
-    //     num_participants: admin.firestore.FieldValue.increment(-1)
-    // });
-
-    // const chatDeletePath = firestore.collection('chats').doc('chatId').collection('participants').doc(userId)
-    // await firebase_tools.firestore
-    //     .delete(chatDeletePath, {
-    //     project: process.env.GCLOUD_PROJECT,
-    //     recursive: true,
-    //     yes: true,
-    //     token: functions.config().fb.token
-    // });
+    return await deleteUserInfoHelper(userId, chatId)
 });
 
+async function deleteUserInfoHelper(userId, chatId) {
+    console.log("userid to delete: ",userId)
+    console.log("chatid to delete: ",chatId)
+    
+    // delete the user document
+    const userDeletePath = firestore.collection('users').doc(userId)
+    const userDeleteInfo = await userDeletePath.delete();
+
+    if(chatId !== null) {
+        // delete from current chat participants document
+        const chatParticipantsPath = firestore.collection('chats').doc(chatId).collection('participants').doc(userId)
+        const chatDeleteInfo = await chatParticipantsPath.delete();
+        const lowerParticipantsInfo = await firestore.collection('chats').doc(chatId).update({
+            num_participants: admin.firestore.FieldValue.increment(-1)
+        })
+    }
+
+    return "sucess"
+}
 
 // listens for changes to the number of users and then finds the best chat for them
 exports.assignChatroom = functions.firestore.document('users/{userId}').onWrite(async (change, context) => {
@@ -75,14 +65,6 @@ exports.assignChatroom = functions.firestore.document('users/{userId}').onWrite(
         .catch(function(error) {
             console.error("Error adding document: ",error)
         });
-        // console.log("chatId is null")
-        // chatId = firestore.collection('chats').doc().documentId()
-        // console.log("new chatid: ",chatId)
-        // firestore.collection("chats").document(chatId).add({
-        //     num_participants: 1,
-        //     tags: userTags
-        // })
-        // modify the chatId
     }
 
     console.log("CHATID: ",chatId)
@@ -123,7 +105,6 @@ async function findBestChat(userTags, userId, username) {
                 chatId = doc.id
                 chatTags = doc.tags
                 score = 1 // chatScore(chatId, chatTags)
-                // console.log(doc.id, " => ", doc.data());
 
                 // short circuit if the perfect room is found
                 if(score === 1) { // score === userTags.length) {
@@ -149,67 +130,69 @@ function chatScore(chatTags, userTags) {
     return 1;
 }
 
-/**
- * Run once a day at midnight, to cleanup the users
- * Manually run the task here https://console.cloud.google.com/cloudscheduler
- */
-// exports.accountcleanup = functions.pubsub.schedule('every 5 minutes').onRun(async context => {
-//     // Fetch all user details.
-//     const inactiveUsers = await getInactiveUsers();
-//     // Use a pool so that we delete maximum `MAX_CONCURRENT` users in parallel.
-//     const promisePool = new PromisePool(() => deleteInactiveUser(inactiveUsers), MAX_CONCURRENT);
-//     await promisePool.start();
-//     console.log('User cleanup finished');
-// });
+// Delete accounts that are signed up but are inactive (what does this mean tho? What if they decide to just have their video on)
 
-/**
- * Deletes one inactive user from the list.
- */
-function deleteInactiveUser(inactiveUsers) {
+// Delete chats that haven't had an active message for 30 minutes (same issue as above? )
+
+// Delete inactive signed-out accounts
+exports.accountCleanup = functions.runWith({timeoutSeconds: 540, memory: '2GB'}).pubsub.schedule('every 30 minutes').onRun(async context => {
+    const promisePool = require('es6-promise-pool');
+    const PromisePool = promisePool.PromisePool;
+
+    // Maximum concurrent account deletions.
+    const MAX_CONCURRENT = 3;
+
+    const inactiveUsers = await getInactiveUsers();
+    console.log("length of inactive users: ", inactiveUsers.length)
+
+
+    const new_promisePool = new PromisePool(() => deleteInactiveUser(inactiveUsers), MAX_CONCURRENT);
+    await new_promisePool.start();
+    console.log('User cleanup finished');
+
+    return null
+})
+
+async function deleteInactiveUser(inactiveUsers) {
     if (inactiveUsers.length > 0) {
-      const userToDelete = inactiveUsers.pop();
+        const userToDelete = inactiveUsers.pop();
+        const userId = userToDelete.uid
       
-      // Delete the inactive user.
-      return admin.auth().deleteUser(userToDelete.uid).then(() => {
-        return console.log('Deleted user account', userToDelete.uid, 'because of inactivity');
-      }).catch((error) => {
-        return console.error('Deletion of inactive user account', userToDelete.uid, 'failed:', error);
-      });
-    } else {
-      return null;
-    }
-  }
+        // Delete the users chat information
+        var chatId = null;
+        const userInfo = firestore.collection('users').doc(userId);
+        const doc = await userInfo.get();
+        if(doc.exists) {
+            chatId = doc.chat_id
+        }
+        const ref = await deleteUserInfoHelper(userId, chatId)
 
-/**
- * Returns the list of all inactive users.
- */
+        // Delete the inactive user's authentication status
+        return admin.auth().deleteUser(userToDelete.uid).then(() => {
+            return console.log('Deleted user account', userToDelete.uid, 'because of inactivity');
+        }).catch((error) => {
+        return console.error('Deletion of inactive user account', userToDelete.uid, 'failed:', error);
+        });
+    } 
+    else {
+        return null;
+    }
+}
+
 async function getInactiveUsers(users = [], nextPageToken) {
     const result = await admin.auth().listUsers(1000, nextPageToken);
     // Find users that have not signed in in the last 30 days.
     const inactiveUsers = result.users.filter(
-        user => Date.parse(user.metadata.lastSignInTime) < (Date.now() - 24 * 60 * 60 * 1000));
+        user => Date.parse(user.metadata.lastSignInTime) < (Date.now() - 60 * 1000)); // 30 * 60 * 1000)); // Delete users after 30 minutes of inactivity
     
     // Concat with list of previously found inactive users if there was more than 1000 users.
     users = users.concat(inactiveUsers);
-    
+        
     // If there are more users to fetch we fetch them.
     if (result.pageToken) {
       return getInactiveUsers(users, result.pageToken);
     }
     
+    
     return users;
 }
-  
-
-
-    // firestore.collection("users").doc(userId).get().then(function(doc) {
-    //     if(doc.exists) {
-    //         console.log("Document data:", doc.data());
-    //     }
-    //     else {
-    //         console.log("No such document!");
-    //     }
-    //     return null
-    // }).catch(function(error) {
-    //     console.log("Error getting document:", error);
-    // });
