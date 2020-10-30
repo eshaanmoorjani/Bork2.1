@@ -31,12 +31,12 @@ function InputBoxes() {
     <Row>
       <Col md="auto">
         <Form.Label id="inputForm">Username</Form.Label>
-        <Form.Control id="username" type="username" placeholder="Your Username" size="lg"/> 
+        <Form.Control id="username" type="username" placeholder="Your Username" size="lg" autocomplete="off"/> 
       </Col>
 
       <Col md="auto">
         <Form.Label id="inputForm">Custom Tags (coming soon!)</Form.Label>
-        <Form.Control id="customTags" type="tags" disabled={true} placeholder="Enter tags" size="lg"/> 
+        <Form.Control id="customTags" type="tags" disabled={true} placeholder="Enter tags" size="lg" autocomplete="off"/> 
       </Col>
 
       <GenerateTagBoxes tags={["Among Us"]} />

@@ -51,7 +51,7 @@ class ChatApp extends Component {
                 <div id="dummyScroll"></div>
             </main>
             <form class="msger-inputarea" onSubmit={this.handleEnter}>
-                <input type="text" id="input" class="msger-input" placeholder="Send a message, you cunt"/>
+                <input type="text" id="input" class="msger-input" autocomplete="off" placeholder="Send a message, you cunt"/>
                 <Button type="button" class="msger-send-btn" onClick={this.handleSend}>Send</Button>
             </form>
         </section>
