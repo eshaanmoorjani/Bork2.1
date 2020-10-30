@@ -11,5 +11,19 @@
   "firestore": {
     "rules": "src/services/firebase.rules",
     "indexes": "src/services/firestore_indexes.json"
+  },
+  "hosting": {
+    "public": "build",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
   }
 }

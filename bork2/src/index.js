@@ -16,7 +16,7 @@ auth.onAuthStateChanged(firebaseUser => {
     // create a listener because client writes to database --> cloud function is called --> chatId is assigned
     db.collection("users").doc(auth.currentUser.uid).onSnapshot(function(doc) {
       const data = doc.data();
-      if (data.chat_id != null) {
+      if (data != null && data.chat_id != null) {
         const assignedChatID = data.chat_id;
         const username = data.username;
         ReactDOM.render(

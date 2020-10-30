@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import {auth, db, functions} from '../services/firebase';
+import {auth, db, functions, firebase} from '../services/firebase';
 
 import './Chat.css';
 import { BorkHeader } from './Login';
@@ -213,11 +213,11 @@ class ChatApp extends Component {
     }
     
     // this deletes from local participants, need to delete from DATABASE
-    handleLogout() {
+    async handleLogout() {
         console.log("a")
-        const deleteInfo = functions.httpsCallable('deleteUserInformation')
+        const deleteInfo = functions.httpsCallable('deleteUserInfo')
         console.log("b")
-        deleteInfo({userId: this.state.userID, chatId: this.state.chatID}).then(result => {
+        await deleteInfo({userId: this.state.userID, chatId: this.state.chatID}).then(result => { // CORS error that wasn't there earlier
             console.log("b.5")
             console.log(result.data); // Will tell you if they signed them out or not
         })

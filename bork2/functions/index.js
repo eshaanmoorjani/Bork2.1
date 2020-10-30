@@ -139,13 +139,12 @@ exports.accountCleanup = functions.runWith({timeoutSeconds: 540, memory: '2GB'})
     const promisePool = require('es6-promise-pool');
     const PromisePool = promisePool.PromisePool;
 
-    // Maximum concurrent account deletions.
-    const MAX_CONCURRENT = 3;
-
     const inactiveUsers = await getInactiveUsers();
     console.log("length of inactive users: ", inactiveUsers.length)
 
-
+    // Maximum concurrent account deletions.
+    const MAX_CONCURRENT = Math.max(3, inactiveUsers.length);
+    // await deleteInactiveUser(inactiveUsers)
     const new_promisePool = new PromisePool(() => deleteInactiveUser(inactiveUsers), MAX_CONCURRENT);
     await new_promisePool.start();
     console.log('User cleanup finished');
@@ -155,18 +154,27 @@ exports.accountCleanup = functions.runWith({timeoutSeconds: 540, memory: '2GB'})
 
 async function deleteInactiveUser(inactiveUsers) {
     if (inactiveUsers.length > 0) {
+        console.log("deleting inactive user")
         const userToDelete = inactiveUsers.pop();
         const userId = userToDelete.uid
       
+        console.log("deleting chat information")
         // Delete the users chat information
-        var chatId = null;
         const userInfo = firestore.collection('users').doc(userId);
-        const doc = await userInfo.get();
-        if(doc.exists) {
-            chatId = doc.chat_id
-        }
+        var chatId = await userInfo.get().then(function(doc) {
+            console.log(doc.id, " => "+doc.data())
+            if(doc.exists) {
+                console.log("doc.chat_id: ", doc.data().chat_id)
+                chatId = doc.data().chat_id
+                return chatId
+            }
+            return null
+        }).catch(function(error) {
+            console.error("broke here ", error)
+        });
         const ref = await deleteUserInfoHelper(userId, chatId)
 
+        console.log("deleting user information")
         // Delete the inactive user's authentication status
         return admin.auth().deleteUser(userToDelete.uid).then(() => {
             return console.log('Deleted user account', userToDelete.uid, 'because of inactivity');
@@ -183,7 +191,7 @@ async function getInactiveUsers(users = [], nextPageToken) {
     const result = await admin.auth().listUsers(1000, nextPageToken);
     // Find users that have not signed in in the last 30 days.
     const inactiveUsers = result.users.filter(
-        user => Date.parse(user.metadata.lastSignInTime) < (Date.now() - 60 * 1000)); // 30 * 60 * 1000)); // Delete users after 30 minutes of inactivity
+        user => Date.parse(user.metadata.lastSignInTime) < (Date.now() - 30 * 60 * 1000)); // 30 * 60 * 1000)); // Delete users after 30 minutes of inactivity
     
     // Concat with list of previously found inactive users if there was more than 1000 users.
     users = users.concat(inactiveUsers);
