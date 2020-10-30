@@ -42,9 +42,9 @@ body {
     font-size: 20px;
   }
   
-  #input {
-    color: white;
-    margin: 00px;
+  #login-input {
+    position: relative;
+    top: 500px;
     text-align: center;
   }
 

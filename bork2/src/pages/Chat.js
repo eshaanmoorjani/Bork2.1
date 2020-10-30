@@ -51,7 +51,7 @@ class ChatApp extends Component {
                 <div id="dummyScroll"></div>
             </main>
             <form class="msger-inputarea" onSubmit={this.handleEnter}>
-                <input type="text" id="input" class="msger-input" autocomplete="off" placeholder="Send a message, you cunt"/>
+                <input type="text" id="input" class="msger-input" autocomplete="off" placeholder="Send a message!"/>
                 <Button type="button" class="msger-send-btn" onClick={this.handleSend}>Send</Button>
             </form>
         </section>
@@ -71,7 +71,7 @@ class ChatApp extends Component {
         return (
         <header class="msger-header">
             <div class="msger-header-title">
-                <i class="fas fa-comment-alt"></i> Bork.cc
+                <i class="fas fa-comment-alt"></i> Meet.Game
             </div>
             <div class="msger-header-options">
                 <span><i class="fas fa-cog"></i></span>

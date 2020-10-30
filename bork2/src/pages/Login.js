@@ -14,11 +14,11 @@ export function App() {
 }
 
 export function BorkHeader() {
-  return (<h1 id="header">Bork</h1>);
+  return (<h1 id="header">Meet.Game</h1>);
 }
 
 function BorkDescription() {
-  return (<h2>Bork matches gamers to other gamers. Find Among Us lobbies, Valorant teams, and some fun people to chill with!</h2>);
+  return (<h2>Find Among Us lobbies, Valorant teams, and some fun people to chill with!</h2>);
 }
 
 function NoUsernameWarning() {
@@ -26,7 +26,7 @@ function NoUsernameWarning() {
 }
 
 function InputBoxes() {
-  return (<Form inline className="fixed-bottom" id="input">
+  return (<Form inline id="login-input">
     <Container fluid>
     <Row>
       <Col md="auto">
@@ -45,7 +45,7 @@ function InputBoxes() {
       }
 
       <Col md="auto">
-        <Form.Label id="inputForm">Bork!</Form.Label>
+        <Form.Label id="inputForm">Enter a lobby!</Form.Label>
         <Button id="submit_button" variant="info" size="lg" >Submit</Button>
       </Col>
 
