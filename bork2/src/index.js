@@ -25,7 +25,7 @@ auth.onAuthStateChanged(firebaseUser => {
         );
       }
     }) 
-  }   
+  }  
   else {
     ReactDOM.render(
       <App />,

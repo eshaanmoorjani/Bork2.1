@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import {auth, db, functions, firebase} from '../services/firebase';
+import {auth, db, rt_db, functions, firebase} from '../services/firebase';
 
 import './Chat.css';
 import { BorkHeader } from './Login';
@@ -30,8 +30,17 @@ class ChatApp extends Component {
         this.handleSend = this.handleSend.bind(this);
         this.handleEnter = this.handleEnter.bind(this);
         this.handleLogout = this.handleLogout.bind(this);
+        this.chatConnection = this.chatConnection.bind(this);
+        this.sendMessage = this.sendMessage.bind(this);
+        this.chatConnection();
         this.getMessage();
         this.getParticipants();
+    }
+
+    chatConnection() {
+        firebase.database().ref('users/'+this.state.userID+"/is_disconnected").set(false); // ayoooo dont change baby girl
+        var presenceRef = rt_db.ref("users/"+this.state.userID+"/is_disconnected");     
+        presenceRef.onDisconnect().set(true);
     }
     
     makeChat() {
@@ -74,22 +83,12 @@ class ChatApp extends Component {
     // need to make multiple lines of text if too long
     makeMessageBubble(messageID) {
         const messageData = this.state.messages[messageID];
-        var rightOrLeft = assignRightOrLeft(messageData, this.state.userID);
-        var date = new Date(messageData.timestamp.seconds * 1000);
-        var timeFormatted = getFormattedTime(date);
-        return (
-            <div class={rightOrLeft}>
-                <div class="msg-bubble">
-                    <div class="msg-info">
-                        <div class="msg-info-name">{messageData.username}</div>
-                        <div class="msg-info-time">{timeFormatted}</div>
-                    </div>
-                    <div class="msg-text">
-                        {messageData.content}
-                    </div>
-                </div>
-            </div>
-        );
+        // check if its a disconnect message
+        if (messageData.type == "user_content") {
+            return makeUserContentMessage(messageData, this.state.userID);
+        } else {
+            return makeEntryStatusMessage(messageData);
+        }
     }
 
     makeAllMessages() {
@@ -164,23 +163,29 @@ class ChatApp extends Component {
     }
 
     getParticipants() {
-        console.log("im getting the participants");
         const ref = db.collection("chats").doc(this.state.chatID).collection("participants").orderBy("timestamp");
         ref.onSnapshot(collection => {
-            var participants = 0;
+            console.log("THE PARTICIPANTS HAVE CHANGED")
+            var numParticipants = 0;
+            var participants = {};
             collection.forEach(doc => {
-                participants++;
+                numParticipants++;
                 const data = doc.data();
                 console.log(data);
-                this.setState({
-                    ...this.state,
-                    numParticipants: participants,
-                    participants: {
-                        ...this.state.participants,
-                        [data.user_id]: data.username,
-                    },
-                });
+                participants[data.user_id] = data.username;
+                // this.setState({
+                //     ...this.state,
+                //     numParticipants: participants,
+                //     participants: {
+                //         ...this.state.participants,
+                //         [data.user_id]: data.username,
+                //     },
+                // });
             });
+            this.setState({
+                numParticipants: numParticipants,
+                participants: participants,
+            })
         });
     }
 
@@ -199,17 +204,22 @@ class ChatApp extends Component {
         inputForm.value = "";
         if (message != "") {
             this.state.numMessagesSent += 1;
-            db.collection("chats/").doc(this.state.chatID).collection("messages/").add({
-                content: message,
-                timestamp: new Date(),
-                userID: this.state.userID,
-                username: this.state.username,
-                messageNumber: this.state.numMessagesSent,
-            });
-            db.collection("chats").doc(this.state.chatID).update({
-                last_message_time: new Date()
-            })
+            this.sendMessage(message);
         }
+    }
+
+    sendMessage(message) {
+        db.collection("chats/").doc(this.state.chatID).collection("messages/").add({
+            content: message,
+            timestamp: new Date(),
+            userID: this.state.userID,
+            username: this.state.username,
+            messageNumber: this.state.numMessagesSent,
+            type: "user_content",
+        });
+        db.collection("chats").doc(this.state.chatID).update({
+            last_message_time: new Date()
+        })
     }
     
     // this deletes from local participants, need to delete from DATABASE
@@ -217,7 +227,7 @@ class ChatApp extends Component {
         console.log("a")
         const deleteInfo = functions.httpsCallable('deleteUserInfo')
         console.log("b")
-        await deleteInfo({userId: this.state.userID, chatId: this.state.chatID}).then(result => { // CORS error that wasn't there earlier
+        await deleteInfo({userId: this.state.userID, chatId: this.state.chatID, username: this.state.username}).then(result => { // CORS error that wasn't there earlier
             console.log("b.5")
             console.log(result.data); // Will tell you if they signed them out or not
         })
@@ -257,6 +267,33 @@ function assignRightOrLeft(messageData, userID) {
         rightOrLeft = "msg left-msg";
     }
     return rightOrLeft;
+}
+// yo when can i save to test 2 min okok
+function makeUserContentMessage(messageData, userID) {
+    var rightOrLeft = assignRightOrLeft(messageData, userID);
+    var date = new Date(messageData.timestamp.seconds * 1000);
+    var timeFormatted = getFormattedTime(date);
+    return (
+        <div class={rightOrLeft}>
+            <div class="msg-bubble">
+                <div class="msg-info">
+                    <div class="msg-info-name">{messageData.username}</div>
+                    <div class="msg-info-time">{timeFormatted}</div>
+                </div>
+                <div class="msg-text">
+                    {messageData.content}
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function makeEntryStatusMessage(messageData) {
+    return (
+        <div class="disconnect-msg">
+            {messageData.content}
+        </div>
+    );
 }
 
 export default ChatApp;

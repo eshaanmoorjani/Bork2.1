@@ -5,32 +5,7 @@ const admin = require('firebase-admin');
 admin.initializeApp();
 
 const firestore = admin.firestore();
-
-exports.deleteUserInfo = functions.https.onCall(async (data, context) => {
-    const userId = data.userId;
-    const chatId = data.chatId;
-    return await deleteUserInfoHelper(userId, chatId)
-});
-
-async function deleteUserInfoHelper(userId, chatId) {
-    console.log("userid to delete: ",userId)
-    console.log("chatid to delete: ",chatId)
-    
-    // delete the user document
-    const userDeletePath = firestore.collection('users').doc(userId)
-    const userDeleteInfo = await userDeletePath.delete();
-
-    if(chatId !== null) {
-        // delete from current chat participants document
-        const chatParticipantsPath = firestore.collection('chats').doc(chatId).collection('participants').doc(userId)
-        const chatDeleteInfo = await chatParticipantsPath.delete();
-        const lowerParticipantsInfo = await firestore.collection('chats').doc(chatId).update({
-            num_participants: admin.firestore.FieldValue.increment(-1)
-        })
-    }
-
-    return "sucess"
-}
+const realtime = admin.database();
 
 // listens for changes to the number of users and then finds the best chat for them
 exports.assignChatroom = functions.firestore.document('users/{userId}').onWrite(async (change, context) => {
@@ -38,7 +13,6 @@ exports.assignChatroom = functions.firestore.document('users/{userId}').onWrite(
     const userInfo = change.after.data();
     console.log(userInfo)
     if(userInfo['chat_id'] !== undefined) {
-        console.log("this solved the issue")
         return null;
     }
 
@@ -89,6 +63,16 @@ exports.assignChatroom = functions.firestore.document('users/{userId}').onWrite(
         username: username,
         timestamp: new Date(),
     })
+
+    // send a connect message
+    firestore.collection('chats').doc(chatId).collection("messages").add({
+        content: username + " has joined.",
+        timestamp: new Date(),
+        userID: userId,
+        username: username,
+        messageNumber: -1,
+        type: "user_connect",
+    });
 });
 
 async function findBestChat(userTags, userId, username) {
@@ -130,9 +114,94 @@ function chatScore(chatTags, userTags) {
     return 1;
 }
 
-// Delete accounts that are signed up but are inactive (what does this mean tho? What if they decide to just have their video on)
 
-// Delete chats that haven't had an active message for 30 minutes (same issue as above? )
+exports.removeDisconnectedUsers = functions.database.ref('/users/{userId}/is_disconnected').onWrite(async (change, context) => {
+    const is_disconnected = change.after.val();
+    const userId = context.params.userId;
+    // console.log(original)
+    // console.log(userId)
+    if(is_disconnected) {
+        console.log("about to timeout")
+        await setTimeout(async function() {
+            await realtime.ref('/users/' + userId + "/is_disconnected").once('value').then(async function(snapshot) {
+                if(snapshot.val()) {
+                    console.log("should delete them")
+                    const userInfo = await getChatId(userId)
+                    console.log("got chat info")
+                    await deleteUserInfoHelper(userId, userInfo[0], userInfo[1])
+                    console.log("deletedUserInfo")
+                    await deleteChatInfo(userId, userInfo[0], userInfo[1])
+                    console.log("deletedChatInfo")
+                    return 1
+                }
+                console.log("should not delete")
+                return null
+            });
+            return null
+        },10000)
+    }
+
+});
+
+exports.deleteUserInfo = functions.https.onCall(async (data, context) => {
+    const userId = data.userId;
+    const chatId = data.chatId;
+    const username = data.username
+    await deleteUserInfoHelper(userId)
+    console.log("switching to the next: ", chatId)
+    await deleteChatInfo(userId, chatId, username)
+    return "success"
+});
+
+async function getChatId(userId) {
+    const userInfo = firestore.collection('users').doc(userId);
+
+    return await userInfo.get().then(function(doc) {
+        console.log(doc.id, " => "+doc.data())
+        if(doc.exists) {
+            console.log("doc.chat_id: ", doc.data().chat_id)
+            const chatId = doc.data().chat_id
+            const username = doc.data().username
+            return [chatId, username]
+        }
+        return [null, null]
+    }).catch(function(error) {
+        console.error("broke here ", error)
+    });
+}
+
+async function deleteUserInfoHelper(userId) {
+    console.log("userid to delete: ",userId)
+    
+    // delete the user document from firestore and realtime database
+    const userDeletePath = firestore.collection('users').doc(userId)
+    const userDeleteInfo = await userDeletePath.delete();
+    await realtime.ref('users/'+userId).remove()
+    return "success"
+}
+
+async function deleteChatInfo(userId, chatId, username) {
+    // delete from current chat participants document
+    const chatParticipantsPath = firestore.collection('chats').doc(chatId).collection('participants').doc(userId)
+    console.log("a")
+    const chatDeleteInfo = await chatParticipantsPath.delete();
+    console.log("b")
+    const lowerParticipantsInfo = await firestore.collection('chats').doc(chatId).update({
+        num_participants: admin.firestore.FieldValue.increment(-1)
+    })
+    console.log("c")
+
+    // send user_disconnect message
+    firestore.collection('chats').doc(chatId).collection("messages").add({
+        content: username + " has rage quit.",
+        timestamp: new Date(),
+        userID: userId,
+        username: username,
+        messageNumber: -1,
+        type: "user_disconnect",
+    });
+    console.log("d")
+}
 
 // Delete inactive signed-out accounts
 exports.accountCleanup = functions.runWith({timeoutSeconds: 540, memory: '2GB'}).pubsub.schedule('every 30 minutes').onRun(async context => {
@@ -158,21 +227,8 @@ async function deleteInactiveUser(inactiveUsers) {
         const userToDelete = inactiveUsers.pop();
         const userId = userToDelete.uid
       
-        console.log("deleting chat information")
-        // Delete the users chat information
-        const userInfo = firestore.collection('users').doc(userId);
-        var chatId = await userInfo.get().then(function(doc) {
-            console.log(doc.id, " => "+doc.data())
-            if(doc.exists) {
-                console.log("doc.chat_id: ", doc.data().chat_id)
-                chatId = doc.data().chat_id
-                return chatId
-            }
-            return null
-        }).catch(function(error) {
-            console.error("broke here ", error)
-        });
-        const ref = await deleteUserInfoHelper(userId, chatId)
+        // Delete the user's database information
+        const ref = await deleteUserInfoHelper(userId)
 
         console.log("deleting user information")
         // Delete the inactive user's authentication status
@@ -200,7 +256,6 @@ async function getInactiveUsers(users = [], nextPageToken) {
     if (result.pageToken) {
       return getInactiveUsers(users, result.pageToken);
     }
-    
     
     return users;
 }

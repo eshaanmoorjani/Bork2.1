@@ -96,6 +96,8 @@
   .msg-info-name {
     margin-right: 10px;
     font-weight: bold;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .msg-info-time {
     font-size: 0.85em;
@@ -117,6 +119,11 @@
     margin: 0 0 0 10px;
   }
   
+  .disconnect-msg {
+    font-size: 10px;
+    text-align: center;
+  }
+
   .msger-inputarea {
     display: flex;
     padding: 10px;

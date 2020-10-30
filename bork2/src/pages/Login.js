@@ -35,11 +35,14 @@ function InputBoxes() {
       </Col>
 
       <Col md="auto">
-        <Form.Label id="inputForm">Comma Separated Tags</Form.Label>
-        <Form.Control id="customTags" type="tags" placeholder="Enter tags" size="lg"/> 
+        <Form.Label id="inputForm">Custom Tags (coming soon!)</Form.Label>
+        <Form.Control id="customTags" type="tags" disabled={true} placeholder="Enter tags" size="lg"/> 
       </Col>
 
-      <GenerateTagBoxes tags={["Among Us", "League of Legends", "Valorant", "Brawl", "Overwatch", "CS:GO"]} />
+      <GenerateTagBoxes tags={["Among Us"]} />
+      {
+        //, "League of Legends", "Valorant", "Brawl", "Overwatch", "CS:GO"
+      }
 
       <Col md="auto">
         <Form.Label id="inputForm">Bork!</Form.Label>
@@ -86,6 +89,24 @@ class GenerateTagBoxes extends Component {
       tagForms.push(tag);
       this.state.tagBoxes.push(tag);
     }
+
+    // temporary other games coming soon tag
+    tagForms.push(
+      <Form.Check
+      inline
+      id="poop"
+      label="Other games"
+      disabled={true}
+      checked={false}
+      name="tag_checkbox"
+      type="checkbox"
+/>
+    )
+    tagForms.push(
+      <div id="also-coming-soon">
+        Also coming soon!
+      </div>
+    )
     return (tagForms);
   }
 
@@ -109,11 +130,14 @@ class TagBox extends Component {
   }
   
   render() {
+    // disabled = true, checked=true, temporarily
     return (
         <Form.Check
           inline
           id={this.tag}
           label={this.tag}
+          disabled={true}
+          checked={true}
           name="tag_checkbox"
           type="checkbox"
         />
