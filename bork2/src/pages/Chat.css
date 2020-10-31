@@ -33,7 +33,7 @@
     justify-content: space-between;
     margin: 5%;
     width: 800px;
-    height: 850px;
+    height: 900px;
     border: var(--border);
     border-radius: 5px;
     background: var(--msger-bg);
@@ -99,6 +99,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
+
   .msg-info-time {
     font-size: 0.85em;
   }
@@ -120,7 +121,7 @@
   }
   
   .disconnect-msg {
-    font-size: 10px;
+    font-size: 15px;
     text-align: center;
   }
 

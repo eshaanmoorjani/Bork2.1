@@ -132,7 +132,11 @@ exports.removeDisconnectedUsers = functions.database.ref('/users/{userId}/is_dis
                     console.log("deletedUserInfo")
                     await deleteChatInfo(userId, userInfo[0], userInfo[1])
                     console.log("deletedChatInfo")
-                    return 1
+                    return admin.auth().deleteUser(userId).then(() => {
+                        return console.log('Deleted user account', userId, 'because of inactivity');
+                    }).catch((error) => {
+                        return console.error('Deletion of inactive user account', userId, 'failed:', error);
+                    });
                 }
                 console.log("should not delete")
                 return null
@@ -182,6 +186,7 @@ async function deleteUserInfoHelper(userId) {
 
 async function deleteChatInfo(userId, chatId, username) {
     // delete from current chat participants document
+    console.log("-a, chatid: ",chatId)
     const chatParticipantsPath = firestore.collection('chats').doc(chatId).collection('participants').doc(userId)
     console.log("a")
     const chatDeleteInfo = await chatParticipantsPath.delete();
@@ -192,7 +197,7 @@ async function deleteChatInfo(userId, chatId, username) {
     console.log("c")
 
     // send user_disconnect message
-    firestore.collection('chats').doc(chatId).collection("messages").add({
+    await firestore.collection('chats').doc(chatId).collection("messages").add({
         content: username + " has rage quit.",
         timestamp: new Date(),
         userID: userId,
