@@ -1,0 +1,379 @@
+/* Frame 1 */
+.full-frame {
+    position: relative;
+    width: 1920px;
+    height: 1080px;
+    background: #FFFFFF;
+}
+
+
+/* Meet.Game Header */
+.meet-game-header {
+    position: absolute;
+    width: 546px;
+    height: 174px;
+    left: 1325px;
+    top: 0px;
+
+    font-family: Sura;
+    font-style: normal;
+    font-weight: normal;
+    font-size: 110px;
+    line-height: 174px;
+    /* identical to box height */
+
+    color: #000000;
+}
+
+
+/* Other games coming soon! */
+.coming-soon {
+    position: absolute;
+    width: 670px;
+    height: 54px;
+    left: 1250px;
+    top: 992px;
+
+    font-family: Open Sans;
+    font-style: normal;
+    font-weight: normal;
+    font-size: 40px;
+    line-height: 54px;
+    display: flex;
+    align-items: center;
+    text-align: center;
+
+    color: #000000;
+}
+
+
+/* Left Frame */
+.left-frame {
+    position: absolute;
+    width: 1250px;
+    height: 1080px;
+    left: 0px;
+    top: 0px;
+
+    background: #000000;
+}
+
+
+/* Meet.Game description */
+.meet-game-description {
+    position: absolute;
+    width: 811px;
+    height: 95px;
+    left: 61px;
+    top: 70px;
+
+    font-family: Open Sans;
+    font-style: normal;
+    font-weight: normal;
+    font-size: 50px;
+    line-height: 68px;
+    text-align: center;
+
+    color: #FFFFFF;
+}
+
+
+/* Find Game Button */
+.solo-queue-button {
+    position: absolute;
+    width: 876px;
+    height: 77.4px;
+    left: 55px;
+    top: 705.6px;
+
+    background: #023E8A;
+    border-radius: 78px;
+
+    font-family: Open Sans;
+    font-style: normal;
+    font-weight: bold;
+    font-size: 40px;
+    line-height: 54px;
+    display: flex;
+    align-items: center;
+    text-align: center;
+
+    color: #FFFFFF;
+}
+
+
+/* Rectangle 1 */
+
+/* position: absolute;
+width: 876px;
+height: 77.4px;
+left: 55px;
+top: 705.6px;
+
+background: #023E8A;
+border-radius: 78px; */
+
+
+/* Solo Queue */
+/* 
+position: absolute;
+width: 876px;
+height: 80px;
+left: 55px;
+top: 703px;
+
+font-family: Open Sans;
+font-style: normal;
+font-weight: bold;
+font-size: 40px;
+line-height: 54px;
+display: flex;
+align-items: center;
+text-align: center;
+
+color: #FFFFFF; */
+
+
+
+/* Username box */
+
+/* position: absolute;
+width: 510px;
+height: 222px;
+left: 238px;
+top: 322px; */
+
+
+
+/* Rectangle 1 */
+.username-box {
+    position: absolute;
+    width: 510px;
+    height: 211px;
+    left: 238px;
+    top: 333px;
+
+    background: #000000;
+    border: 2px solid #FFFFFF;
+    box-sizing: border-box;
+    border-radius: 20px;
+}
+
+/* Group 1 */
+
+/* position: absolute;
+width: 510px;
+height: 222px;
+left: 238px;
+top: 322px; */
+
+
+
+/* Username Frame */
+
+/* position: absolute;
+width: 510px;
+height: 222px;
+left: 238px;
+top: 322px; */
+
+
+
+/* Username label */
+.username-label {
+    position: absolute;
+    width: 510px;
+    height: 77px;
+    left: 0px;
+    top: 31px;
+
+    font-family: Open Sans;
+    font-style: normal;
+    font-weight: normal;
+    font-size: 50px;
+    line-height: 68px;
+    display: flex;
+    align-items: center;
+    text-align: center;
+
+    color: #FFFFFF;
+}
+
+
+/* Username input form */
+.username-input {
+    position: absolute;
+    width: 404px;
+    height: 62px;
+    left: 54px;
+    top: 108px;
+
+    background: #FFFFFF;
+    border-radius: 20px;
+
+    font-family: Open Sans;
+    font-style: normal;
+    font-weight: normal;
+    font-size: 30px;
+    line-height: 41px;
+    /* identical to box height */
+    display: flex;
+    align-items: center;
+    text-align: center;
+
+    color: #000000;
+}
+
+/* Username text */
+
+/* position: absolute;
+width: 404px;
+height: 41px;
+left: 54px;
+top: 118px;
+
+font-family: Open Sans;
+font-style: normal;
+font-weight: normal;
+font-size: 30px;
+line-height: 41px;
+
+display: flex;
+align-items: center;
+text-align: center;
+
+color: #000000; */
+
+
+
+/* Create Lobby Button */
+/* 
+    position: absolute;
+    width: 420px;
+    height: 80px;
+    left: 61px;
+    top: 800px;
+
+    border-radius: 27px;
+ */
+
+/* Rectangle 1 */
+.join-lobby-button {
+    /* position: absolute;
+    left: 0%;
+    right: -1.69%;
+    top: 3.25%;
+    bottom: 0%; */
+
+    position: absolute;
+    width: 420px;
+    height: 80px;
+    left: 61px;
+    top: 800px;
+    border-radius: 27px;
+
+    background: #55ACEE;
+    border-radius: 114px;
+
+    font-family: Open Sans;
+    font-style: normal;
+    font-weight: bold;
+    font-size: 40px;
+    line-height: 54px;
+    display: flex;
+    align-items: center;
+    text-align: center;
+
+    color: #FFFFFF;
+}
+
+
+
+/* Join Lobby */
+
+/* position: absolute;
+left: 0%;
+right: 0%;
+top: 0%;
+bottom: 0%;
+
+font-family: Open Sans;
+font-style: normal;
+font-weight: bold;
+font-size: 40px;
+line-height: 54px;
+display: flex;
+align-items: center;
+text-align: center;
+
+color: #FFFFFF; */
+
+
+
+/* Create Lobby Button */
+
+
+/* position: absolute;
+width: 420px;
+height: 80px;
+left: 511px;
+top: 800px; */
+
+
+
+/* Rectangle 1 */
+.create-lobby-button {
+    /* position: absolute;
+    left: 0%;
+    right: -1.69%;
+    top: 3.25%;
+    bottom: 0%; */
+
+    position: absolute;
+    width: 420px;
+    height: 80px;
+    left: 511px;
+    top: 800px;
+
+    background: #55ACEE;
+    border-radius: 110px;
+    
+    font-family: Open Sans;
+    font-style: normal;
+    font-weight: bold;
+    font-size: 40px;
+    line-height: 54px;
+    display: flex;
+    align-items: center;
+    text-align: center;
+
+    color: #FFFFFF;
+}
+
+/* Join Lobby */
+
+/* position: absolute;
+left: 0%;
+right: 0%;
+top: 0%;
+bottom: 0%;
+
+font-family: Open Sans;
+font-style: normal;
+font-weight: bold;
+font-size: 40px;
+line-height: 54px;
+display: flex;
+align-items: center;
+text-align: center;
+
+color: #FFFFFF; */
+
+/* Among us character */
+.among-us-character {
+    position: absolute;
+    width: 1203px;
+    height: 1177px;
+    left: 653px;
+    top: -101px;
+}
