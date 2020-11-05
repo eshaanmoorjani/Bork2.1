@@ -1,7 +1,6 @@
 import './LoginV2.css';
 import React, { Component } from 'react';
 
-
 export default class App extends Component {
     constructor(props) {
         super(props);
@@ -16,9 +15,12 @@ export default class App extends Component {
     render() {
         return (
             <div class="full-frame">
+
                 <LeftFrame />
                 <RightFrame />
-                {this.amongUsCharacter()}
+                {//this.amongUsCharacter()
+                }
+                <BackgroundDots numDots={15}/>
             </div>
         );
     }
@@ -39,15 +41,15 @@ class LeftFrame extends Component {
         return (
             <div class="username-box">
                 <h3 class="username-label">Username</h3>
-                <input class="username-input" type="text" autcomplete="off" placeholder="Your username" required></input>
+                <input id="username" class="username-input" type="text" autcomplete="off" placeholder="Your username" required></input>
             </div>
         );
     }
 
     soloQueueButton() {
         return (
-            <button class="solo-queue-button" type="submit" >
-                Solo Queue
+            <button id="submit_button" class="solo-queue-button" type="submit" >
+                <p class="solo-queue-text">Solo Queue</p>
             </button>
         );
     }
@@ -55,7 +57,7 @@ class LeftFrame extends Component {
     createLobbyButton() {
         return (
             <button class="create-lobby-button">
-                Create Lobby
+                <p class="create-lobby-text">Create Lobby</p>
             </button>
         );
     }
@@ -63,7 +65,7 @@ class LeftFrame extends Component {
     joinLobbyButton() {
         return (
             <button class="join-lobby-button">
-                Join Lobby
+                <p class="join-lobby-text">Join Lobby</p>
             </button>
         );
     }
@@ -74,8 +76,10 @@ class LeftFrame extends Component {
                 {this.description()}
                 {this.usernameBox()}
                 {this.soloQueueButton()}
-                {this.createLobbyButton()}
-                {this.joinLobbyButton()}
+                <div class="create-join-lobby">
+                    {this.createLobbyButton()}
+                    {this.joinLobbyButton()}
+                </div>
             </div>
         );
     }
@@ -89,7 +93,7 @@ class RightFrame extends Component {
     header() {
         return (
             <h1 class="meet-game-header">
-                Meet.Game
+                Hog.Pub
             </h1>
         )
     }
@@ -107,6 +111,49 @@ class RightFrame extends Component {
             <div class="right-frame">
                 {this.header()}
                 {this.comingSoon()}
+            </div>
+        )
+    }
+}
+
+class BackgroundDots extends Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            numDots: this.props.numDots,
+        };
+    }
+
+    makeDot(xx, yy) {
+        const style = {
+            left: xx + "%",
+            bottom: yy + "%",
+        };
+        if (xx < 66) {
+            style["background-color"] = "#FFFFFF";
+        } else {
+            style["background-color"] = "#000000";
+        }
+
+        return (
+            <span class="dot" style={style}></span>
+        );
+    }
+
+    makeDots() {
+        var dots = [];
+        for (var i = 0; i < this.state.numDots; i++) {
+            var xx = Math.random() * 100;
+            var yy = Math.random() * 100;
+            dots.push(this.makeDot(xx, yy));
+        }
+        return dots;
+    }
+
+    render() {
+        return (
+            <div class="all-dots">
+                {this.makeDots()}
             </div>
         )
     }

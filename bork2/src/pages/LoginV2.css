@@ -1,26 +1,48 @@
 /* Frame 1 */
 .full-frame {
-    position: relative;
-    width: 1920px;
-    height: 1080px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    /* overflow: auto;  makes scrollbar if things are off screen */
     background: #FFFFFF;
 }
 
+/* Left Frame */
+.left-frame {
+    position: fixed;
+    width: 66%;
+    height: 100%;
+    left: 0px;
+    top: 0px;
+    background: #000000; /* #504f4f  is a bit softer gray */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.right-frame {
+    position: fixed;
+    width: 34%;
+    height: 100%;
+    left: 66%;
+    top: 0%;
+    background: #FFFFFF;
+    display: flex;
+    flex-direction: column;
+    /* justify-content: center; */
+    align-items: center;
+}
 
 /* Meet.Game Header */
 .meet-game-header {
-    position: absolute;
-    width: 546px;
-    height: 174px;
-    left: 1325px;
-    top: 0px;
-
-    font-family: Sura;
+    font-family: Tahoma;
     font-style: normal;
     font-weight: normal;
-    font-size: 110px;
+    font-size: 100px;
     line-height: 174px;
-    /* identical to box height */
 
     color: #000000;
 }
@@ -28,173 +50,58 @@
 
 /* Other games coming soon! */
 .coming-soon {
-    position: absolute;
-    width: 670px;
-    height: 54px;
-    left: 1250px;
-    top: 992px;
-
-    font-family: Open Sans;
+    position: fixed;
+    bottom: 3%;
+    font-family: Tahoma;
     font-style: normal;
     font-weight: normal;
     font-size: 40px;
     line-height: 54px;
-    display: flex;
-    align-items: center;
-    text-align: center;
-
+    
     color: #000000;
-}
-
-
-/* Left Frame */
-.left-frame {
-    position: absolute;
-    width: 1250px;
-    height: 1080px;
-    left: 0px;
-    top: 0px;
-
-    background: #000000;
 }
 
 
 /* Meet.Game description */
 .meet-game-description {
-    position: absolute;
-    width: 811px;
-    height: 95px;
-    left: 61px;
-    top: 70px;
-
-    font-family: Open Sans;
+    position: relative;
+    bottom: 20%;
+    font-family: Tahoma;
     font-style: normal;
     font-weight: normal;
-    font-size: 50px;
+    font-size: 40px;
     line-height: 68px;
     text-align: center;
 
     color: #FFFFFF;
 }
-
-
-/* Find Game Button */
-.solo-queue-button {
-    position: absolute;
-    width: 876px;
-    height: 77.4px;
-    left: 55px;
-    top: 705.6px;
-
-    background: #023E8A;
-    border-radius: 78px;
-
-    font-family: Open Sans;
-    font-style: normal;
-    font-weight: bold;
-    font-size: 40px;
-    line-height: 54px;
-    display: flex;
-    align-items: center;
-    text-align: center;
-
-    color: #FFFFFF;
-}
-
-
-/* Rectangle 1 */
-
-/* position: absolute;
-width: 876px;
-height: 77.4px;
-left: 55px;
-top: 705.6px;
-
-background: #023E8A;
-border-radius: 78px; */
-
-
-/* Solo Queue */
-/* 
-position: absolute;
-width: 876px;
-height: 80px;
-left: 55px;
-top: 703px;
-
-font-family: Open Sans;
-font-style: normal;
-font-weight: bold;
-font-size: 40px;
-line-height: 54px;
-display: flex;
-align-items: center;
-text-align: center;
-
-color: #FFFFFF; */
-
-
-
-/* Username box */
-
-/* position: absolute;
-width: 510px;
-height: 222px;
-left: 238px;
-top: 322px; */
-
 
 
 /* Rectangle 1 */
 .username-box {
-    position: absolute;
-    width: 510px;
-    height: 211px;
-    left: 238px;
-    top: 333px;
+    position: relative;
+    height: 20%;
+    width: 40%;
+    bottom: 5%;
+    align-self: center;
 
-    background: #000000;
     border: 2px solid #FFFFFF;
     box-sizing: border-box;
     border-radius: 20px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
-
-/* Group 1 */
-
-/* position: absolute;
-width: 510px;
-height: 222px;
-left: 238px;
-top: 322px; */
-
-
-
-/* Username Frame */
-
-/* position: absolute;
-width: 510px;
-height: 222px;
-left: 238px;
-top: 322px; */
-
 
 
 /* Username label */
 .username-label {
-    position: absolute;
-    width: 510px;
-    height: 77px;
-    left: 0px;
-    top: 31px;
-
-    font-family: Open Sans;
+    font-family: Tahoma;
     font-style: normal;
     font-weight: normal;
-    font-size: 50px;
-    line-height: 68px;
-    display: flex;
-    align-items: center;
-    text-align: center;
+    font-size: 40px;
 
     color: #FFFFFF;
 }
@@ -202,84 +109,86 @@ top: 322px; */
 
 /* Username input form */
 .username-input {
-    position: absolute;
-    width: 404px;
-    height: 62px;
-    left: 54px;
-    top: 108px;
-
     background: #FFFFFF;
     border-radius: 20px;
 
-    font-family: Open Sans;
+    font-family: Tahoma;
     font-style: normal;
     font-weight: normal;
     font-size: 30px;
-    line-height: 41px;
     /* identical to box height */
     display: flex;
     align-items: center;
     text-align: center;
+    justify-content: center;
 
     color: #000000;
 }
 
-/* Username text */
 
-/* position: absolute;
-width: 404px;
-height: 41px;
-left: 54px;
-top: 118px;
+/* Find Game Button */
+.solo-queue-button {
+    position: relative;
+    width: 80%;
+    height: 8%;
+    top: 10%;
 
-font-family: Open Sans;
-font-style: normal;
-font-weight: normal;
-font-size: 30px;
-line-height: 41px;
+    background: #023E8A;
+    border-radius: 78px;
+    padding: 0;
+    border: none;
 
-display: flex;
-align-items: center;
-text-align: center;
+    font-family: Tahoma;
+    font-style: normal;
+    font-weight: bold;
+    font-size: 40px;
+    line-height: 54px;
 
-color: #000000; */
+    display: flex;
+    align-items: center;
+    text-align: center;
+
+    color: #FFFFFF;
+}
+
+.solo-queue-text {
+    position: relative;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
+.create-join-lobby {
+    position: relative;
+    height: 8%;
+    width: 100%;
+    top: 11%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+}
 
 
-
-/* Create Lobby Button */
-/* 
-    position: absolute;
-    width: 420px;
-    height: 80px;
-    left: 61px;
-    top: 800px;
-
-    border-radius: 27px;
- */
 
 /* Rectangle 1 */
 .join-lobby-button {
-    /* position: absolute;
-    left: 0%;
-    right: -1.69%;
-    top: 3.25%;
-    bottom: 0%; */
-
-    position: absolute;
-    width: 420px;
-    height: 80px;
-    left: 61px;
-    top: 800px;
-    border-radius: 27px;
+    position: relative;
+    height: 100%;
+    width: 40%; /* half of the soloqueue button width */
 
     background: #55ACEE;
     border-radius: 114px;
+    padding: 0;
+    border: none;
 
-    font-family: Open Sans;
+    font-family: Tahoma;
     font-style: normal;
     font-weight: bold;
     font-size: 40px;
     line-height: 54px;
+
     display: flex;
     align-items: center;
     text-align: center;
@@ -287,58 +196,26 @@ color: #000000; */
     color: #FFFFFF;
 }
 
-
-
-/* Join Lobby */
-
-/* position: absolute;
-left: 0%;
-right: 0%;
-top: 0%;
-bottom: 0%;
-
-font-family: Open Sans;
-font-style: normal;
-font-weight: bold;
-font-size: 40px;
-line-height: 54px;
-display: flex;
-align-items: center;
-text-align: center;
-
-color: #FFFFFF; */
-
-
-
-/* Create Lobby Button */
-
-
-/* position: absolute;
-width: 420px;
-height: 80px;
-left: 511px;
-top: 800px; */
-
-
+.join-lobby-text {
+    position: relative;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: auto;
+    margin-bottom: auto;
+}
 
 /* Rectangle 1 */
 .create-lobby-button {
-    /* position: absolute;
-    left: 0%;
-    right: -1.69%;
-    top: 3.25%;
-    bottom: 0%; */
-
-    position: absolute;
-    width: 420px;
-    height: 80px;
-    left: 511px;
-    top: 800px;
+    position: relative;
+    height: 100%;
+    width: 40%;
 
     background: #55ACEE;
     border-radius: 110px;
+    padding: 0;
+    border: none;
     
-    font-family: Open Sans;
+    font-family: Tahoma;
     font-style: normal;
     font-weight: bold;
     font-size: 40px;
@@ -350,30 +227,40 @@ top: 800px; */
     color: #FFFFFF;
 }
 
-/* Join Lobby */
+.create-lobby-text {
+    position: relative;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: auto;
+    margin-bottom: auto;
+}
 
-/* position: absolute;
-left: 0%;
-right: 0%;
-top: 0%;
-bottom: 0%;
+.solo-queue-button:focus, .join-lobby-button:focus, .create-lobby-button:focus, .username-input:focus {
+    outline: none;
+}
 
-font-family: Open Sans;
-font-style: normal;
-font-weight: bold;
-font-size: 40px;
-line-height: 54px;
-display: flex;
-align-items: center;
-text-align: center;
+.solo-queue-button:hover, .join-lobby-button:hover, .create-lobby-button:hover {
+    color: black;
+}
 
-color: #FFFFFF; */
+canvas.dots {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
 
 /* Among us character */
 .among-us-character {
+    position: fixed;
+    left: 66%;
+}
+
+.dot {
     position: absolute;
-    width: 1203px;
-    height: 1177px;
-    left: 653px;
-    top: -101px;
+    height: 8px;
+    width: 8px;
+    background-color: #FFFFFF;
+    border-radius: 50%;
 }

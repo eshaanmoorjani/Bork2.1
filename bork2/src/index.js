@@ -1,12 +1,11 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
-import App from './pages/Login';
+import App from './pages/LoginV2';
 import ChatApp from './pages/Chat';
 import * as serviceWorker from './serviceWorker';
-import {db, auth} from './services/firebase'
-import {loginButtonTransition} from './pages/LoginFirebase'
-
+import {db, auth} from './services/firebase';
+import {loginButtonTransition} from './pages/LoginFirebase';
 
 // AUTH LISTENER
 auth.onAuthStateChanged(firebaseUser => {
@@ -35,15 +34,6 @@ auth.onAuthStateChanged(firebaseUser => {
   }
 });
 
-
-// {
-//     const data = querySnapshot.data();
-//     console.log("DATA:", data);
-//     chatID = data.chat_id;
-//     })
-// .catch(function(error) {
-//     console.log(error)
-// });
 
 // If you want your app to work offline and load faster, you can change
 // unregister() to register() below. Note this comes with some pitfalls.

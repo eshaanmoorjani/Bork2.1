@@ -10,14 +10,15 @@ export function loginButtonTransition() {
         const username_box = document.getElementById("username");
         if(username_box.value != "") { // add other username criteria later
             console.log("signed in a user");
-            const premadeTags = getCheckedTags();
-            const customTags = getCustomTags();
+            //const premadeTags = getCheckedTags();
+            //const customTags = getCustomTags();
             const username = document.getElementById("username").value
 
             auth.signInAnonymously();
             auth.onAuthStateChanged(function(firebaseUser) {
                 if(firebaseUser) {
-                    writeUserData(firebaseUser.uid, username, premadeTags, customTags) // transform this into a back-end function
+                    //writeUserData(firebaseUser.uid, username, premadeTags, customTags) // transform this into a back-end function
+                    writeUserData(firebaseUser.uid, username, ["among us"], ["among us"]);
                     assignNextChat(username);
                 }
             });
