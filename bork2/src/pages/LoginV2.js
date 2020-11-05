@@ -1,5 +1,12 @@
 import './LoginV2.css';
 import React, { Component } from 'react';
+import { Button } from 'react-bootstrap';
+import logo from "../images/hog_pub.png";
+
+console.log("image: ", logo)
+
+const LEFT_FRAME_COLOR = "#000000";
+const RIGHT_FRAME_COLOR = "#FFFFFF";
 
 export default class App extends Component {
     constructor(props) {
@@ -8,7 +15,7 @@ export default class App extends Component {
 
     amongUsCharacter() {
         return (
-            <img class="among-us-character" src="AmongUsCharacter.png" alt="Among Us character"></img>
+            <img class="among-us-character" src={require("./../images/hog_pub.png")} alt="Among Us character" />
         );
     }
 
@@ -18,9 +25,9 @@ export default class App extends Component {
 
                 <LeftFrame />
                 <RightFrame />
-                {//this.amongUsCharacter()
+                {this.amongUsCharacter()
                 }
-                <BackgroundDots numDots={15}/>
+                <BackgroundDots numDots={10}/>
             </div>
         );
     }
@@ -33,7 +40,10 @@ class LeftFrame extends Component {
 
     description() {
         return (
-            <h2 class="meet-game-description">Enter video/audio/text Among Us lobbies with a single click.</h2>
+            <div class="meet-game-description">
+                <h2 class="meet-game-description" >Enter Among Us lobbies with a single click.</h2>
+                <h2 class="meet-game-subdescription">Now supporting video and audio!</h2>
+            </div>
         );
     }
 
@@ -41,32 +51,78 @@ class LeftFrame extends Component {
         return (
             <div class="username-box">
                 <h3 class="username-label">Username</h3>
-                <input id="username" class="username-input" type="text" autcomplete="off" placeholder="Your username" required></input>
+                <input id="username" class="username-input" type="text" autoComplete="off" placeholder="Your username" required></input>
+                <p id="username-warning" class="username-warning"></p>
             </div>
         );
     }
 
     soloQueueButton() {
         return (
-            <button id="submit_button" class="solo-queue-button" type="submit" >
-                <p class="solo-queue-text">Solo Queue</p>
-            </button>
+            <div class='solo-queue-box'>
+                <style type="text/css">
+                {`
+                    .btn-primary:hover, .btn-primary:active, .btn-primary:visited {
+                        background-color: #8064A2 !important;
+                    }
+
+                    .btn-xxl {
+                    padding: .5rem 1.5rem;
+                    font-style: bold;
+                    font-size: 2.5rem;
+                    }
+                `}
+                </style>
+                <Button id="submit_button" style={{backgroundColor: "#023E8A", borderColor: "#1F2833", borderRadius: "100px", fontWeight: "bold"}} class="solo-queue-button" variant="primary" size="xxl" block>
+                    Solo Queue
+                </Button>
+            </div>
         );
     }
 
     createLobbyButton() {
         return (
-            <button class="create-lobby-button">
-                <p class="create-lobby-text">Create Lobby</p>
-            </button>
+            <div class='create-lobby-box'>
+                <style type="text/css">
+                {`
+                    .btn-primary:hover, .btn-primary:active, .btn-primary:visited {
+                        background-color: #8064A2 !important;
+                    }
+
+                    .btn-xxl {
+                    padding: .5rem 1.5rem;
+                    font-style: bold;
+                    font-size: 2.5rem;
+                    }
+                `}
+                </style>
+                <Button id="create_lobby_button" style={{backgroundColor: "#55ACEE", borderColor: "#1F2833", borderRadius: "100px", fontWeight: "bold"}} class="create-lobby-button" variant="primary" size="xxl" block>
+                    Create Lobby
+                </Button>
+            </div>
         );
     }
 
     joinLobbyButton() {
         return (
-            <button class="join-lobby-button">
-                <p class="join-lobby-text">Join Lobby</p>
-            </button>
+            <div class='join-lobby-box'>
+                <style type="text/css">
+                {`
+                    .btn-primary:hover, .btn-primary:active, .btn-primary:visited {
+                        background-color: #8064A2 !important;
+                    }
+
+                    .btn-xxl {
+                    padding: .5rem 1.5rem;
+                    font-style: bold;
+                    font-size: 2.5rem;
+                    }
+                `}
+                </style>
+                <Button id="join_lobby_button" style={{backgroundColor: "#55ACEE", borderColor: "#1F2833", borderRadius: "100px", fontWeight: "bold"}} class="-lobby-button" variant="primary" size="xxl" block>
+                    Join Lobby
+                </Button>
+            </div>
         );
     }
 
@@ -93,7 +149,7 @@ class RightFrame extends Component {
     header() {
         return (
             <h1 class="meet-game-header">
-                Hog.Pub
+                Hog Pub
             </h1>
         )
     }
@@ -130,9 +186,9 @@ class BackgroundDots extends Component {
             bottom: yy + "%",
         };
         if (xx < 66) {
-            style["background-color"] = "#FFFFFF";
+            style["background-color"] = RIGHT_FRAME_COLOR;
         } else {
-            style["background-color"] = "#000000";
+            style["background-color"] = LEFT_FRAME_COLOR;
         }
 
         return (
@@ -143,11 +199,39 @@ class BackgroundDots extends Component {
     makeDots() {
         var dots = [];
         for (var i = 0; i < this.state.numDots; i++) {
-            var xx = Math.random() * 100;
-            var yy = Math.random() * 100;
-            dots.push(this.makeDot(xx, yy));
+            var xxyy = this.getXXYY();
+            dots.push(this.makeDot(xxyy[0], xxyy[1]));
         }
         return dots;
+    }
+
+    getXXYY() {
+        var xx = 0;
+        var yy = Math.random() * 100;
+        if (yy < 15) {
+            xx = Math.random() * 68;
+        } else if (15 < yy && yy < 35) {
+            if (Math.random() < 0.15) {
+                xx = Math.random() * 7;
+            } else {
+                xx = Math.random() * 40 + 60;
+            }
+        } else if (35 < yy && yy < 47) {
+            xx = Math.random() * 100;
+        } else if (47 < yy && yy < 70) {
+            if (Math.random() < 0.3) {
+                xx = Math.random() * 19;
+            } else {
+                xx = Math.random() * 54 + 47;
+            }
+        } else if (70 < yy && yy < 85) {
+            xx = Math.random() * 100;
+        } else if (93 < yy) {
+            xx = Math.random() * 100;
+        } else {
+            return this.getXXYY(); // potential infinite loop but me like statistics
+        }
+        return [xx, yy];
     }
 
     render() {

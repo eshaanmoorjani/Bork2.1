@@ -8,12 +8,11 @@ export function loginButtonTransition() {
     // CLICK LOGIN EVENT LISTENER
     btnLogin.addEventListener('click', e=> {
         const username_box = document.getElementById("username");
-        if(username_box.value != "") { // add other username criteria later
+        if(username_box.value != "" && username_box.value.length < 10) { // add other username criteria later
             console.log("signed in a user");
             //const premadeTags = getCheckedTags();
             //const customTags = getCustomTags();
-            const username = document.getElementById("username").value
-
+            const username = username_box.value;
             auth.signInAnonymously();
             auth.onAuthStateChanged(function(firebaseUser) {
                 if(firebaseUser) {
@@ -24,7 +23,12 @@ export function loginButtonTransition() {
             });
         }
         else {
-            document.getElementById("no-username-warning").innerText = "Username cannot be empty. ";
+            const usernameWarning = document.getElementById("username-warning");
+            if (username_box.value == "") {
+                usernameWarning.innerText = "Username cannot be empty!";
+            } else {
+                usernameWarning.innerText = "Username must be under 10 characters!";
+            }
             //alert("Username cannot be empty. ");
         }
     });

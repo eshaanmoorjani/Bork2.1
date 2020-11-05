@@ -1,6 +1,4 @@
 const functions = require('firebase-functions');
-// const firebase_tools = require('firebase-tools');
-// const promisePool = require('es6-promise-pool');
 const admin = require('firebase-admin');
 admin.initializeApp();
 
@@ -66,7 +64,7 @@ exports.assignChatroom = functions.firestore.document('users/{userId}').onWrite(
 
     // send a connect message
     firestore.collection('chats').doc(chatId).collection("messages").add({
-        content: username + " has joined.",
+        content: username + " has joined the pub.",
         timestamp: new Date(),
         userID: userId,
         username: username,

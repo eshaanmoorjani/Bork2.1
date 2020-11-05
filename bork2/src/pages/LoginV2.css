@@ -65,7 +65,8 @@
 /* Meet.Game description */
 .meet-game-description {
     position: relative;
-    bottom: 20%;
+    bottom: 15%;
+    
     font-family: Tahoma;
     font-style: normal;
     font-weight: normal;
@@ -74,6 +75,19 @@
     text-align: center;
 
     color: #FFFFFF;
+}
+
+.meet-game-subdescription {
+    position: relative;
+    bottom: 20%;
+
+    font-family: Tahoma;
+    font-style: normal;
+    font-weight: normal;
+    font-size: 30px;
+    line-height: 68px;
+
+    color: #6d6a6a;
 }
 
 
@@ -106,6 +120,28 @@
     color: #FFFFFF;
 }
 
+/* Button box */
+.solo-queue-box {
+    position: relative;
+    margin-left: auto;
+    margin-right: auto;
+    width: 80%;
+    top: 10%;
+}
+
+.create-lobby-box {
+    position: relative;
+    margin-left: auto;
+    margin-right: 0;
+    width: 40%;
+}
+
+.join-lobby-box {
+    position: relative;
+    margin-left: 0;
+    margin-right: auto;
+    width: 40%;
+}
 
 /* Username input form */
 .username-input {
@@ -125,38 +161,8 @@
     color: #000000;
 }
 
-
-/* Find Game Button */
-.solo-queue-button {
-    position: relative;
-    width: 80%;
-    height: 8%;
-    top: 10%;
-
-    background: #023E8A;
-    border-radius: 78px;
-    padding: 0;
-    border: none;
-
-    font-family: Tahoma;
-    font-style: normal;
-    font-weight: bold;
-    font-size: 40px;
-    line-height: 54px;
-
-    display: flex;
-    align-items: center;
-    text-align: center;
-
-    color: #FFFFFF;
-}
-
-.solo-queue-text {
-    position: relative;
-    margin-left: auto;
-    margin-right: auto;
-    margin-top: auto;
-    margin-bottom: auto;
+.username-warning {
+    color: red;
 }
 
 .create-join-lobby {
@@ -197,37 +203,6 @@
 }
 
 .join-lobby-text {
-    position: relative;
-    margin-left: auto;
-    margin-right: auto;
-    margin-top: auto;
-    margin-bottom: auto;
-}
-
-/* Rectangle 1 */
-.create-lobby-button {
-    position: relative;
-    height: 100%;
-    width: 40%;
-
-    background: #55ACEE;
-    border-radius: 110px;
-    padding: 0;
-    border: none;
-    
-    font-family: Tahoma;
-    font-style: normal;
-    font-weight: bold;
-    font-size: 40px;
-    line-height: 54px;
-    display: flex;
-    align-items: center;
-    text-align: center;
-
-    color: #FFFFFF;
-}
-
-.create-lobby-text {
     position: relative;
     margin-left: auto;
     margin-right: auto;
