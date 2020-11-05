@@ -1,7 +1,7 @@
 import './LoginV2.css';
 import React, { Component } from 'react';
 import { Button } from 'react-bootstrap';
-import logo from "../images/hog_pub.png";
+import logo from "./hog_pub.png";
 
 console.log("image: ", logo)
 
@@ -15,7 +15,7 @@ export default class App extends Component {
 
     amongUsCharacter() {
         return (
-            <img class="among-us-character" src={require("./../images/hog_pub.png")} alt="Among Us character" />
+            <img class="among-us-character" src={require("./hog_pub.png")} alt="Among Us character" />
         );
     }
 
