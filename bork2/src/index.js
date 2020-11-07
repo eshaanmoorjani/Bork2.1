@@ -9,10 +9,7 @@ import {loginButtonTransition, joinLobbyTransition} from './pages/LoginFirebase'
 
 /* 
 
-const createLobby = functions.httpsCallable('createLobby')
-await createLobby({userId: ____, username: ____}).then(result => { // CORS error that wasn't there earlier
-  console.log(result.data); // Will print out the chatId
-})
+
 
 */
 

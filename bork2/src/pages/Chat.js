@@ -17,7 +17,6 @@ class ChatApp extends Component {
             username: this.props.username,
             numParticipants: 0,
             queueReady: true,
-            queueMessage: "Start Queue",
             joinTime: this.props.joinTime,
             lastMessageTime: Math.floor(date.getTime() / 1000),
             numMessagesSent: 0, // might not need this but whatever
@@ -27,7 +26,7 @@ class ChatApp extends Component {
             participants: {
             }, // usernames
         };
-        this.findQueueStatus = this.findQueueStatus.bind(this);
+        this.getQueueStatus = this.getQueueStatus.bind(this);
         this.getMessage = this.getMessage.bind(this);
         this.getParticipants = this.getParticipants.bind(this);
         this.handleSend = this.handleSend.bind(this);
@@ -39,7 +38,7 @@ class ChatApp extends Component {
         this.chatConnection();
         this.getMessage();
         this.getParticipants();
-        this.findQueueStatus();
+        this.getQueueStatus();
     }
 
     chatConnection() {
@@ -109,18 +108,12 @@ class ChatApp extends Component {
         return (
             <div class="navbar">
                 <Navbar fixed="top" bg="light" variant="light" expand="lg">
-                    <Navbar.Brand>Hog Pog</Navbar.Brand>
+                    <Navbar.Brand>Among Us Pub</Navbar.Brand>
                     <Navbar.Toggle aria-controls="basic-navbar-nav" />
                     <Navbar.Collapse id="basic-navbar-nav">
-                        <Nav className="mr-auto">
-                            <NavItem class="lobbyTag">Among Us</NavItem>
-                        </Nav>
-                        {
-                            // ask rajen to make sure your approach is the right way
-                        }
                         <Nav className='mr-auto'>
                             <Form>
-                                <Button id="queueInfoButton" variant="warning" onClick={this.handleQueueChange}>{this.state.queueMessage}</Button>
+                                <Button id="queueInfoButton" variant="warning" onClick={this.handleQueueChange}>{this.getQueueButtonMessage()}</Button>
                             </Form>
                         </Nav>
                         <Nav>
@@ -148,30 +141,29 @@ class ChatApp extends Component {
             </div>
             );
     }
+    
+    getQueueButtonMessage() {
+        if (this.state.queueReady) {
+            return "Stop Queue";
+        } else {
+            return "Start Queue";
+        }
+    }
 
     async handleQueueChange() {
         await db.collection("chats").doc(this.state.chatID).update({
             queue_ready: !this.state.queueReady
         })
-        this.state.queueReady = !this.state.queueReady
+        this.setState({
+            queueReady: !this.state.queueReady,
+        });
     }
 
     // change the button depending on whether it's an opened or closed chat
-    async findQueueStatus() {
-        db.collection("chats").doc(this.state.chatID).onSnapshot(doc => {
-            console.log("before", this.state.queueMessage)
-            var queue_ready = doc.data().queue_ready
-            this.state.queueReady = queue_ready
-
-            if(queue_ready) {
-                this.state.queueMessage = "Pause Queue"
-            }
-            else {
-                this.state.queueMessage = "Start Queue"
-            }
-
-            console.log("after", this.state.queueMessage)
-        })
+    async getQueueStatus() {
+        this.state.queueReady = await db.collection("chats").doc(this.state.chatID).get().then(function(doc) {
+            return doc.data().queue_ready
+        });
     }
 
     // every room 10 people max for now 

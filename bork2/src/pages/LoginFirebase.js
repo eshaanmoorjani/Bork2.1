@@ -10,6 +10,10 @@ export function joinLobbyTransition() {
     transition(joinLobbyButton, "joinLobby");
 }
 
+export async function createLobbyTransition() {
+    
+}
+
 /* Add listener to the given button */
 function transition(button, type) {
     button.addEventListener('click', e=> {
