@@ -5,53 +5,40 @@ admin.initializeApp();
 const firestore = admin.firestore();
 const realtime = admin.database();
 
-// listens for changes to the number of users and then finds the best chat for them
-exports.assignChatroom = functions.firestore.document('users/{userId}').onWrite(async (change, context) => {
-    const userId = context.params.userId;
-    const userInfo = change.after.data();
-    console.log(userInfo)
-    if(userInfo['chat_id'] !== undefined) {
-        return null;
-    }
-
-    const premadeTags = userInfo.premade_tags
-    const customTags = userInfo.custom_tags
-    const userTags = premadeTags.concat(customTags)
-    const username = userInfo.username
-
-    // iterate through every chat that exists, and see which one fits the tag
-    // create new chat for custom tag or 
-
-    var chatId = await findBestChat(userTags, userId, username)
+exports.createLobby = functions.https.onCall(async (data, context) => {
+    const userId = data.userId;
+    const username = data.username
     
-    // create a new chat for the person
-    if(chatId === null) {
-        chatId = await firestore.collection("chats").add({
-            num_participants: 1,
-            tags: userTags
-        })
-        .then(function(docRef) {
-            chatId = docRef.id
-            return docRef.id;
-        })
-        .catch(function(error) {
-            console.error("Error adding document: ",error)
-        });
-    }
+    var chatId = await createNewChat(['Among Us'], false)
 
-    console.log("CHATID: ",chatId)
+    await modifyUserChatInfo(userId, chatId, username)
+    return chatId
+});
 
+async function createNewChat(userTags, queue_ready) {
+    var chatId = null
+    chatId = await firestore.collection("chats").add({
+        num_participants: 1,
+        tags: userTags,
+        queue_ready: queue_ready
+    })
+    .then(function(docRef) {
+        chatId = docRef.id
+        return docRef.id;
+    })
+    .catch(function(error) {
+        console.log("Error adding document: ",error)
+    })
+    return chatId
+}
+
+async function modifyUserChatInfo(userId, chatId, username) {
     firestore.collection("users").doc(userId).update({
-        // username: username,
-        // premade_tags: premadeTags,
-        // custom_tags: customTags,
         chat_id: chatId
     }).then(function() {
-        console.log("SUCCESSFULLLLL")
         return null
     })
     .catch(function(error) {
-        console.log('fuck firebase brah')
         console.log(error)
     })
 
@@ -71,11 +58,42 @@ exports.assignChatroom = functions.firestore.document('users/{userId}').onWrite(
         messageNumber: -1,
         type: "user_connect",
     });
+}
+
+// listens for changes to the number of users and then finds the best chat for them
+exports.assignChatroom = functions.firestore.document('users/{userId}').onWrite(async (change, context) => {
+    const userId = context.params.userId;
+    const userInfo = change.after.data();
+    console.log(userInfo)
+    if(userInfo['chat_id'] !== '-1') {
+        console.log("LOOK HERE MOFJHASDKJFHSLKJAHLFKJ")
+        return null;
+    }
+
+    const premadeTags = userInfo.premade_tags
+    const customTags = userInfo.custom_tags
+    const userTags = premadeTags.concat(customTags)
+    const username = userInfo.username
+
+    // iterate through every chat that exists, and see which one fits the tag
+    // create new chat for custom tag or 
+
+    var chatId = await findBestChat(userTags, userId, username)
+    
+    // create a new chat for the person
+    if(chatId === null) {
+        chatId = await createNewChat(userTags, true)
+    }
+
+    await modifyUserChatInfo(userId, chatId, username)
 });
 
 async function findBestChat(userTags, userId, username) {
     // get every chat room where num_participants < 10
-    return firestore.collection("chats").where("num_participants", "<", 10).get()
+    // query = firestore.collection("chats")
+    // query = query.where("num_participants", "<", 10)
+    // query = query.where("queue_ready", "==", "true")
+    return firestore.collection("chats").where("num_participants", "<", 10).get() 
         .then(function(querySnapshot) {
             var chatId = "0"
             var chatTags = []

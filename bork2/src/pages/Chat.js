@@ -87,6 +87,7 @@ class ChatApp extends Component {
         if (messageData.type == "user_content") {
             return makeUserContentMessage(messageData, this.state.userID);
         } else {
+            console.log(messageData)
             return makeEntryStatusMessage(messageData);
         }
     }

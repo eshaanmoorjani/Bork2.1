@@ -5,7 +5,16 @@ import App from './pages/LoginV2';
 import ChatApp from './pages/Chat';
 import * as serviceWorker from './serviceWorker';
 import {db, auth} from './services/firebase';
-import {loginButtonTransition} from './pages/LoginFirebase';
+import {loginButtonTransition, joinLobbyTransition} from './pages/LoginFirebase';
+
+/* 
+
+const createLobby = functions.httpsCallable('createLobby')
+await createLobby({userId: ____, username: ____}).then(result => { // CORS error that wasn't there earlier
+  console.log(result.data); // Will print out the chatId
+})
+
+*/
 
 // AUTH LISTENER
 auth.onAuthStateChanged(firebaseUser => {
@@ -15,7 +24,7 @@ auth.onAuthStateChanged(firebaseUser => {
     // create a listener because client writes to database --> cloud function is called --> chatId is assigned
     db.collection("users").doc(auth.currentUser.uid).onSnapshot(function(doc) {
       const data = doc.data();
-      if (data != null && data.chat_id != null) {
+      if (data != null && data.chat_id != "-1") {
         const assignedChatID = data.chat_id;
         const username = data.username;
         ReactDOM.render(
@@ -30,7 +39,7 @@ auth.onAuthStateChanged(firebaseUser => {
       <App />,
       document.getElementById('root')
     );
-    loginButtonTransition()
+    loginButtonTransition();
   }
 });
 

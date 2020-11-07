@@ -1,4 +1,5 @@
 import './LoginV2.css';
+import { joinLobbyTransition } from './LoginFirebase.js';
 import React, { Component } from 'react';
 import { Button } from 'react-bootstrap';
 import logo from "../pig_logo/pig_logo.png";
@@ -15,7 +16,7 @@ export default class App extends Component {
 
     amongUsCharacter() {
         return (
-            <img class="among-us-character" src={require("./hog_pub.png")} alt="Among Us character" />
+            <img class="among-us-character" src={require("./../pig_logo/pig_logo.png")} alt="Among Us character" />
         );
     }
 
@@ -126,10 +127,12 @@ class LeftFrame extends Component {
         idInput.setAttribute("autocomplete", "off");
         idInput.setAttribute("placeholder", "Enter Lobby ID");
         idInput.className = "join-lobby-input";
+        idInput.id = "join-lobby-input";
 
         // the button
         var joinButton = document.createElement("BUTTON");
         joinButton.className = "join-input-button";
+        joinButton.id = "join-input-button";
 
         // the button inner text
         var joinButtonText = document.createElement("p");
@@ -140,6 +143,7 @@ class LeftFrame extends Component {
         inputDiv.appendChild(idInput);
         inputDiv.appendChild(joinButton);
         jlb.appendChild(inputDiv);
+        joinLobbyTransition();
     }
 
     joinLobbyNoHover() {
