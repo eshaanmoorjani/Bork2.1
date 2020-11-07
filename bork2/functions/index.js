@@ -90,9 +90,7 @@ exports.assignChatroom = functions.firestore.document('users/{userId}').onWrite(
 
 async function findBestChat(userTags, userId, username) {
     // get every chat room where num_participants < 10
-    // query = firestore.collection("chats")
-    // query = query.where("num_participants", "<", 10)
-    // query = query.where("queue_ready", "==", "true")
+
     return firestore.collection("chats").where("num_participants", "<", 10).get() 
         .then(function(querySnapshot) {
             var chatId = "0"
@@ -102,19 +100,22 @@ async function findBestChat(userTags, userId, username) {
             for (var i in querySnapshot.docs) {
                 const doc = querySnapshot.docs[i]
 
-                chatId = doc.id
-                chatTags = doc.tags
-                score = 1 // chatScore(chatId, chatTags)
+                queue_ready = doc.queue_ready
+                if(queue_ready) {
+                    chatId = doc.id
+                    chatTags = doc.tags
+                    score = 1 // chatScore(chatId, chatTags)
 
-                // short circuit if the perfect room is found
-                if(score === 1) { // score === userTags.length) {
-                    console.log("will add "+userId+" to this chat: ", chatId)
-                    // increase the number of participants
-                    firestore.collection('chats').doc(chatId).update({
-                        num_participants: admin.firestore.FieldValue.increment(1)
-                    })
+                    // short circuit if the perfect room is found
+                    if(score === 1) { // score === userTags.length) {
+                        console.log("will add "+userId+" to this chat: ", chatId)
+                        // increase the number of participants
+                        firestore.collection('chats').doc(chatId).update({
+                            num_participants: admin.firestore.FieldValue.increment(1)
+                        })
 
-                    return chatId;
+                        return chatId;
+                    }
                 }
             }
 
