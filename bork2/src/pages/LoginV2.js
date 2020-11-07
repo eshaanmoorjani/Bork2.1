@@ -111,17 +111,35 @@ class LeftFrame extends Component {
     joinLobbyHover() {
         var jlb = document.getElementById('join-lobby-box');
 
+        // if there input div is already attached, don't do anything
         if (jlb.childElementCount > 1) {
             return null;
         }
 
+        // container for both the form input and the button
+        var inputDiv = document.createElement("div");
+        inputDiv.className = "join-lobby-div"
+
+        // the form input
         var idInput = document.createElement("INPUT");
         idInput.setAttribute("type", "text");
         idInput.setAttribute("autocomplete", "off");
-        idInput.setAttribute("placeholder", "Enter Chat ID");
+        idInput.setAttribute("placeholder", "Enter Lobby ID");
         idInput.className = "join-lobby-input";
 
-        jlb.appendChild(idInput);
+        // the button
+        var joinButton = document.createElement("BUTTON");
+        joinButton.className = "join-input-button";
+
+        // the button inner text
+        var joinButtonText = document.createElement("p");
+        joinButtonText.className = "join-input-text";
+        joinButtonText.innerHTML = "Join!";
+
+        joinButton.appendChild(joinButtonText);
+        inputDiv.appendChild(idInput);
+        inputDiv.appendChild(joinButton);
+        jlb.appendChild(inputDiv);
     }
 
     joinLobbyNoHover() {
