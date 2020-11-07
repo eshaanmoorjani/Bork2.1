@@ -1,7 +1,7 @@
 import './LoginV2.css';
 import React, { Component } from 'react';
 import { Button } from 'react-bootstrap';
-import logo from "./hog_pub.png";
+import logo from "../pig_logo/pig_logo.png";
 
 console.log("image: ", logo)
 
@@ -60,6 +60,19 @@ class LeftFrame extends Component {
     soloQueueButton() {
         return (
             <div class='solo-queue-box'>
+                <style type="text/css">
+                    { // style shit idk, don't change for now
+                    ` 
+                        .btn-primary:hover, .btn-primary:active, .btn-primary:visited {
+                            background-color: #8064A2 !important;
+                        }
+                        .btn-xxl {
+                        padding: .5rem 1.5rem;
+                        font-style: bold;
+                        font-size: 2.5rem;
+                        }
+                    `}
+                </style>
                 <Button id="submit_button" style={{backgroundColor: "#023E8A", borderColor: "#1F2833", borderRadius: "100px", fontWeight: "bold"}} class="solo-queue-button" variant="primary" size="xxl" block>
                     Solo Queue
                 </Button>
@@ -70,7 +83,8 @@ class LeftFrame extends Component {
     createLobbyButton() {
         return (
             <div class='create-lobby-box'>
-                <Button id="create_lobby_button" style={{backgroundColor: "#55ACEE", borderColor: "#1F2833", borderRadius: "100px", fontWeight: "bold"}} class="create-lobby-button" variant="primary" size="xxl" block>
+                <Button id="create_lobby_button" style={{backgroundColor: "#55ACEE", borderColor: "#1F2833", borderRadius: "100px", fontWeight: "bold"}}
+                 class="create-lobby-button" variant="primary" size="xxl" block>
                     Create Lobby
                 </Button>
             </div>
@@ -79,25 +93,40 @@ class LeftFrame extends Component {
 
     joinLobbyButton() {
         return (
-            <div class='join-lobby-box'>
-                <Button id="join_lobby_button" style={{backgroundColor: "#55ACEE", borderColor: "#1F2833", borderRadius: "100px", fontWeight: "bold"}} class="-lobby-button" variant="primary" size="xxl" block>
+            <div class='join-lobby-box' id='join-lobby-box'>
+                <Button id="join_lobby_button" style={{backgroundColor: "#55ACEE", borderColor: "#1F2833", borderRadius: "100px", fontWeight: "bold"}}
+                 class="-lobby-button" variant="primary" size="xxl" block>
                     Join Lobby
                 </Button>
             </div>
         );
     }
 
-        );
+    componentDidMount() {
+        var jlb = document.getElementById("join-lobby-box");
+        jlb.addEventListener("mouseover", this.joinLobbyHover);
+        jlb.addEventListener("mouseleave", this.joinLobbyNoHover);
     }
 
-    joinLobbyButton() {
-        return (
-            <div class='join-lobby-box'>
-                <Button id="join_lobby_button" style={{backgroundColor: "#55ACEE", borderColor: "#1F2833", borderRadius: "100px", fontWeight: "bold"}} class="-lobby-button" variant="primary" size="xxl" block>
-                    Join Lobby
-                </Button>
-            </div>
-        );
+    joinLobbyHover() {
+        var jlb = document.getElementById('join-lobby-box');
+
+        if (jlb.childElementCount > 1) {
+            return null;
+        }
+
+        var idInput = document.createElement("INPUT");
+        idInput.setAttribute("type", "text");
+        idInput.setAttribute("autocomplete", "off");
+        idInput.setAttribute("placeholder", "Enter Chat ID");
+        idInput.className = "join-lobby-input";
+
+        jlb.appendChild(idInput);
+    }
+
+    joinLobbyNoHover() {
+        var jlb = document.getElementById('join-lobby-box');
+        jlb.removeChild(jlb.lastChild);
     }
 
     render() {
