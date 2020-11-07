@@ -60,19 +60,6 @@ class LeftFrame extends Component {
     soloQueueButton() {
         return (
             <div class='solo-queue-box'>
-                <style type="text/css">
-                {`
-                    .btn-primary:hover, .btn-primary:active, .btn-primary:visited {
-                        background-color: #8064A2 !important;
-                    }
-
-                    .btn-xxl {
-                    padding: .5rem 1.5rem;
-                    font-style: bold;
-                    font-size: 2.5rem;
-                    }
-                `}
-                </style>
                 <Button id="submit_button" style={{backgroundColor: "#023E8A", borderColor: "#1F2833", borderRadius: "100px", fontWeight: "bold"}} class="solo-queue-button" variant="primary" size="xxl" block>
                     Solo Queue
                 </Button>
@@ -83,19 +70,6 @@ class LeftFrame extends Component {
     createLobbyButton() {
         return (
             <div class='create-lobby-box'>
-                <style type="text/css">
-                {`
-                    .btn-primary:hover, .btn-primary:active, .btn-primary:visited {
-                        background-color: #8064A2 !important;
-                    }
-
-                    .btn-xxl {
-                    padding: .5rem 1.5rem;
-                    font-style: bold;
-                    font-size: 2.5rem;
-                    }
-                `}
-                </style>
                 <Button id="create_lobby_button" style={{backgroundColor: "#55ACEE", borderColor: "#1F2833", borderRadius: "100px", fontWeight: "bold"}} class="create-lobby-button" variant="primary" size="xxl" block>
                     Create Lobby
                 </Button>
@@ -106,19 +80,19 @@ class LeftFrame extends Component {
     joinLobbyButton() {
         return (
             <div class='join-lobby-box'>
-                <style type="text/css">
-                {`
-                    .btn-primary:hover, .btn-primary:active, .btn-primary:visited {
-                        background-color: #8064A2 !important;
-                    }
+                <Button id="join_lobby_button" style={{backgroundColor: "#55ACEE", borderColor: "#1F2833", borderRadius: "100px", fontWeight: "bold"}} class="-lobby-button" variant="primary" size="xxl" block>
+                    Join Lobby
+                </Button>
+            </div>
+        );
+    }
 
-                    .btn-xxl {
-                    padding: .5rem 1.5rem;
-                    font-style: bold;
-                    font-size: 2.5rem;
-                    }
-                `}
-                </style>
+        );
+    }
+
+    joinLobbyButton() {
+        return (
+            <div class='join-lobby-box'>
                 <Button id="join_lobby_button" style={{backgroundColor: "#55ACEE", borderColor: "#1F2833", borderRadius: "100px", fontWeight: "bold"}} class="-lobby-button" variant="primary" size="xxl" block>
                     Join Lobby
                 </Button>
