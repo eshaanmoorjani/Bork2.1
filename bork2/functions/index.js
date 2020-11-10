@@ -5,13 +5,48 @@ admin.initializeApp();
 const firestore = admin.firestore();
 const realtime = admin.database();
 
+exports.usernameApproval = functions.https.onCall((data, context) => {
+    const username = data.username
+    if(username.length === 0) {
+        return "Username cannot be 0 characters"
+    }
+    else if(username.length > 16) {
+        return "Username must be between 1-16 chracters"
+    }
+    const username_lower = username.toLowerCase()
+    for(var i = 0; i < username.length; i++) {
+        if(username_lower[i] < 'a' && username_lower[i] > 'z') {
+            return "Username cannot include special characters. Only a-z and A-Z"
+        }
+    }
+    return true;
+});
+
+exports.assignForSoloQueue = functions.https.onCall(async (data, context) => {
+    const userId = context.auth.uid
+    const username = data.username
+    
+    const tags = ['Among Us'] // data.tags
+    var chatId = await findBestChat(tags, userId, username)
+    
+    // create a new chat for the person
+    if(chatId === null) {
+        chatId = await createNewChat(userTags, true)
+    }
+
+    await modifyUserChatInfo(userId, chatId, username)
+
+    return chatId
+});
+
 exports.createLobby = functions.https.onCall(async (data, context) => {
-    const userId = data.userId;
+    const userId = context.auth.uid;
     const username = data.username
     
     var chatId = await createNewChat(['Among Us'], false)
 
     await modifyUserChatInfo(userId, chatId, username)
+
     return chatId
 });
 
@@ -33,15 +68,13 @@ async function createNewChat(userTags, queue_ready) {
 }
 
 async function modifyUserChatInfo(userId, chatId, username) {
-    firestore.collection("users").doc(userId).update({
-        chat_id: chatId
-    }).then(function() {
-        return null
+    await firestore.collection("users").doc(userId).set({
+        user_id: userId,
+        username: username,
+        premade_tags: ['Among Us'],
+        custom_tags: [],
+        chat_id: chatId,
     })
-    .catch(function(error) {
-        console.log(error)
-    })
-
     
     firestore.collection('chats').doc(chatId).collection('participants').doc(userId).set({
         user_id: userId,
@@ -66,7 +99,6 @@ exports.assignChatroom = functions.firestore.document('users/{userId}').onWrite(
     const userInfo = change.after.data();
     console.log(userInfo)
     if(userInfo['chat_id'] !== '-1') {
-        console.log("LOOK HERE MOFJHASDKJFHSLKJAHLFKJ")
         return null;
     }
 
@@ -91,16 +123,18 @@ exports.assignChatroom = functions.firestore.document('users/{userId}').onWrite(
 async function findBestChat(userTags, userId, username) {
     // get every chat room where num_participants < 10
 
+    console.log("in findBestchat")
+
     return firestore.collection("chats").where("num_participants", "<", 10).get() 
         .then(function(querySnapshot) {
-            var chatId = "0"
+            var chatId = "-1"
             var chatTags = []
             var score = 0
             // Not developing code in this fashion b/c we are just focusing on Among Us
             for (var i in querySnapshot.docs) {
                 const doc = querySnapshot.docs[i]
 
-                queue_ready = doc.queue_ready
+                queue_ready = doc.data().queue_ready
                 if(queue_ready) {
                     chatId = doc.id
                     chatTags = doc.tags
@@ -108,7 +142,6 @@ async function findBestChat(userTags, userId, username) {
 
                     // short circuit if the perfect room is found
                     if(score === 1) { // score === userTags.length) {
-                        console.log("will add "+userId+" to this chat: ", chatId)
                         // increase the number of participants
                         firestore.collection('chats').doc(chatId).update({
                             num_participants: admin.firestore.FieldValue.increment(1)

@@ -1,4 +1,4 @@
-import {auth, db, firebase} from '../services/firebase';
+import {auth, db, functions, firebase} from '../services/firebase';
 
 export function loginButtonTransition() {
     const soloQueueButton = document.getElementById('submit_button');
@@ -19,13 +19,26 @@ function transition(button, type) {
     button.addEventListener('click', e=> {
         const chatID = getChatID(type);
 
-        const username_box = document.getElementById("username");        
-        if(username_box.value != "" && username_box.value.length < 10) {
-            signIn(username_box, chatID);
-        }
-        else {
-            usernameWarn(username_box);
-        }
+        const username_box = document.getElementById("username");
+        const username = username_box.value
+
+        const usernameApproval = functions.httpsCallable('usernameApproval')
+        usernameApproval({username: username}).then(result => { 
+            const message = result.data;
+            if(message === true) {
+                signIn(username, chatID)
+            }
+            else {
+                const usernameWarning = document.getElementById("username-warning");
+                usernameWarning.innerText = message;
+            }
+        })
+        // if(username_box.value != "" && username_box.value.length < 10) {
+        //     signIn(username_box, chatID);
+        // }
+        // else {
+        //     usernameWarn(username_box);
+        // }
     });
 }
 
@@ -42,23 +55,16 @@ function getChatID(type) {
     return chatID;
 }
 
-function signIn(username_box, chatID) {
-    const username = username_box.value;
+function signIn(username, chatID) {
     auth.signInAnonymously();
     auth.onAuthStateChanged(function(firebaseUser) {
         if(firebaseUser) {
-            writeUserData(firebaseUser.uid, username, ["among us"], ["among us"], chatID);
+            const assignForSoloQueue = functions.httpsCallable('assignForSoloQueue')
+            assignForSoloQueue({username: username}).then(result => { 
+                console.log(result.data);
+            })
         }
     });
-}
-
-function usernameWarn(username_box) {
-    const usernameWarning = document.getElementById("username-warning");
-    if (username_box.value == "") {
-        usernameWarning.innerText = "Username cannot be empty!";
-    } else {
-        usernameWarning.innerText = "Username must be under 10 characters!";
-    }
 }
 
 function getCheckedTags() {
@@ -83,18 +89,6 @@ function getCustomTags() {
     const customTagsArray = customTags.replace(/ /g, '').toLowerCase().split(","); 
 
     return [...new Set(customTagsArray)];
-}
-
-function writeUserData(userId, username, premadeTags, customTags, chatID) {
-    auth.currentUser.chatId = null
-    console.log('userid: ',userId)
-    db.collection("users").doc(userId).set({
-        user_id: userId,
-        username: username,
-        premade_tags: premadeTags,
-        custom_tags: customTags,
-        chat_id: chatID,
-    })
 }
 
 export default loginButtonTransition;
