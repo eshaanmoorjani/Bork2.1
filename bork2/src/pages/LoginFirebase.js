@@ -1,12 +1,15 @@
 import {auth, db, firebase} from '../services/firebase';
+import React from 'react';
+import ReactDOM from 'react-dom';
+import App from './LoginV2.js';
 
 export function loginButtonTransition() {
-    const soloQueueButton = document.getElementById('submit_button');
+    const soloQueueButton = document.getElementById('solo-queue-button');
     transition(soloQueueButton, "soloQueue");
 }
 
 export function joinLobbyTransition() {
-    const joinLobbyButton = document.getElementById("join-input-button");
+    const joinLobbyButton = document.getElementById("join-lobby-button");
     transition(joinLobbyButton, "joinLobby");
 }
 
@@ -19,12 +22,12 @@ function transition(button, type) {
     button.addEventListener('click', e=> {
         const chatID = getChatID(type);
 
-        const username_box = document.getElementById("username");        
+        const username_box = document.getElementById("username-textfield");        
         if(username_box.value != "" && username_box.value.length < 10) {
             signIn(username_box, chatID);
         }
         else {
-            usernameWarn(username_box);
+            ReactDOM.render(<App usernameError={true} usernameLabel="Bad username!"/>, document.getElementById("root"));
         }
     });
 }
