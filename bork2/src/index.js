@@ -11,11 +11,14 @@ import {loginButtonTransition} from './pages/LoginFirebase';
 auth.onAuthStateChanged(firebaseUser => {
   console.log("auth changed")
   if(firebaseUser) { // and firebaseUser.assignedToChat
+    console.log("firebase user hehe", firebaseUser)
 
     // create a listener because client writes to database --> cloud function is called --> chatId is assigned
     db.collection("users").doc(auth.currentUser.uid).onSnapshot(function(doc) {
       const data = doc.data();
-      if (data != null && data.chat_id != "-1") {
+      console.log(data)
+      if (data != null) {
+        console.log(data)
         const assignedChatID = data.chat_id;
         const username = data.username;
         ReactDOM.render(
