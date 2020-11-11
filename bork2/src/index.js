@@ -2,16 +2,10 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 import App from './pages/LoginV2';
-import ChatApp from './pages/Chat';
+import LobbyApp from './pages/ChatV2';
 import * as serviceWorker from './serviceWorker';
 import {db, auth} from './services/firebase';
-import {loginButtonTransition, joinLobbyTransition} from './pages/LoginFirebase';
-
-/* 
-
-
-
-*/
+import {loginButtonTransition} from './pages/LoginFirebase';
 
 // AUTH LISTENER
 auth.onAuthStateChanged(firebaseUser => {
@@ -28,7 +22,7 @@ auth.onAuthStateChanged(firebaseUser => {
         const assignedChatID = data.chat_id;
         const username = data.username;
         ReactDOM.render(
-          <ChatApp chatID={assignedChatID} username={username} joinTime={new Date()}/>,
+          <LobbyApp chatID={assignedChatID} username={username} queueReady={true} joinTime={new Date()}/>,
           document.getElementById('root')
         );
       }
@@ -36,7 +30,7 @@ auth.onAuthStateChanged(firebaseUser => {
   }  
   else {
     ReactDOM.render(
-      <App />,
+      <App usernameLabel="Username"/>,
       document.getElementById('root')
     );
     loginButtonTransition();

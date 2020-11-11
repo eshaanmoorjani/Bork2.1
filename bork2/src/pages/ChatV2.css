@@ -1,0 +1,293 @@
+.full-frame {
+    position: fixed;
+    top: 0%;
+    bottom: 0%;
+    left: 0%;
+    right: 0%;
+
+    height: 100%;
+    width: 100%;
+}
+
+.lobby-frame {
+    position: fixed;
+    top: 0%;
+    left: 0%;
+
+    height: 100%;
+    width: 20%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+
+    background-color: #023E8A;
+}
+
+.chat-frame {
+    position: fixed;
+    top: 0%;
+    left: 20%;
+    
+    height: 100%;
+    width: 60%;
+    background-color: #ffffff;
+}
+
+.video-frame {
+    position: fixed;
+    top: 0%;
+    left: 80%;
+
+    height: 100%;
+    width: 20%;
+    background-color: #ffffff;
+}
+
+.hog-pub-box {
+    position: relative;
+
+    height: 20%;
+    width: 100%;
+
+    margin-left: auto;
+    margin-right: auto;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.hog-pub-header {
+    margin-top: auto;
+
+    font-size: 60px;
+    font-weight: normal;
+    color: #ffffff;
+}
+
+.lobby-title {
+    position: relative;
+    margin-top: auto;
+    bottom: 20%;
+    font-size: 30px;
+    font-weight: normal;
+    color: #ffffff;
+}
+
+.misc-box {
+    position: relative;
+    
+    height: 80%;
+    width: 100%;
+
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+}
+
+.lobby-info-box {
+    position: relative;
+    margin-top: auto;
+    margin-bottom: auto;
+
+    height: 80%;
+    width: 90%;
+
+    border-width: 2px;
+    border-radius: 10px;
+    border-style: solid;
+    border-color: #ffffff;
+
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+}
+
+.lobby-info-header {
+    position: relative;
+
+    font-size: 25px;
+    font-weight: normal;
+    color: #ffffff;
+}
+
+.lobby-info-text {
+    position: relative;
+
+    font-size: 15px;
+    font-weight: normal;
+    color: #ffffff;
+}
+
+.start-queue-button {
+    position: relative;
+
+    width: 90%;
+    height: 5%;
+
+    background: #3EA75B;
+    border-radius: 10px;
+    outline: none;
+    border: none;
+
+    display: flex;
+    align-items: center;
+    text-align: center;
+}
+
+.start-queue-text {
+    position: relative;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: auto;
+    margin-bottom: auto;
+
+    color: #ffffff;
+    font-size: 100%;
+}
+
+.leave-lobby-button {
+    position: relative;
+    margin-bottom: auto;
+
+    width: 90%;
+    height: 5%;
+
+    background: #EF7BA5;
+    border-radius: 10px;
+    outline: none;
+    border: none;
+
+    display: flex;
+    align-items: center;
+    text-align: center;
+}
+
+.leave-lobby-text {
+    position: relative;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: auto;
+    margin-bottom: auto;
+
+    color: #ffffff;
+    font-size: 100%;
+}
+
+.messages-frame {
+    position: relative;
+    top: 0%;
+    margin-left: auto;
+    margin-right: auto;
+
+    height: 95%;
+    width: 95%;
+
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.messages-frame::-webkit-scrollbar {
+    width: 5px;
+}
+
+.messages-frame::-webkit-scrollbar-track {
+    background: #ddd;
+}
+
+.messages-frame::-webkit-scrollbar-thumb {
+    background: #bdbdbd;
+}
+
+.message-bubble {
+    position: relative;
+    margin-top: 5px;
+    margin-bottom: 5px;
+
+    min-width: 100px;
+    max-width: 800px;
+    
+    padding: 12px;
+    border-radius: 15px;
+
+    overflow-x: hidden;
+
+    background: #ececec;
+}
+
+.message-metadata {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    font-size: 15px;
+}
+
+.message-content {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.message-username {
+    margin-right: 10px;
+    font-weight: bold;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.message-timestamp {
+    font-size: 0.85em;
+}
+
+.other-message .message-bubble {
+    border-bottom-left-radius: 0;
+}
+
+.user-message {
+    flex-direction: row-reverse;
+}
+
+.user-message .message-bubble {
+    background: #579ffb;
+    color: #ffffff;
+    border-bottom-right-radius: 0;
+}
+
+.status-msg {
+    position: relative;
+    
+    margin-left: auto;
+    margin-right: auto;
+    top: 2%;
+
+    font-size: 15px;
+    text-align: center;
+}
+
+.send-message-form {
+    position: relative;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: auto;
+
+    height: 3%;
+    width: 95%;
+}
+
+.send-message-input {
+    position: relative;
+    
+    height: 100%;
+    width: 100%;
+
+    border: 1px solid #000000;
+    box-sizing: border-box;
+    border-radius: 3px;
+}

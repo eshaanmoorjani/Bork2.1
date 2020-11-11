@@ -1,12 +1,12 @@
 import {auth, db, functions, firebase} from '../services/firebase';
 
 export function loginButtonTransition() {
-    const soloQueueButton = document.getElementById('submit_button');
+    const soloQueueButton = document.getElementById('solo-queue-button');
     transition(soloQueueButton, "soloQueue");
 }
 
 export function joinLobbyTransition() {
-    const joinLobbyButton = document.getElementById("join-input-button");
+    const joinLobbyButton = document.getElementById("join-lobby-button");
     transition(joinLobbyButton, "joinLobby");
 }
 
@@ -18,6 +18,7 @@ export async function createLobbyTransition() {
 function transition(button, type) {
     button.addEventListener('click', e=> {
         const chatID = getChatID(type);
+
 
         const username_box = document.getElementById("username");
         const username = username_box.value
