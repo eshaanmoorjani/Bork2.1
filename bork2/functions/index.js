@@ -15,8 +15,8 @@ exports.usernameApproval = functions.https.onCall((data, context) => {
     }
     const username_lower = username.toLowerCase()
     for(var i = 0; i < username.length; i++) {
-        if(username_lower[i] < 'a' || username_lower[i] > 'z') {
-            return "Username cannot include special characters."
+        if(!(username_lower[i] >= 'a' && username_lower[i] <= 'z') && !(username_lower[i] >= '1' && username_lower[i] <= '9')) {
+            return "Username can only include letters and numbers."
         }
     }
     return true;
@@ -42,6 +42,8 @@ exports.assignForSoloQueue = functions.https.onCall(async (data, context) => {
 exports.createLobby = functions.https.onCall(async (data, context) => {
     const userId = context.auth.uid;
     const username = data.username
+
+    console.log("create lobby button was activated")
     
     var chatId = await createNewChat(['Among Us'], false)
 
@@ -93,33 +95,6 @@ async function modifyUserChatInfo(userId, chatId, username) {
     });
 }
 
-// listens for changes to the number of users and then finds the best chat for them
-exports.assignChatroom = functions.firestore.document('users/{userId}').onWrite(async (change, context) => {
-    const userId = context.params.userId;
-    const userInfo = change.after.data();
-    console.log(userInfo)
-    if(userInfo['chat_id'] !== '-1') {
-        return null;
-    }
-
-    const premadeTags = userInfo.premade_tags
-    const customTags = userInfo.custom_tags
-    const userTags = premadeTags.concat(customTags)
-    const username = userInfo.username
-
-    // iterate through every chat that exists, and see which one fits the tag
-    // create new chat for custom tag or 
-
-    var chatId = await findBestChat(userTags, userId, username)
-    
-    // create a new chat for the person
-    if(chatId === null) {
-        chatId = await createNewChat(userTags, true)
-    }
-
-    await modifyUserChatInfo(userId, chatId, username)
-});
-
 async function findBestChat(userTags, userId, username) {
     // get every chat room where num_participants < 10
 
@@ -141,7 +116,7 @@ async function findBestChat(userTags, userId, username) {
                     score = 1 // chatScore(chatId, chatTags)
 
                     // short circuit if the perfect room is found
-                    if(score === 1) { // score === userTags.length) {
+                    if(score === 1) {
                         // increase the number of participants
                         firestore.collection('chats').doc(chatId).update({
                             num_participants: admin.firestore.FieldValue.increment(1)
@@ -170,17 +145,13 @@ exports.removeDisconnectedUsers = functions.database.ref('/users/{userId}/is_dis
     // console.log(original)
     // console.log(userId)
     if(is_disconnected) {
-        console.log("about to timeout")
         await setTimeout(async function() {
             await realtime.ref('/users/' + userId + "/is_disconnected").once('value').then(async function(snapshot) {
+                console.log("HAPPENED AFTER")
                 if(snapshot.val()) {
-                    console.log("should delete them")
                     const userInfo = await getChatId(userId)
-                    console.log("got chat info")
                     await deleteUserInfoHelper(userId, userInfo[0], userInfo[1])
-                    console.log("deletedUserInfo")
                     await deleteChatInfo(userId, userInfo[0], userInfo[1])
-                    console.log("deletedChatInfo")
                     return admin.auth().deleteUser(userId).then(() => {
                         return console.log('Deleted user account', userId, 'because of inactivity');
                     }).catch((error) => {
@@ -230,6 +201,8 @@ async function deleteUserInfoHelper(userId) {
     const userDeletePath = firestore.collection('users').doc(userId)
     const userDeleteInfo = await userDeletePath.delete();
     await realtime.ref('users/'+userId).remove()
+
+    // delete the user from the chat if they are the last person 
     return "success"
 }
 
@@ -313,3 +286,32 @@ async function getInactiveUsers(users = [], nextPageToken) {
     
     return users;
 }
+
+/* 
+// listens for changes to the number of users and then finds the best chat for them
+exports.assignChatroom = functions.firestore.document('users/{userId}').onWrite(async (change, context) => {
+    const userId = context.params.userId;
+    const userInfo = change.after.data();
+    console.log(userInfo)
+    if(userInfo['chat_id'] !== '-1') {
+        return null;
+    }
+
+    const premadeTags = userInfo.premade_tags
+    const customTags = userInfo.custom_tags
+    const userTags = premadeTags.concat(customTags)
+    const username = userInfo.username
+
+    // iterate through every chat that exists, and see which one fits the tag
+    // create new chat for custom tag or 
+
+    var chatId = await findBestChat(userTags, userId, username)
+    
+    // create a new chat for the person
+    if(chatId === null) {
+        chatId = await createNewChat(userTags, true)
+    }
+
+    await modifyUserChatInfo(userId, chatId, username)
+});
+*/

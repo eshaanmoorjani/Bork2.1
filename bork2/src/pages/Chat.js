@@ -255,11 +255,8 @@ class ChatApp extends Component {
     
     // this deletes from local participants, need to delete from DATABASE
     async handleLogout() {
-        console.log("a")
         const deleteInfo = functions.httpsCallable('deleteUserInfo')
-        console.log("b")
         await deleteInfo({userId: this.state.userID, chatId: this.state.chatID, username: this.state.username}).then(result => { // CORS error that wasn't there earlier
-            console.log("b.5")
             console.log(result.data); // Will tell you if they signed them out or not
         })
         .catch(function (error) {

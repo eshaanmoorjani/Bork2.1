@@ -1,5 +1,5 @@
 import './LoginV2.css';
-import { joinLobbyTransition } from './LoginFirebase.js';
+import { joinLobbyTransition, createLobbyTransition } from './LoginFirebase.js';
 import React, { Component } from 'react';
 
 import TextField from '@material-ui/core/TextField';
@@ -59,22 +59,34 @@ class Form extends Component {
   }
 
   form() {
+    const soloStyle = {
+      background: 'linear-gradient(45deg, #2196F3 5%, #21CBF3 90%)',
+      color: 'white',
+      fontSize: 20,
+    };
+
+    const otherStyle = {
+      borderColor: '#21CBF3',
+      color: '#21CBF3',
+      borderWidth: 1.5,
+      fontSize: 20,
+    };
+
     return (
       <Grid container class="container">
           <TextField class="username-textfield" id="username-textfield" variant="outlined" error={this.props.usernameError}
           label="Username" helperText={this.props.usernameHelperText} fullWidth={true} autoComplete="off"
           InputLabelProps={{style: {fontSize: 25}}}
           InputProps={{style: {height: 65, fontSize: 25}}}
-          inputProps={{style: {fontSize: 40, textAlign: "center"}}}
-          >
+          inputProps={{style: {fontSize: 40, textAlign: "center"}}}>
           </TextField>
 
-          <Button className="solo-queue-button" id="solo-queue-button" variant="contained" color="primary" size="large" fullWidth={true}>Solo Queue</Button>
+          <Button className="solo-queue-button" id="solo-queue-button" style={soloStyle} variant="contained" color="primary" size="large" fullWidth={true}>Solo Queue</Button>
 
           <Grid item class="buttons">
-            <Button  id="create-lobby-button" variant="outlined" color="primary" size="large" fullWidth={true}>Create Lobby</Button>
+            <Button id="create-lobby-button" variant="outlined" style={otherStyle} color="primary" size="large" fullWidth={true}>Create Lobby</Button>
             <div id="join-lobby-box">
-                <Button id="join-lobby-button" variant="outlined" color="primary" size="large" fullWidth={true}>Join Lobby</Button>
+                <Button id="join-lobby-button" variant="outlined" style={otherStyle} color="primary" size="large" fullWidth={true}>Join Lobby</Button>
             </div>
           </Grid>
       </Grid>
@@ -122,6 +134,7 @@ class Form extends Component {
         inputDiv.appendChild(joinButton);
         jlb.appendChild(inputDiv);
         joinLobbyTransition();
+        createLobbyTransition();
     }
 
     joinLobbyNoHover() {

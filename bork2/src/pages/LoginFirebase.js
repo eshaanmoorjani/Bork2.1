@@ -3,7 +3,7 @@ import { showPage } from '../index';
 
 export function loginButtonTransition() {
     const soloQueueButton = document.getElementById('solo-queue-button');
-    transition(soloQueueButton, "soloQueue");
+    transition(soloQueueButton, "assignForSoloQueue");
 }
 
 export function joinLobbyTransition() {
@@ -11,16 +11,14 @@ export function joinLobbyTransition() {
     transition(joinLobbyButton, "joinLobby");
 }
 
-export async function createLobbyTransition() {
-    
+export function createLobbyTransition() {
+    const createLobbyButton = document.getElementById("create-lobby-button");
+    transition(createLobbyButton, "createLobby");
 }
 
 /* Add listener to the given button */
-function transition(button, type) {
+function transition(button, functionName) {
     button.addEventListener('click', e=> {
-        const chatID = getChatID(type);
-
-
         const username_box = document.getElementById("username-textfield");
         const username = username_box.value
 
@@ -28,40 +26,25 @@ function transition(button, type) {
         usernameApproval({username: username}).then(result => { 
             const message = result.data;
             if(message === true) {
-                signIn(username, chatID);
+                signIn(username, functionName);
             }
             else {
                 showPage(true, message);
             }
         })
-        // if(username_box.value != "" && username_box.value.length < 10) {
-        //     signIn(username_box, chatID);
-        // }
-        // else {
-        //     usernameWarn(username_box);
-        // }
     });
 }
 
 /* If solo queue button was clicked, chatID should be -1 (to be compatible with cloud function).
    If join lobby button was clicked, chatID should be what the user entered.
 */
-function getChatID(type) {
-    var chatID = "-1";
-    if (type == "joinLobby") {
-        const joinLobbyInput = document.getElementById("join-lobby-input");
-        chatID = joinLobbyInput.value;
-    }
-    console.log("CHAT ID:", chatID);
-    return chatID;
-}
 
-function signIn(username, chatID) {
+function signIn(username, functionName) {
     auth.signInAnonymously();
     auth.onAuthStateChanged(function(firebaseUser) {
         if(firebaseUser) {
-            const assignForSoloQueue = functions.httpsCallable('assignForSoloQueue')
-            assignForSoloQueue({username: username}).then(result => { 
+            const buttonFunction = functions.httpsCallable(functionName)
+            buttonFunction({username: username}).then(result => { 
                 console.log(result.data);
             })
         }
