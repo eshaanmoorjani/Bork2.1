@@ -206,22 +206,6 @@
     background: #bdbdbd;
 }
 
-.message-bubble {
-    position: relative;
-    margin-top: 5px;
-    margin-bottom: 5px;
-
-    min-width: 100px;
-    max-width: 800px;
-    
-    padding: 12px;
-    border-radius: 15px;
-
-    overflow-x: hidden;
-
-    background: #ececec;
-}
-
 .message-metadata {
     display: flex;
     justify-content: space-between;
@@ -246,18 +230,43 @@
     font-size: 0.85em;
 }
 
-.other-message .message-bubble {
+.other-message {
+    position: relative;
+    margin-top: 5px;
+    margin-bottom: 5px;
+
+    min-width: 100px;
+    max-width: 800px;
+    
+    align-self: flex-start;
+
+    padding: 12px;
+    border-radius: 15px;
     border-bottom-left-radius: 0;
+
+    overflow-x: hidden;
+
+    background: #ececec;
+
 }
 
-.user-message {
-    flex-direction: row-reverse;
-}
-
-.user-message .message-bubble {
+.user-message  {
     background: #579ffb;
     color: #ffffff;
     border-bottom-right-radius: 0;
+
+    position: relative;
+    margin-top: 5px;
+    margin-bottom: 5px;
+
+    min-width: 100px;
+    max-width: 800px;
+    
+    padding: 12px;
+    border-radius: 15px;
+    border-bottom-right-radius: 0px;
+
+    overflow-x: hidden;
 }
 
 .status-msg {

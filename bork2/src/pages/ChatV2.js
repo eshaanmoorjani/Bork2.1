@@ -237,7 +237,6 @@ class ChatFrame extends Component {
             var timeFormatted = getFormattedTime(date);
             return (
                 <div class={messageClass}>
-                    <div class="message-bubble">
                         <div class="message-metadata">
                             <div class="message-username">{messageData.username}</div>
                             <div class="message-timestamp">{timeFormatted}</div>
@@ -245,7 +244,6 @@ class ChatFrame extends Component {
                         <div class="mesage-content">
                             {messageData.content}
                         </div>
-                    </div>
                 </div>
             );
         }
