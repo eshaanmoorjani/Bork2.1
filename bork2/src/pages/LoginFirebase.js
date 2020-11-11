@@ -20,7 +20,7 @@ function transition(button, type) {
         const chatID = getChatID(type);
 
 
-        const username_box = document.getElementById("username");
+        const username_box = document.getElementById("username-textfield");
         const username = username_box.value
 
         const usernameApproval = functions.httpsCallable('usernameApproval')

@@ -51,6 +51,7 @@ class Form extends Component {
           Enter Among Us Lobbies!
         </h2>
         <h3 class="sub-description">
+          <p id="username-warning"></p>
         </h3>
       </div>
 
