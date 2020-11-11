@@ -23,7 +23,7 @@ export default class App extends Component {
   loginFrame() {
     return (
       <div class="login-frame">
-        <Form usernameError={this.props.usernameError} usernameLabel={this.props.usernameLabel}></Form>
+        <Form usernameError={this.props.usernameError} usernameHelperText={this.props.usernameHelperText}></Form>
         <HogPub></HogPub>
       </div>
     );
@@ -62,7 +62,7 @@ class Form extends Component {
     return (
       <Grid container class="container">
           <TextField class="username-textfield" id="username-textfield" variant="outlined" error={this.props.usernameError}
-          label={this.props.usernameLabel} fullWidth={true} autoComplete="off"
+          label="Username" helperText={this.props.usernameHelperText} fullWidth={true} autoComplete="off"
           InputLabelProps={{style: {fontSize: 25}}}
           InputProps={{style: {height: 65, fontSize: 25}}}
           inputProps={{style: {fontSize: 40, textAlign: "center"}}}

@@ -12,7 +12,7 @@
     justify-content: center;
     align-items: center;
   
-    background: linear-gradient(135deg, rgb(9, 9, 77), rgb(112, 13, 79))
+    background: linear-gradient(135deg, #A9F1DF, #FFBBBB)
   }
   
   .login-frame {
@@ -27,7 +27,7 @@
     flex-direction: row;
   
     background: white;
-    box-shadow: 5px 5px 10000px rgb(198, 237, 255);
+    box-shadow: 5px 5px 10px rgb(181, 247, 247);
   }
   
   .form-frame {
@@ -104,24 +104,14 @@
   }
   
   .username-textfield {
-    position: relative;
-    top: 10%;
-  }
-
-  .username-warning {
-      position: absolute;
-      left: 5%;
-      top: 320%;
-
-      font-size: 15px;
-      font-weight: normal;
-
-      color: red;
+    position: absolute;
+    margin: auto;
+    top: 10%; left: 0; bottom: 0; right: 0;
   }
   
   #solo-queue-button {
     position: relative;
-    top: 25%;
+    top: 40%;
   
     height: 10%;
     
@@ -131,7 +121,7 @@
   
   .buttons {
     position: relative;
-    top: 26%;
+    top: 41%;
   
     height: 10%;
     width: 100%;

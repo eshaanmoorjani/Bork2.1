@@ -1,4 +1,5 @@
 import {auth, db, functions, firebase} from '../services/firebase';
+import { showPage } from '../index';
 
 export function loginButtonTransition() {
     const soloQueueButton = document.getElementById('solo-queue-button');
@@ -27,11 +28,10 @@ function transition(button, type) {
         usernameApproval({username: username}).then(result => { 
             const message = result.data;
             if(message === true) {
-                signIn(username, chatID)
+                signIn(username, chatID);
             }
             else {
-                const usernameWarning = document.getElementById("username-warning");
-                usernameWarning.innerText = message;
+                showPage(true, message);
             }
         })
         // if(username_box.value != "" && username_box.value.length < 10) {

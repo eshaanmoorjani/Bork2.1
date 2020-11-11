@@ -15,8 +15,8 @@ exports.usernameApproval = functions.https.onCall((data, context) => {
     }
     const username_lower = username.toLowerCase()
     for(var i = 0; i < username.length; i++) {
-        if(username_lower[i] < 'a' && username_lower[i] > 'z') {
-            return "Username cannot include special characters. Only a-z and A-Z"
+        if(username_lower[i] < 'a' || username_lower[i] > 'z') {
+            return "Username cannot include special characters."
         }
     }
     return true;
@@ -31,7 +31,7 @@ exports.assignForSoloQueue = functions.https.onCall(async (data, context) => {
     
     // create a new chat for the person
     if(chatId === null) {
-        chatId = await createNewChat(userTags, true)
+        chatId = await createNewChat(tags, true)
     }
 
     await modifyUserChatInfo(userId, chatId, username)
@@ -163,7 +163,6 @@ async function findBestChat(userTags, userId, username) {
 function chatScore(chatTags, userTags) {
     return 1;
 }
-
 
 exports.removeDisconnectedUsers = functions.database.ref('/users/{userId}/is_disconnected').onWrite(async (change, context) => {
     const is_disconnected = change.after.val();
