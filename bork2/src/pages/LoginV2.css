@@ -165,11 +165,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  -webkit-animation: fadein 1s;
-  -moz-animation: fadein 1s; /* Firefox < 16 */
-      -ms-animation: fadein 1s; /* Internet Explorer */
-        -o-animation: fadein 1s; /* Opera < 12.1 */
-          animation: fadein 1s;
+  -webkit-animation: fadein .5s;
+  -moz-animation: fadein .5s; /* Firefox < 16 */
+      -ms-animation: fadein .5s; /* Internet Explorer */
+        -o-animation: fadein .5s; /* Opera < 12.1 */
+          animation: fadein .5s;
 }
 
 @keyframes fadein {
@@ -222,17 +222,17 @@
   align-items: center;
   text-align: center;
 
-  color: #21CBF3;
+  color: #FFBBBB;
 }
 
 .join-lobby-input::placeholder {
-  color: #21CBF3;
+  color: #FFBBBB;
 }
 
 .join-input-button {
   width: 20%;
 
-  background: #21CBF3;
+  background: #FFBBBB;
   padding: 0;
   border: none;
   border-radius: 0px;
@@ -248,7 +248,7 @@
   border-width: 1px;
   border-style: solid;
 
-  border-color: #21CBF3;
+  border-color: #FFBBBB;
   
   display: flex;
   align-items: center;

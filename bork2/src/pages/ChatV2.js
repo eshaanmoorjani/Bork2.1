@@ -1,7 +1,13 @@
 import React, { Component } from 'react';
 
+import DailyIframe from '@daily-co/daily-js';
+
+import TextField from '@material-ui/core/TextField';
+import Button from '@material-ui/core/Button';
+
 import './ChatV2.css';
 import {auth, db, rt_db, functions, firebase} from '../services/firebase';
+
 
 export default class LobbyApp extends Component {
     constructor(props) {
@@ -131,17 +137,17 @@ class LobbyFrame extends Component {
 
     startQueueButton() {
         return (
-            <button class="start-queue-button" onClick={this.props.handleQueueChange}>
+            <Button class="start-queue-button" onClick={this.props.handleQueueChange}>
                 <p class="start-queue-text">{this.getQueueButtonMessage()}</p>
-            </button>
+            </Button>
         );
     }
 
     leaveLobbyButton() {
         return (
-            <button class="leave-lobby-button" onClick={this.props.handleLogout}>
+            <Button class="leave-lobby-button" onClick={this.props.handleLogout}>
                 <p class="leave-lobby-text">Leave Lobby</p>
-            </button>
+            </Button>
         );
     }
 
@@ -237,13 +243,15 @@ class ChatFrame extends Component {
             var timeFormatted = getFormattedTime(date);
             return (
                 <div class={messageClass}>
+                    <div class="message-bubble">
                         <div class="message-metadata">
                             <div class="message-username">{messageData.username}</div>
                             <div class="message-timestamp">{timeFormatted}</div>
                         </div>
-                        <div class="mesage-content">
+                        <div class="message-content">
                             {messageData.content}
                         </div>
+                    </div>
                 </div>
             );
         }
@@ -267,7 +275,8 @@ class ChatFrame extends Component {
     sendMessageBox() {
         return (
             <form class="send-message-form" onSubmit={this.handleSendMessage}>
-                <input class="send-message-input" id="message-input" placeholder="Type a message..." autoComplete="off"></input>
+                <TextField className="send-message-input" id="message-input" variant="outlined"
+                 label="Enter a message" fullWidth={true} autoComplete="off"></TextField>
             </form>
         );
     }
@@ -320,11 +329,59 @@ class ChatFrame extends Component {
 class VideoFrame extends Component {
     constructor(props) {
         super(props);
+
+        this.joinCall = this.joinCall.bind(this);
+
+        this.addDisconnectListener = this.addDisconnectListener.bind(this);
+        this.addListeners = this.addListeners.bind(this);
     }
 
     render() {
         return (
-            <div class="video-frame"></div>
+            <div class="video-frame" id="video-frame">
+                {this.joinButton()}
+            </div>
         );
+    }
+
+    joinButton() {
+        const style = {
+
+          };
+
+        return (
+            <Button className="join-video-button" variant="outlined" color="primary" style={style}onClick={this.joinCall}>
+                <p class="join-video-text">Join Video!</p>
+            </Button>
+        );
+    }
+
+    joinCall() {
+        const style = {
+            iframeStyle: {
+                position: "fixed",
+                left: "60%",
+                width: "40%",
+                height: "100%",
+                borderWidth: 0,
+
+            },
+            showLeaveButton: true,
+            showFullscreenButton: true,
+        };
+        const callFrame = DailyIframe.createFrame(style);
+        callFrame.join({url: "https://hogpub.daily.co/test"});
+
+        this.addListeners(callFrame);
+    }
+
+    addListeners(callFrame) {
+        this.addDisconnectListener(callFrame);
+    }
+
+    addDisconnectListener(callFrame) {
+        callFrame.on("left-meeting", (event) => {
+            console.log(event);
+        })
     }
 }

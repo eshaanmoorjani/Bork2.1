@@ -66,8 +66,8 @@ class Form extends Component {
     };
 
     const otherStyle = {
-      borderColor: '#21CBF3',
-      color: '#21CBF3',
+      borderColor: '#FFBBBB',
+      color: '#FFBBBB',
       borderWidth: 1.2,
       fontSize: 20,
     };
