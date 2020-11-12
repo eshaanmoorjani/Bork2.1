@@ -26,9 +26,10 @@ exports.assignForSoloQueue = functions.https.onCall(async (data, context) => {
     const userId = context.auth.uid
     const username = data.username
 
-    userRef =  // firestore.collection('users').doc(userId)
-    return await userRef.get().then(async (docSnapshot) => {
-        if(!docSnapshot.exists) {
+    userRef =  realtime.ref("users/" + userId)// firestore.collection('users').doc(userId)
+    return await userRef.once("value").then(async function(snapshot) {
+        snapshot_val = snapshot.val()
+        if(snapshot_val === null || snapshot_val.is_disconnected) {
             const tags = ['Among Us'] // data.tags
             var chatId = await findBestChat(tags, userId, username)
             
@@ -52,13 +53,21 @@ exports.createLobby = functions.https.onCall(async (data, context) => {
     const userId = context.auth.uid;
     const username = data.username
 
-    console.log("create lobby button was activated")
-    
-    var chatId = await createNewChat(['Among Us'], false)
 
-    await modifyUserChatInfo(userId, chatId, username)
+    userRef =  realtime.ref("users/" + userId)// firestore.collection('users').doc(userId)
+    return await userRef.once("value").then(async function(snapshot) {
+        snapshot_val = snapshot.val()
+        if(snapshot_val === null || snapshot_val.is_disconnected) {
+            var chatId = await createNewChat(['Among Us'], false)
 
-    return chatId
+            await modifyUserChatInfo(userId, chatId, username)
+
+            return chatId
+        }
+        else {
+            return "button already pressed"
+        }
+    })
 });
 
 async function createNewChat(userTags, queue_ready) {
