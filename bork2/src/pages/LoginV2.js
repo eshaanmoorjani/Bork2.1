@@ -1,6 +1,6 @@
 import './LoginV2.css';
-import { joinLobbyTransition, createLobbyTransition } from './LoginFirebase.js';
 import React, { Component } from 'react';
+import ReactDom from 'react-dom';
 
 import TextField from '@material-ui/core/TextField';
 import Grid from '@material-ui/core/Grid';
@@ -66,8 +66,8 @@ class Form extends Component {
     };
 
     const otherStyle = {
-      borderColor: '#FFBBBB',
-      color: '#FFBBBB',
+      borderColor: '#21CBF3',
+      color: '#21CBF3',
       borderWidth: 1.2,
       fontSize: 20,
     };
@@ -87,60 +87,71 @@ class Form extends Component {
             <Button id="create-lobby-button" variant="outlined" style={otherStyle} color="primary" size="large" fullWidth={true}>Create Lobby</Button>
             <div id="join-lobby-box">
                 <Button id="join-lobby-button" variant="outlined" style={otherStyle} color="primary" size="large" fullWidth={true}>Join Lobby</Button>
+                
             </div>
           </Grid>
       </Grid>
     );
   }
 
-    componentDidMount() {
-        var jlb = document.getElementById("join-lobby-box");
-        jlb.addEventListener("mouseover", this.joinLobbyHover);
-        jlb.addEventListener("mouseleave", this.joinLobbyNoHover);
-    }
+  // not using this rn
+  joinLobbyDropdown() {
+    return (
+      <div class="join-lobby-div">
+        <TextField className="join-lobby-input" id="join-lobby-input" variant="standard" type="text" autoComplete="off" label="Enter Lobby ID"></TextField>
+        <Button className="join-lobby-button" id="join-lobby-button" variant="contained">
+          <p class="join-input-text">Join!</p>
+        </Button>
+      </div>
+    );
+  }
 
-    joinLobbyHover() {
-        var jlb = document.getElementById('join-lobby-box');
+  componentDidMount() {
+      var jlb = document.getElementById("join-lobby-box");
+      jlb.addEventListener("mouseover", this.joinLobbyHover);
+      jlb.addEventListener("mouseleave", this.joinLobbyNoHover);
+  }
 
-        // if there input div is already attached, don't do anything
-        if (jlb.childElementCount > 1) {
-            return null;
-        }
+  joinLobbyHover() {
+      var jlb = document.getElementById('join-lobby-box');
 
-        // container for both the form input and the button
-        var inputDiv = document.createElement("div");
-        inputDiv.className = "join-lobby-div"
+      // if there input div is already attached, don't do anything
+      if (jlb.childElementCount > 1) {
+          return null;
+      }
 
-        // the form input
-        var idInput = document.createElement("INPUT");
-        idInput.setAttribute("type", "text");
-        idInput.setAttribute("autocomplete", "off");
-        idInput.setAttribute("placeholder", "Enter Lobby ID");
-        idInput.className = "join-lobby-input";
-        idInput.id = "join-lobby-input";
+      // container for both the form input and the button
+      var inputDiv = document.createElement("div");
+      inputDiv.className = "join-lobby-div"
 
-        // the button
-        var joinButton = document.createElement("BUTTON");
-        joinButton.className = "join-input-button";
-        joinButton.id = "join-input-button";
+      // the form input
+      var idInput = document.createElement("INPUT");
+      idInput.setAttribute("type", "text");
+      idInput.setAttribute("autocomplete", "off");
+      idInput.setAttribute("placeholder", "Enter Lobby ID");
+      idInput.className = "join-lobby-input";
+      idInput.id = "join-lobby-input";
 
-        // the button inner text
-        var joinButtonText = document.createElement("p");
-        joinButtonText.className = "join-input-text";
-        joinButtonText.innerHTML = "Join!";
+      // the button
+      var joinButton = document.createElement("BUTTON");
+      joinButton.className = "join-input-button";
+      joinButton.id = "join-input-button";
 
-        joinButton.appendChild(joinButtonText);
-        inputDiv.appendChild(idInput);
-        inputDiv.appendChild(joinButton);
-        jlb.appendChild(inputDiv);
-        joinLobbyTransition();
-        createLobbyTransition();
-    }
+      // the button inner text
+      var joinButtonText = document.createElement("p");
+      joinButtonText.className = "join-input-text";
+      joinButtonText.innerHTML = "Join!";
 
-    joinLobbyNoHover() {
-        var jlb = document.getElementById('join-lobby-box');
-        jlb.removeChild(jlb.lastChild);
-    }
+      joinButton.appendChild(joinButtonText);
+      inputDiv.appendChild(idInput);
+      inputDiv.appendChild(joinButton);
+      jlb.appendChild(inputDiv);
+  }
+
+  joinLobbyNoHover() {
+      var jlb = document.getElementById('join-lobby-box');
+      jlb.removeChild(jlb.lastChild);
+  }
 
 }
 

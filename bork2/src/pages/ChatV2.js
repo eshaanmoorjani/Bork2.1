@@ -38,7 +38,7 @@ export default class LobbyApp extends Component {
             <div class="full-frame">
                 <LobbyFrame queueReady={this.state.queueReady} handleLogout={this.handleLogout} handleQueueChange={this.changeQueueStatus}/>
                 <ChatFrame chatID={this.state.chatID} userID={this.state.userID} username={this.props.username} initTime={new Date()}/>
-                <VideoFrame />
+                <VideoFrame videoCallURL="https://hogpub.daily.co/test"/>
             </div>
         );
     }
@@ -350,8 +350,8 @@ class VideoFrame extends Component {
           };
 
         return (
-            <Button className="join-video-button" variant="outlined" color="primary" style={style}onClick={this.joinCall}>
-                <p class="join-video-text">Join Video!</p>
+            <Button className="join-video-button" id="join-video-button" variant="contained" color="primary" style={style} onClick={this.joinCall}>
+                <p class="join-video-text">Join Voice and Video!</p>
             </Button>
         );
     }
@@ -370,7 +370,7 @@ class VideoFrame extends Component {
             showFullscreenButton: true,
         };
         const callFrame = DailyIframe.createFrame(style);
-        callFrame.join({url: "https://hogpub.daily.co/test"});
+        callFrame.join({url: this.props.videoCallURL});
 
         this.addListeners(callFrame);
     }
@@ -381,7 +381,7 @@ class VideoFrame extends Component {
 
     addDisconnectListener(callFrame) {
         callFrame.on("left-meeting", (event) => {
-            console.log(event);
+            
         })
     }
 }

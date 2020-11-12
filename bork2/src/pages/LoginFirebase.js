@@ -1,3 +1,7 @@
+import React from 'react';
+import ReactDOM from 'react-dom';
+import App from './LoginV2';
+
 import {auth, db, functions, firebase} from '../services/firebase';
 import { showPage } from '../index';
 
@@ -8,7 +12,9 @@ export function loginButtonTransition() {
 
 export function joinLobbyTransition() {
     const joinLobbyButton = document.getElementById("join-lobby-button");
+    const joinDropdownButton = document.getElementById("join-input-button"); // cant add event listener for this button -- it doesnt exist at the beginning
     transition(joinLobbyButton, "joinLobby");
+    transition(joinDropdownButton, "joinLobby");
 }
 
 export function createLobbyTransition() {
@@ -29,7 +35,8 @@ function transition(button, functionName) {
                 signIn(username, functionName);
             }
             else {
-                showPage(true, message);
+                /* Re-render the login page with the username error message */
+                ReactDOM.render(<App usernameError={true} usernameHelperText={message} />, document.getElementById("root"));
             }
         })
     });
@@ -45,7 +52,7 @@ function signIn(username, functionName) {
         if(firebaseUser) {
             const buttonFunction = functions.httpsCallable(functionName)
             buttonFunction({username: username}).then(result => { 
-                console.log(result.data);
+                console.log("dick", result.data);
             })
         }
     });

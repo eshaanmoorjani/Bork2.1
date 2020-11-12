@@ -25,18 +25,27 @@ exports.usernameApproval = functions.https.onCall((data, context) => {
 exports.assignForSoloQueue = functions.https.onCall(async (data, context) => {
     const userId = context.auth.uid
     const username = data.username
-    
-    const tags = ['Among Us'] // data.tags
-    var chatId = await findBestChat(tags, userId, username)
-    
-    // create a new chat for the person
-    if(chatId === null) {
-        chatId = await createNewChat(tags, true)
-    }
 
-    await modifyUserChatInfo(userId, chatId, username)
+    userRef =  // firestore.collection('users').doc(userId)
+    return await userRef.get().then(async (docSnapshot) => {
+        if(!docSnapshot.exists) {
+            const tags = ['Among Us'] // data.tags
+            var chatId = await findBestChat(tags, userId, username)
+            
+            // create a new chat for the person
+            if(chatId === null) {
+                chatId = await createNewChat(tags, true)
+            }
+        
+            await modifyUserChatInfo(userId, chatId, username)
+        
+            return chatId
+        }
+        else {
+            return "button already pressed"
+        }
+    })
 
-    return chatId
 });
 
 exports.createLobby = functions.https.onCall(async (data, context) => {
