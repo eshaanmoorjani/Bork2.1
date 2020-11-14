@@ -30,6 +30,7 @@ exports.assignForSoloQueue = functions.https.onCall(async (data, context) => {
     return await userRef.once("value").then(async function(snapshot) {
         snapshot_val = snapshot.val()
         if(snapshot_val === null || snapshot_val.is_disconnected) {
+            console.log("fuck me1", snapshot_val, snapshot_val.is_disconnected)
             const tags = ['Among Us'] // data.tags
             var chatId = await findBestChat(tags, userId, username)
             
@@ -42,9 +43,8 @@ exports.assignForSoloQueue = functions.https.onCall(async (data, context) => {
         
             return chatId
         }
-        else {
-            return "button already pressed"
-        }
+        console.log("fuck me2", snapshot_val, snapshot_val.is_disconnected)
+        return "button already pressed"
     })
 
 });
@@ -64,9 +64,7 @@ exports.createLobby = functions.https.onCall(async (data, context) => {
 
             return chatId
         }
-        else {
-            return "button already pressed"
-        }
+        return "button already pressed"
     })
 });
 
