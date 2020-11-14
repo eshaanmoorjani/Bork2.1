@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import App from './LoginV2';
 
-import {auth, db, functions, firebase} from '../services/firebase';
+import {auth, db, rt_db, functions, firebase} from '../services/firebase';
 import { showPage } from '../index';
 
 export function loginButtonTransition() {
@@ -47,6 +47,7 @@ function transition(button, functionName) {
 */
 
 function signIn(username, functionName) {
+    console.log("new auth")
     auth.signInAnonymously();
     auth.onAuthStateChanged(function(firebaseUser) {
         if(firebaseUser) {

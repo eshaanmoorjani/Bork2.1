@@ -25,7 +25,7 @@
     background-color:   #2196F3;
 }
 
-.chat-frame {
+.chat-frame-yes-video {
     position: fixed;
     top: 0%;
     left: 20%;
@@ -35,13 +35,43 @@
     background-color: #ffffff;
 }
 
-.video-frame {
+.video-frame-yes-video {
     position: fixed;
     top: 0%;
     left: 60%;
 
     height: 100%;
     width: 40%;
+
+    border-left-width: 1px;
+    border-left-color: black;
+    border-left-style: solid;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    
+    background-color: #ffffff;
+}
+
+.chat-frame-no-video {
+    position: fixed;
+    top: 0%;
+    left: 20%;
+    
+    height: 100%;
+    width: 60%;
+    background-color: #ffffff;
+}
+
+.video-frame-no-video {
+    position: fixed;
+    top: 0%;
+    left: 80%;
+
+    height: 100%;
+    width: 20%;
 
     border-left-width: 1px;
     border-left-color: black;

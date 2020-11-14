@@ -18,7 +18,10 @@ export default class LobbyApp extends Component {
             userID: auth.currentUser.uid,
             username: this.props.username,
             
+            lobbyType: this.props.lobbyType,
             queueReady: this.props.queueReady,
+            lobbyOpen: false,
+
             participants: {},
             numParticipants: 0,
         };
@@ -36,9 +39,9 @@ export default class LobbyApp extends Component {
     render() {
         return (
             <div class="full-frame">
-                <LobbyFrame queueReady={this.state.queueReady} handleLogout={this.handleLogout} handleQueueChange={this.changeQueueStatus}/>
+                <LobbyFrame queueReady={this.state.queueReady} handleLogout={this.handleLogout} handleQueueStatusChange={this.changeQueueStatus}/>
                 <ChatFrame chatID={this.state.chatID} userID={this.state.userID} username={this.props.username} initTime={new Date()}/>
-                <VideoFrame videoCallURL="https://hogpub.daily.co/test"/>
+                <VideoFrame ref="videoFrame" videoCallURL="https://hogpub.daily.co/test"/>
             </div>
         );
     }
@@ -69,17 +72,26 @@ export default class LobbyApp extends Component {
     }
 
     changeConnectionStatus() {
-        firebase.database().ref('users/' + this.state.userID + "/is_disconnected").set(false); // ayoooo dont change baby girl
+        rt_db.ref('users/' + this.state.userID + "/is_disconnected").set(false); // ayoooo dont change baby girl
         var presenceRef = rt_db.ref("users/" + this.state.userID + "/is_disconnected");     
         presenceRef.onDisconnect().set(true);
     }
 
     async changeQueueStatus() {
         await db.collection("chats").doc(this.state.chatID).update({
-            queue_ready: !this.state.queueReady
-        })
+            queue_ready: !this.state.queueReady,
+        });
         this.setState({
             queueReady: !this.state.queueReady,
+        });
+    }
+
+    async changeLobbyStatus() {
+        await db.collection("chats").doc(this.state.chatID).update({
+            lobby_open: !this.state.lobbyOpen,
+        });
+        this.setState({
+            lobby_open: !this.state.lobbyOpen,
         });
     }
 
@@ -91,7 +103,10 @@ export default class LobbyApp extends Component {
         .catch(function (error) {
             console.log(error);
         });
-    
+
+        // disconnect from the video call using the VideoFrame class's method
+        this.refs.videoFrame.disconnect();
+        
         auth.signOut().then(() => {
         })
         .catch(function (error) {
@@ -137,8 +152,16 @@ class LobbyFrame extends Component {
 
     startQueueButton() {
         return (
-            <Button class="start-queue-button" onClick={this.props.handleQueueChange}>
+            <Button class="start-queue-button" onClick={this.props.handleQueueStatusChange}>
                 <p class="start-queue-text">{this.getQueueButtonMessage()}</p>
+            </Button>
+        );
+    }
+
+    openLobbyButton() {
+        return (
+            <Button class="open-lobby-button" onClick={this.props.handleLobbyStatusChange}>
+                <p class="open-lobby-text">{this.getLobbyButtonMessage()}</p>
             </Button>
         );
     }
@@ -165,6 +188,10 @@ class LobbyFrame extends Component {
     getQueueButtonMessage() {
         return this.props.queueReady ? "Stop Queue": "Start Queue";
     }
+
+    getLobbyButtonMessage() {
+        return this.props.lobbyOpen ? "Close Lobby" : "Open Lobby";
+    }
 }
 
 class ChatFrame extends Component {
@@ -190,7 +217,7 @@ class ChatFrame extends Component {
 
     render() {
         return (
-            <div class="chat-frame">
+            <div class="chat-frame-no-video" id="chat-frame">
                 {this.messages()}
                 {this.sendMessageBox()}
             </div>
@@ -330,7 +357,13 @@ class VideoFrame extends Component {
     constructor(props) {
         super(props);
 
+        this.state = {
+            callFrame: null,
+        };
+
         this.joinCall = this.joinCall.bind(this);
+        this.makeCallFrame = this.makeCallFrame.bind(this);
+        this.joinButton = this.joinButton.bind(this);
 
         this.addDisconnectListener = this.addDisconnectListener.bind(this);
         this.addListeners = this.addListeners.bind(this);
@@ -338,7 +371,7 @@ class VideoFrame extends Component {
 
     render() {
         return (
-            <div class="video-frame" id="video-frame">
+            <div class="video-frame-no-video" id="video-frame">
                 {this.joinButton()}
             </div>
         );
@@ -357,6 +390,15 @@ class VideoFrame extends Component {
     }
 
     joinCall() {
+        this.makeCallFrame();
+
+        this.state.callFrame.join({url: this.props.videoCallURL});
+
+        this.addListeners();
+        this.cssYesVideo();
+    }
+
+    makeCallFrame() {
         const style = {
             iframeStyle: {
                 position: "fixed",
@@ -370,18 +412,37 @@ class VideoFrame extends Component {
             showFullscreenButton: true,
         };
         const callFrame = DailyIframe.createFrame(style);
-        callFrame.join({url: this.props.videoCallURL});
-
-        this.addListeners(callFrame);
+        console.log(callFrame);
+        this.state.callFrame = callFrame;
+        console.log(this.state.callFrame);
     }
 
-    addListeners(callFrame) {
-        this.addDisconnectListener(callFrame);
+    addListeners() {
+        this.addDisconnectListener();
     }
 
-    addDisconnectListener(callFrame) {
-        callFrame.on("left-meeting", (event) => {
-            
+    addDisconnectListener() {
+        this.state.callFrame.on("left-meeting", (event) => {
+            this.state.callFrame.destroy();
+            this.cssNoVideo();
         })
+    }
+
+    disconnect() {
+        this.state.callFrame.leave();
+    }
+
+    cssYesVideo() {
+        const chatFrame = document.getElementById("chat-frame");
+        const videoFrame = document.getElementById("video-frame");
+        chatFrame.setAttribute("class", "chat-frame-yes-video");
+        videoFrame.setAttribute("class", "video-frame-yes-video");
+    }
+
+    cssNoVideo() {
+        const chatFrame = document.getElementById("chat-frame");
+        const videoFrame = document.getElementById("video-frame");
+        chatFrame.setAttribute("class", "chat-frame-no-video");
+        videoFrame.setAttribute("class", "video-frame-no-video");
     }
 }

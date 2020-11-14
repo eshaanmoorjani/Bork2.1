@@ -22,15 +22,19 @@ exports.usernameApproval = functions.https.onCall((data, context) => {
     return true;
 });
 
+exports.chatExists = functions.https.onCall((data, context) => {
+    
+})
+
 exports.assignForSoloQueue = functions.https.onCall(async (data, context) => {
     const userId = context.auth.uid
     const username = data.username
 
-    userRef =  realtime.ref("users/" + userId)// firestore.collection('users').doc(userId)
+    userRef =  realtime.ref("users/" + userId + '/queuing')
     return await userRef.once("value").then(async function(snapshot) {
-        snapshot_val = snapshot.val()
-        if(snapshot_val === null || snapshot_val.is_disconnected) {
-            console.log("fuck me1", snapshot_val, snapshot_val.is_disconnected)
+        if(snapshot.val() === null) {
+            userRef.set(true);
+            console.log("fuck me1", snapshot.val())
             const tags = ['Among Us'] // data.tags
             var chatId = await findBestChat(tags, userId, username)
             
@@ -38,14 +42,13 @@ exports.assignForSoloQueue = functions.https.onCall(async (data, context) => {
             if(chatId === null) {
                 chatId = await createNewChat(tags, true)
             }
-        
+
+            console.log("AYO BRUH IM WRITING TO THE USER INFORMATIO THDAKFHASKFH")
             await modifyUserChatInfo(userId, chatId, username)
-        
             return chatId
         }
-        console.log("fuck me2", snapshot_val, snapshot_val.is_disconnected)
         return "button already pressed"
-    })
+    });
 
 });
 
@@ -54,10 +57,10 @@ exports.createLobby = functions.https.onCall(async (data, context) => {
     const username = data.username
 
 
-    userRef =  realtime.ref("users/" + userId)// firestore.collection('users').doc(userId)
+    userRef =  realtime.ref("users/" + userId + '/queuing')
     return await userRef.once("value").then(async function(snapshot) {
         snapshot_val = snapshot.val()
-        if(snapshot_val === null || snapshot_val.is_disconnected) {
+        if(snapshot_val === null) {
             var chatId = await createNewChat(['Among Us'], false)
 
             await modifyUserChatInfo(userId, chatId, username)
@@ -67,6 +70,11 @@ exports.createLobby = functions.https.onCall(async (data, context) => {
         return "button already pressed"
     })
 });
+
+exports.joinLobby = functions.https.onCall(async (data, context) => {
+    const userId = context.auth.uid
+    const username = data.username
+})
 
 async function createNewChat(userTags, queue_ready) {
     var chatId = null
@@ -86,6 +94,7 @@ async function createNewChat(userTags, queue_ready) {
 }
 
 async function modifyUserChatInfo(userId, chatId, username) {
+    // adds the user information to the database
     await firestore.collection("users").doc(userId).set({
         user_id: userId,
         username: username,
@@ -94,6 +103,7 @@ async function modifyUserChatInfo(userId, chatId, username) {
         chat_id: chatId,
     })
     
+    // adds user to the participants collection
     firestore.collection('chats').doc(chatId).collection('participants').doc(userId).set({
         user_id: userId,
         username: username,
@@ -113,8 +123,6 @@ async function modifyUserChatInfo(userId, chatId, username) {
 
 async function findBestChat(userTags, userId, username) {
     // get every chat room where num_participants < 10
-
-    console.log("in findBestchat")
 
     return firestore.collection("chats").where("num_participants", "<", 10).get() 
         .then(function(querySnapshot) {
@@ -165,20 +173,20 @@ exports.removeDisconnectedUsers = functions.database.ref('/users/{userId}/is_dis
             await realtime.ref('/users/' + userId + "/is_disconnected").once('value').then(async function(snapshot) {
                 console.log("HAPPENED AFTER")
                 if(snapshot.val()) {
-                    const userInfo = await getChatId(userId)
-                    await deleteUserInfoHelper(userId, userInfo[0], userInfo[1])
-                    await deleteChatInfo(userId, userInfo[0], userInfo[1])
-                    return admin.auth().deleteUser(userId).then(() => {
+                    await admin.auth().deleteUser(userId).then(() => {
                         return console.log('Deleted user account', userId, 'because of inactivity');
                     }).catch((error) => {
                         return console.error('Deletion of inactive user account', userId, 'failed:', error);
                     });
+                    const userInfo = await getChatId(userId)
+                    await deleteUserInfoHelper(userId, userInfo[0], userInfo[1])
+                    await deleteChatInfo(userId, userInfo[0], userInfo[1])
                 }
                 console.log("should not delete")
                 return null
             });
             return null
-        },10000)
+        },5000)
     }
 
 });
@@ -224,15 +232,11 @@ async function deleteUserInfoHelper(userId) {
 
 async function deleteChatInfo(userId, chatId, username) {
     // delete from current chat participants document
-    console.log("-a, chatid: ",chatId)
     const chatParticipantsPath = firestore.collection('chats').doc(chatId).collection('participants').doc(userId)
-    console.log("a")
     const chatDeleteInfo = await chatParticipantsPath.delete();
-    console.log("b")
     const lowerParticipantsInfo = await firestore.collection('chats').doc(chatId).update({
         num_participants: admin.firestore.FieldValue.increment(-1)
     })
-    console.log("c")
 
     // send user_disconnect message
     await firestore.collection('chats').doc(chatId).collection("messages").add({
