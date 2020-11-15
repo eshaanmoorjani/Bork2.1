@@ -48,30 +48,30 @@ exports.assignForSoloQueue = functions.https.onCall(async (data, context) => {
             console.log("AYO BRUH IM WRITING TO THE USER INFORMATIO THDAKFHASKFH")
             await modifyUserChatInfo(userId, chatId, username);
             await increaseParticipants(chatId);
-            return chatId
+            return chatId;
         }
-        return "button already pressed"
+        return "button already pressed";
     });
 
 });
 
 exports.createLobby = functions.https.onCall(async (data, context) => {
     const userId = context.auth.uid;
-    const username = data.username
+    const username = data.username;
 
 
-    userRef =  realtime.ref("users/" + userId + '/queuing')
+    userRef =  realtime.ref("users/" + userId + '/queuing');
     return await userRef.once("value").then(async function(snapshot) {
-        snapshot_val = snapshot.val()
+        snapshot_val = snapshot.val();
         if(snapshot_val === null) {
-            var chatId = await createNewChat(['Among Us'], false, "Premade")
+            var chatId = await createNewChat(['Among Us'], false, "Premade");
 
             await modifyUserChatInfo(userId, chatId, username);
             await increaseParticipants(chatId);
 
-            return chatId
+            return chatId;
         }
-        return "button already pressed"
+        return "button already pressed";
     });
 });
 
@@ -92,19 +92,20 @@ exports.verifyChatID = functions.https.onCall((data, context) => {
     if (signInType === "assignForSoloQueue" || signInType === "createLobby") {
         return true;
     } else {
-        /* If there is a lobby with same ID as the user-given chatID, the lobby is not full, and the lobby is open, return true */
+        /* If there is a lobby with same ID as the user-given chatID, the lobby is not full, the lobby is open, and the lobby is premade return true */
         return firestore.collection("chats").where("num_participants", "<", 10).get() 
         .then(function(querySnapshot) {
             for (var i in querySnapshot.docs) {
-                const doc = querySnapshot.docs[i]
-                if(doc.id === chatID && !doc.data().lobby_open) {
+                const doc = querySnapshot.docs[i];
+                const data = doc.data();
+                if(doc.id === chatID && !data.lobby_open && data.lobby_type === "Premade") {
                     return true;
                 }
             }
             return false;
         })
         .catch(function(error) {
-            console.log("Error: ", error)
+            console.log("Error: ", error);
         });
     }
 });
@@ -160,18 +161,18 @@ async function findBestChat(userTags, userId, username) {
 
     return firestore.collection("chats").where("num_participants", "<", 10).get() 
         .then(function(querySnapshot) {
-            var chatId = "-1"
-            var chatTags = []
-            var score = 0
+            var chatId = "-1";
+            var chatTags = [];
+            var score = 0;
             // Not developing code in this fashion b/c we are just focusing on Among Us
             for (var i in querySnapshot.docs) {
-                const doc = querySnapshot.docs[i]
+                const doc = querySnapshot.docs[i];
+                const data = doc.data();
 
-                const lobby_open = doc.data().lobby_open;
-                if(lobby_open) {
-                    chatId = doc.id
-                    chatTags = doc.tags
-                    score = 1 // chatScore(chatId, chatTags)
+                if(data.lobby_open && data.lobby_type === "Normal") {
+                    chatId = doc.id;
+                    chatTags = doc.tags;
+                    score = 1; // chatScore(chatId, chatTags)
 
                     // moved adding one to participants to assignForSoloQueue; findBestChat shouldn't know about that
 
@@ -182,7 +183,7 @@ async function findBestChat(userTags, userId, username) {
                 }
             }
 
-            return null
+            return null;
         })
         .catch(function(error) {
             console.log("Error: ", error)

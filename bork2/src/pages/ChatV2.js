@@ -23,11 +23,9 @@ export default class LobbyApp extends Component {
             participants: {},
             numParticipants: 0,
         };
-
-        this.setState({
-            lobbyOpen: this.getLobbyType() === "Premade" ? false : true,
-        });
         
+        this.setLobbyOpen();
+
         this.handleLogout = this.handleLogout.bind(this);
 
         this.getParticipants = this.getParticipants.bind(this);
@@ -72,13 +70,15 @@ export default class LobbyApp extends Component {
             this.setState({
                 numParticipants: numParticipants,
                 participants: participants,
-            })
+            });
         });
     }
 
-    async getLobbyType() {
+    async setLobbyOpen() {
         const chat = await db.collection("chats").doc(this.state.chatID).get();
-        return chat.data().lobby_type;
+        this.setState({
+            lobbyOpen: chat.data().lobby_open,
+        });
     }
 
     changeConnectionStatus() {

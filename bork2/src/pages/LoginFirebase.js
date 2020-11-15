@@ -70,7 +70,7 @@ function signIn(username, chatID, signInType) {
             const buttonFunction = functions.httpsCallable(signInType)
             buttonFunction({username: username, chatID: chatID}).then(result => { 
                 console.log("dick", result.data);
-            })
+            });
         }
     });
 }
