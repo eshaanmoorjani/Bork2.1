@@ -47,7 +47,7 @@ function transition(button, signInType) {
                         console.log("ITS NOT VERIFIED!!!");
                         /* Re-render the login page with the chatID error message */
                         ReactDOM.render(<App chatIDError={true} chatIDErrorMessage="The chat does not exist or is full!"/>,
-                         document.getElementById("root"));
+                        document.getElementById("root"));
                     }
                 });
             } else {

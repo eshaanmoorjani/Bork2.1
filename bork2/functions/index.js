@@ -7,8 +7,6 @@ const realtime = admin.database();
 
 
 /*
-Weird bug: In created lobbies, queue_ready doesn't flip on first button flip???
-Need to change queue_ready to lobby_open. Its wack as shit.
 Need to turn the joinLobbyInput in LoginV2.js into a materialUI textfield so that it can display an error message
 */
 
@@ -44,7 +42,7 @@ exports.assignForSoloQueue = functions.https.onCall(async (data, context) => {
             
             // create a new chat for the person
             if(chatId === null) {
-                chatId = await createNewChat(tags, true)
+                chatId = await createNewChat(tags, true, "Normal")
             }
 
             console.log("AYO BRUH IM WRITING TO THE USER INFORMATIO THDAKFHASKFH")
@@ -66,7 +64,7 @@ exports.createLobby = functions.https.onCall(async (data, context) => {
     return await userRef.once("value").then(async function(snapshot) {
         snapshot_val = snapshot.val()
         if(snapshot_val === null) {
-            var chatId = await createNewChat(['Among Us'], false)
+            var chatId = await createNewChat(['Among Us'], false, "Premade")
 
             await modifyUserChatInfo(userId, chatId, username);
             await increaseParticipants(chatId);
@@ -94,12 +92,12 @@ exports.verifyChatID = functions.https.onCall((data, context) => {
     if (signInType === "assignForSoloQueue" || signInType === "createLobby") {
         return true;
     } else {
-        /* If there is a lobby with same ID as the user-given chatID, the lobby is not full, and the lobby is open (queue_ready is false), return true */
+        /* If there is a lobby with same ID as the user-given chatID, the lobby is not full, and the lobby is open, return true */
         return firestore.collection("chats").where("num_participants", "<", 10).get() 
         .then(function(querySnapshot) {
             for (var i in querySnapshot.docs) {
                 const doc = querySnapshot.docs[i]
-                if(doc.id === chatID && !doc.data().queue_ready) {
+                if(doc.id === chatID && !doc.data().lobby_open) {
                     return true;
                 }
             }
@@ -111,12 +109,13 @@ exports.verifyChatID = functions.https.onCall((data, context) => {
     }
 });
 
-async function createNewChat(userTags, queue_ready) {
+async function createNewChat(userTags, lobby_open, lobby_type) {
     var chatId = null
     chatId = await firestore.collection("chats").add({
         num_participants: 0, // changed this to 0, the chat shouldn't know whats going on outside
         tags: userTags,
-        queue_ready: queue_ready
+        lobby_type: lobby_type,
+        lobby_open: lobby_open,
     })
     .then(function(docRef) {
         chatId = docRef.id
@@ -168,8 +167,8 @@ async function findBestChat(userTags, userId, username) {
             for (var i in querySnapshot.docs) {
                 const doc = querySnapshot.docs[i]
 
-                queue_ready = doc.data().queue_ready
-                if(queue_ready) {
+                const lobby_open = doc.data().lobby_open;
+                if(lobby_open) {
                     chatId = doc.id
                     chatTags = doc.tags
                     score = 1 // chatScore(chatId, chatTags)

@@ -18,18 +18,20 @@ export default class LobbyApp extends Component {
             userID: auth.currentUser.uid,
             username: this.props.username,
             
-            lobbyType: this.props.lobbyType,
-            queueReady: this.props.queueReady,
-            lobbyOpen: false,
+            lobbyOpen: null,
 
             participants: {},
             numParticipants: 0,
         };
 
+        this.setState({
+            lobbyOpen: this.getLobbyType() === "Premade" ? false : true,
+        });
+        
         this.handleLogout = this.handleLogout.bind(this);
 
         this.getParticipants = this.getParticipants.bind(this);
-        this.changeQueueStatus = this.changeQueueStatus.bind(this);
+        this.handleLobbyStatusChange = this.handleLobbyStatusChange.bind(this);
         this.changeConnectionStatus = this.changeConnectionStatus.bind(this);
         this.addAllListeners = this.addAllListeners.bind(this);
 
@@ -39,8 +41,8 @@ export default class LobbyApp extends Component {
     render() {
         return (
             <div class="full-frame">
-                <LobbyFrame chatID={this.state.chatID} queueReady={this.state.queueReady}
-                 handleLogout={this.handleLogout} handleQueueStatusChange={this.changeQueueStatus}/>
+                <LobbyFrame chatID={this.state.chatID} lobbyOpen={this.state.lobbyOpen}
+                 handleLogout={this.handleLogout} handleLobbyStatusChange={this.handleLobbyStatusChange}/>
 
                 <ChatFrame chatID={this.state.chatID} userID={this.state.userID} username={this.props.username} initTime={new Date()}/>
 
@@ -74,6 +76,11 @@ export default class LobbyApp extends Component {
         });
     }
 
+    async getLobbyType() {
+        const chat = await db.collection("chats").doc(this.state.chatID).get();
+        return chat.data().lobby_type;
+    }
+
     changeConnectionStatus() {
         rt_db.ref('users/' + this.state.userID + "/is_disconnected").set(false); // ayoooo dont change baby girl
         var presenceRef = rt_db.ref("users/" + this.state.userID + "/is_disconnected");     
@@ -81,12 +88,13 @@ export default class LobbyApp extends Component {
     }
 
     /** DOESNT FLIP IN THE DATABASE THE FIRST TIME BECAUSE THE DATABASE's queue_ready IS false BUT THE CHAT'S queue_ready IS true */
-    async changeQueueStatus() {
+    /** TO FIX: NEED TO HAVE lobby_type IN THE DATABASE, BASED ON THE LOBBY TYPE, INIT queue_ready TO true/false. AND ALSO CHANGE queue_ready TO lobby_open */
+    async handleLobbyStatusChange() {
         await db.collection("chats").doc(this.state.chatID).update({
-            queue_ready: !this.state.queueReady,
+            lobby_open: !this.state.lobbyOpen,
         }); 
         this.setState({
-            queueReady: !this.state.queueReady,
+            lobbyOpen: !this.state.lobbyOpen,
         });
     }
 
@@ -138,25 +146,17 @@ class LobbyFrame extends Component {
     misc() {
         return (
             <div class="misc-box">
-                {this.startQueueButton()}
+                {this.openLobbyButton()}
                 {this.lobbyInfoBox()}
                 {this.leaveLobbyButton()}
             </div>
         );
     }
 
-    startQueueButton() {
-        return (
-            <Button class="start-queue-button" onClick={this.props.handleQueueStatusChange}>
-                <p class="start-queue-text">{this.getQueueButtonMessage()}</p>
-            </Button>
-        );
-    }
-
     openLobbyButton() {
         return (
-            <Button class="open-lobby-button" onClick={this.props.handleLobbyStatusChange}>
-                <p class="open-lobby-text">{this.getLobbyButtonMessage()}</p>
+            <Button class="start-queue-button" onClick={this.props.handleLobbyStatusChange}>
+                <p class="start-queue-text">{this.getLobbyButtonMessage()}</p>
             </Button>
         );
     }
@@ -178,10 +178,6 @@ class LobbyFrame extends Component {
                 </div>
             </div>
         );
-    }
-
-    getQueueButtonMessage() {
-        return this.props.queueReady ? "Stop Queue": "Start Queue";
     }
 
     getLobbyButtonMessage() {
