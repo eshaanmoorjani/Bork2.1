@@ -30,7 +30,7 @@ auth.onAuthStateChanged(firebaseUser => {
   }  
   else {
     ReactDOM.render(
-      <App usernameError={false} usernameHelperText=""/>,
+      <App />,
       document.getElementById('root')
     );
     loginButtonTransition();

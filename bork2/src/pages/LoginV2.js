@@ -1,6 +1,6 @@
 import './LoginV2.css';
 import React, { Component } from 'react';
-import ReactDom from 'react-dom';
+import { joinLobbyTransition } from './LoginFirebase';
 
 import TextField from '@material-ui/core/TextField';
 import Grid from '@material-ui/core/Grid';
@@ -23,7 +23,8 @@ export default class App extends Component {
   loginFrame() {
     return (
       <div class="login-frame">
-        <Form usernameError={this.props.usernameError} usernameHelperText={this.props.usernameHelperText}></Form>
+        <Form usernameError={this.props.usernameError} usernameHelperText={this.props.usernameHelperText}
+         chatIDError={this.props.chatIDError} chatIDHelperText={this.props.chatIDHelperText}></Form>
         <HogPub></HogPub>
       </div>
     );
@@ -146,6 +147,8 @@ class Form extends Component {
       inputDiv.appendChild(idInput);
       inputDiv.appendChild(joinButton);
       jlb.appendChild(inputDiv);
+
+      joinLobbyTransition();
   }
 
   joinLobbyNoHover() {

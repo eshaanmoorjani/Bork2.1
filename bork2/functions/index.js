@@ -5,6 +5,14 @@ admin.initializeApp();
 const firestore = admin.firestore();
 const realtime = admin.database();
 
+
+/*
+Weird bug: In created lobbies, queue_ready doesn't flip on first button flip???
+Need to change queue_ready to lobby_open. Its wack as shit.
+Need to turn the joinLobbyInput in LoginV2.js into a materialUI textfield so that it can display an error message
+*/
+
+
 exports.usernameApproval = functions.https.onCall((data, context) => {
     const username = data.username
     if(username.length === 0) {
@@ -21,10 +29,6 @@ exports.usernameApproval = functions.https.onCall((data, context) => {
     }
     return true;
 });
-
-exports.chatExists = functions.https.onCall((data, context) => {
-    
-})
 
 exports.assignForSoloQueue = functions.https.onCall(async (data, context) => {
     const userId = context.auth.uid
@@ -44,7 +48,8 @@ exports.assignForSoloQueue = functions.https.onCall(async (data, context) => {
             }
 
             console.log("AYO BRUH IM WRITING TO THE USER INFORMATIO THDAKFHASKFH")
-            await modifyUserChatInfo(userId, chatId, username)
+            await modifyUserChatInfo(userId, chatId, username);
+            await increaseParticipants(chatId);
             return chatId
         }
         return "button already pressed"
@@ -63,23 +68,53 @@ exports.createLobby = functions.https.onCall(async (data, context) => {
         if(snapshot_val === null) {
             var chatId = await createNewChat(['Among Us'], false)
 
-            await modifyUserChatInfo(userId, chatId, username)
+            await modifyUserChatInfo(userId, chatId, username);
+            await increaseParticipants(chatId);
 
             return chatId
         }
         return "button already pressed"
-    })
+    });
 });
 
 exports.joinLobby = functions.https.onCall(async (data, context) => {
-    const userId = context.auth.uid
-    const username = data.username
-})
+    const userId = context.auth.uid;
+    const username = data.username;
+    const chatID = data.chatID;
+    
+    await modifyUserChatInfo(userId, chatID, username);
+    await increaseParticipants(chatID);
+});
+
+exports.verifyChatID = functions.https.onCall((data, context) => {
+    const chatID = data.chatID;
+    const signInType = data.signInType;
+    console.log("SIGN IN TYPE: ", signInType);
+    /* No need to verify the chatID for soloQueue*/
+    if (signInType === "assignForSoloQueue" || signInType === "createLobby") {
+        return true;
+    } else {
+        /* If there is a lobby with same ID as the user-given chatID, the lobby is not full, and the lobby is open (queue_ready is false), return true */
+        return firestore.collection("chats").where("num_participants", "<", 10).get() 
+        .then(function(querySnapshot) {
+            for (var i in querySnapshot.docs) {
+                const doc = querySnapshot.docs[i]
+                if(doc.id === chatID && !doc.data().queue_ready) {
+                    return true;
+                }
+            }
+            return false;
+        })
+        .catch(function(error) {
+            console.log("Error: ", error)
+        });
+    }
+});
 
 async function createNewChat(userTags, queue_ready) {
     var chatId = null
     chatId = await firestore.collection("chats").add({
-        num_participants: 1,
+        num_participants: 0, // changed this to 0, the chat shouldn't know whats going on outside
         tags: userTags,
         queue_ready: queue_ready
     })
@@ -139,13 +174,10 @@ async function findBestChat(userTags, userId, username) {
                     chatTags = doc.tags
                     score = 1 // chatScore(chatId, chatTags)
 
+                    // moved adding one to participants to assignForSoloQueue; findBestChat shouldn't know about that
+
                     // short circuit if the perfect room is found
                     if(score === 1) {
-                        // increase the number of participants
-                        firestore.collection('chats').doc(chatId).update({
-                            num_participants: admin.firestore.FieldValue.increment(1)
-                        })
-
                         return chatId;
                     }
                 }
@@ -156,6 +188,13 @@ async function findBestChat(userTags, userId, username) {
         .catch(function(error) {
             console.log("Error: ", error)
         });
+}
+
+/* Increases numParticipants of the given lobby by one */
+async function increaseParticipants(chatId) {
+    firestore.collection('chats').doc(chatId).update({
+        num_participants: admin.firestore.FieldValue.increment(1)
+    });
 }
 
 // how to do helper functions with firebase??

@@ -39,8 +39,11 @@ export default class LobbyApp extends Component {
     render() {
         return (
             <div class="full-frame">
-                <LobbyFrame queueReady={this.state.queueReady} handleLogout={this.handleLogout} handleQueueStatusChange={this.changeQueueStatus}/>
+                <LobbyFrame chatID={this.state.chatID} queueReady={this.state.queueReady}
+                 handleLogout={this.handleLogout} handleQueueStatusChange={this.changeQueueStatus}/>
+
                 <ChatFrame chatID={this.state.chatID} userID={this.state.userID} username={this.props.username} initTime={new Date()}/>
+
                 <VideoFrame ref="videoFrame" videoCallURL="https://hogpub.daily.co/test"/>
             </div>
         );
@@ -179,7 +182,7 @@ class LobbyFrame extends Component {
             <div class="lobby-info-box">
                 <h3 class="lobby-info-header">Lobby Info</h3>
                 <div class="lobby-info-text">
-                    <p class="random-stuff">Random stuff</p>
+                    <p class="random-stuff">Chat ID: {this.props.chatID}</p>
                 </div>
             </div>
         );
@@ -429,7 +432,9 @@ class VideoFrame extends Component {
     }
 
     disconnect() {
-        this.state.callFrame.leave();
+        if (this.state.callFrame !== null) {
+            this.state.callFrame.leave();
+        }
     }
 
     cssYesVideo() {
