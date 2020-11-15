@@ -80,21 +80,13 @@ export default class LobbyApp extends Component {
         presenceRef.onDisconnect().set(true);
     }
 
+    /** DOESNT FLIP IN THE DATABASE THE FIRST TIME BECAUSE THE DATABASE's queue_ready IS false BUT THE CHAT'S queue_ready IS true */
     async changeQueueStatus() {
         await db.collection("chats").doc(this.state.chatID).update({
             queue_ready: !this.state.queueReady,
-        });
+        }); 
         this.setState({
             queueReady: !this.state.queueReady,
-        });
-    }
-
-    async changeLobbyStatus() {
-        await db.collection("chats").doc(this.state.chatID).update({
-            lobby_open: !this.state.lobbyOpen,
-        });
-        this.setState({
-            lobby_open: !this.state.lobbyOpen,
         });
     }
 
