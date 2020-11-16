@@ -148,6 +148,7 @@ class Form extends Component {
       inputDiv.appendChild(joinButton);
       jlb.appendChild(inputDiv);
 
+      // REPEATEDLY CALLS THIS, POSSIBLE ISSUE
       joinLobbyTransition();
   }
 

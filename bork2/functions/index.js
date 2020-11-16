@@ -279,7 +279,7 @@ async function deleteChatInfo(userId, chatId, username) {
 
     // send user_disconnect message
     await firestore.collection('chats').doc(chatId).collection("messages").add({
-        content: username + " has rage quit.",
+        content: username + " has hogged out.",
         timestamp: new Date(),
         userID: userId,
         username: username,

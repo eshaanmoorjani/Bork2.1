@@ -2,8 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import App from './LoginV2';
 
-import {auth, db, rt_db, functions, firebase} from '../services/firebase';
-import { showPage } from '../index';
+import { auth, functions } from '../services/firebase';
 
 export function loginButtonTransition() {
     const soloQueueButton = document.getElementById('solo-queue-button');
@@ -22,14 +21,24 @@ export function createLobbyTransition() {
     transition(createLobbyButton, "createLobby");
 }
 
-/* Add listener to the given button */
+/**
+ * Adds a listener to a given button.
+ * On button press, verify the username and/or chatID.
+ * If both are verified, then sign the user in.
+ * Otherwise, re-render the login page with an error message.
+ * 
+ * Possible issue: make sure to not call this function multiple times, will add a ton of listeners
+ * 
+ * @param {*} button 
+ * @param {*} signInType 
+ */
 function transition(button, signInType) {
     button.addEventListener('click', e=> {
         const username_box = document.getElementById("username-textfield");
         const username = username_box.value;
         
         const joinLobbyInput = document.getElementById("join-lobby-input");
-        const chatID = (joinLobbyInput == undefined) ? null : joinLobbyInput.value;
+        const chatID = (joinLobbyInput === undefined || joinLobbyInput === null) ? null : joinLobbyInput.value;
 
         const usernameApproval = functions.httpsCallable('usernameApproval');
         const verifyChatID = functions.httpsCallable('verifyChatID');
@@ -62,16 +71,21 @@ function transition(button, signInType) {
    If join lobby button was clicked, chatID should be what the user entered.
 */
 
-function signIn(username, chatID, signInType) {
+/**
+ * This function is called when we are guarenteed that the user inputted username and/or chatID is valid
+ * 
+ * Revised 11/16/2020 to no longer add another auth.onStateChanged()
+ * 
+ * @param {*} username 
+ * @param {*} chatID 
+ * @param {*} signInType 
+ */
+async function signIn(username, chatID, signInType) {
     console.log("new auth")
-    auth.signInAnonymously();
-    auth.onAuthStateChanged(function(firebaseUser) {
-        if(firebaseUser) {
-            const buttonFunction = functions.httpsCallable(signInType)
-            buttonFunction({username: username, chatID: chatID}).then(result => { 
-                console.log("dick", result.data);
-            });
-        }
+    await auth.signInAnonymously();
+    const buttonFunction = functions.httpsCallable(signInType);
+    buttonFunction({username: username, chatID: chatID}).then(result => { 
+        console.log("dick", result.data);
     });
 }
 
