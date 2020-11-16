@@ -36,7 +36,7 @@ auth.onAuthStateChanged(firebaseUser => {
       document.getElementById('root')
     );
     loginButtonTransition();
-    // joinLobbyTransition();
+    joinLobbyTransition();
     createLobbyTransition();
   }
 });

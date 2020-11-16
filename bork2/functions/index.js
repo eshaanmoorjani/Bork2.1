@@ -46,8 +46,7 @@ exports.assignForSoloQueue = functions.https.onCall(async (data, context) => {
             }
 
             console.log("AYO BRUH IM WRITING TO THE USER INFORMATIO THDAKFHASKFH")
-            await modifyUserChatInfo(userId, chatId, username);
-            await increaseParticipants(chatId);
+            await addToChatSequence(userId, chatId, username);
             return chatId;
         }
         return "button already pressed";
@@ -66,8 +65,7 @@ exports.createLobby = functions.https.onCall(async (data, context) => {
         if(snapshot_val === null) {
             var chatId = await createNewChat(['Among Us'], false, "Premade");
 
-            await modifyUserChatInfo(userId, chatId, username);
-            await increaseParticipants(chatId);
+            await addToChatSequence(userId, chatId, username);
 
             return chatId;
         }
@@ -75,30 +73,44 @@ exports.createLobby = functions.https.onCall(async (data, context) => {
     });
 });
 
+/**
+ * Writes the user's data into the correct chat room.
+ * 
+ * This function is only called if all user inputs (username, chatID) are valid.
+ * 
+ */
 exports.joinLobby = functions.https.onCall(async (data, context) => {
-    const userId = context.auth.uid;
+    const userID = context.auth.uid;
     const username = data.username;
     const chatID = data.chatID;
     
-    await modifyUserChatInfo(userId, chatID, username);
-    await increaseParticipants(chatID);
+    await addToChatSequence(userID, chatID, username);
 });
 
+
+/**
+ * Verify that a given chatID is ok.
+ * 
+ * If the given signInType wasn't joinLobby, then return true. (No need to verify the chatID for other sign in types)
+ * Iterates through all the chats in the database that are not full, are premade lobbies, and are not open (to the outside world).
+ * If there is a chat that matches the given chatID, return true.
+ * Otherwise, no such chat exists; return false.
+ * 
+ */
 exports.verifyChatID = functions.https.onCall((data, context) => {
     const chatID = data.chatID;
     const signInType = data.signInType;
-    console.log("SIGN IN TYPE: ", signInType);
-    /* No need to verify the chatID for soloQueue*/
+
     if (signInType === "assignForSoloQueue" || signInType === "createLobby") {
         return true;
     } else {
-        /* If there is a lobby with same ID as the user-given chatID, the lobby is not full, the lobby is open, and the lobby is premade return true */
-        return firestore.collection("chats").where("num_participants", "<", 10).get() 
-        .then(function(querySnapshot) {
+        /* Had to create an index in cloud firestore to handle multiple where() queries */
+        return firestore.collection("chats")
+        .where("num_participants", "<", 10).where("lobby_type", "==", "Premade").where("lobby_open", "==", false)
+        .get().then(function(querySnapshot) {
             for (var i in querySnapshot.docs) {
                 const doc = querySnapshot.docs[i];
-                const data = doc.data();
-                if(doc.id === chatID && !data.lobby_open && data.lobby_type === "Premade") {
+                if(doc.id === chatID) {
                     return true;
                 }
             }
@@ -126,34 +138,6 @@ async function createNewChat(userTags, lobby_open, lobby_type) {
         console.log("Error adding document: ",error)
     })
     return chatId
-}
-
-async function modifyUserChatInfo(userId, chatId, username) {
-    // adds the user information to the database
-    await firestore.collection("users").doc(userId).set({
-        user_id: userId,
-        username: username,
-        premade_tags: ['Among Us'],
-        custom_tags: [],
-        chat_id: chatId,
-    })
-    
-    // adds user to the participants collection
-    firestore.collection('chats').doc(chatId).collection('participants').doc(userId).set({
-        user_id: userId,
-        username: username,
-        timestamp: new Date(),
-    })
-
-    // send a connect message
-    firestore.collection('chats').doc(chatId).collection("messages").add({
-        content: username + " has joined the pub.",
-        timestamp: new Date(),
-        userID: userId,
-        username: username,
-        messageNumber: -1,
-        type: "user_connect",
-    });
 }
 
 async function findBestChat(userTags, userId, username) {
@@ -190,12 +174,98 @@ async function findBestChat(userTags, userId, username) {
         });
 }
 
-/* Increases numParticipants of the given lobby by one */
+
+/**
+ * Do the sequence of operations that must happen every time a user is added to a chat
+ * 
+ * 1. Write the user to the database -- who they are, what chat they are in, etc.
+ * 2. Add them to the chat's participants
+ * 3. Increase the chat's participants field by 1
+ * 4. Send an entry message
+ * 
+ * @param {*} userId 
+ * @param {*} chatId 
+ * @param {*} username 
+ */
+async function addToChatSequence(userId, chatId, username) {
+    await addUserToChat(userId, chatId, username);
+    await addToParticipants(userId, chatId, username);
+    await increaseParticipants(chatId);
+    await sendMessage(chatId, userId, username, -1, "user_connect", username + " has joined the pub.",);
+}
+
+
+/**
+ * Writes the given user's information to the database.
+ * 
+ * @param {*} userId 
+ * @param {*} chatId 
+ * @param {*} username 
+ */
+async function addUserToChat(userId, chatId, username) {
+    await firestore.collection("users").doc(userId).set({
+        user_id: userId,
+        username: username,
+        premade_tags: ['Among Us'],
+        custom_tags: [],
+        chat_id: chatId,
+    });
+}
+
+
+/**
+ * Given a chat and a user, add the user to the chat's participants
+ * 
+ * @param {*} chatId 
+ * @param {*} userId 
+ * @param {*} username
+ */
+async function addToParticipants(userId, chatId, username) {
+    firestore.collection('chats').doc(chatId).collection('participants').doc(userId).set({
+        user_id: userId,
+        username: username,
+        timestamp: new Date(),
+    })
+}
+
+
+/**
+ * Increases the num_participants field of the given chat by 1.
+ * 
+ * @param {*} chatId 
+ */
 async function increaseParticipants(chatId) {
     firestore.collection('chats').doc(chatId).update({
         num_participants: admin.firestore.FieldValue.increment(1)
     });
 }
+
+
+/**
+ * Sends a given message to a given chat.
+ * 
+ * @param {*} chatId 
+ * @param {*} userId 
+ * @param {*} username 
+ * @param {*} messageNumber 
+ * @param {*} type 
+ * @param {*} message 
+ */
+async function sendMessage(chatId, userId, username, messageNumber, type, message) {
+    await firestore.collection('chats').doc(chatId).collection("messages").add({
+        content: message,
+        timestamp: new Date(),
+        userID: userId,
+        username: username,
+        messageNumber: messageNumber,
+        type: type,
+    });
+}
+
+
+
+
+
 
 // how to do helper functions with firebase??
 function chatScore(chatTags, userTags) {
@@ -277,15 +347,7 @@ async function deleteChatInfo(userId, chatId, username) {
         num_participants: admin.firestore.FieldValue.increment(-1)
     })
 
-    // send user_disconnect message
-    await firestore.collection('chats').doc(chatId).collection("messages").add({
-        content: username + " has hogged out.",
-        timestamp: new Date(),
-        userID: userId,
-        username: username,
-        messageNumber: -1,
-        type: "user_disconnect",
-    });
+    await sendMessage(chatId, userId, username, -1, "user_disconnect", username + " has hogged out.");
     console.log("d")
 }
 

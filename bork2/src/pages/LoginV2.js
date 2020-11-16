@@ -1,11 +1,14 @@
-import './LoginV2.css';
 import React, { Component } from 'react';
-import { joinLobbyTransition } from './LoginFirebase';
 
 import TextField from '@material-ui/core/TextField';
 import Grid from '@material-ui/core/Grid';
 import Button from '@material-ui/core/Button';
+import Hidden from '@material-ui/core/Hidden';
+
+import './LoginV2.css';
+import { joinLobbyTransition } from './LoginFirebase';
 import Logo from './../pig_logo/pig_logo.png';
+
 
 export default class App extends Component {
   constructor(props) {
@@ -86,75 +89,42 @@ class Form extends Component {
 
           <Grid item class="buttons">
             <Button id="create-lobby-button" variant="outlined" style={otherStyle} color="primary" size="large" fullWidth={true}>Create Lobby</Button>
-            <div id="join-lobby-box">
-                <Button id="join-lobby-button" variant="outlined" style={otherStyle} color="primary" size="large" fullWidth={true}>Join Lobby</Button>
-                
+            <div id="join-lobby-box" onMouseEnter={this.joinHoverTrue} onMouseLeave={this.joinHoverFalse}>
+                <Button id="join-lobby-button" variant="outlined" style={otherStyle} color="primary" size="large" fullWidth={true} >Join Lobby</Button>
+                {this.joinLobbyDropdown()}
             </div>
           </Grid>
       </Grid>
     );
   }
 
-  // not using this rn
   joinLobbyDropdown() {
+    const joinLobbyInputButtonStyle = {
+      background: '#21CBF3',
+      color: 'white',
+    };
+
     return (
-      <div class="join-lobby-div">
-        <TextField className="join-lobby-input" id="join-lobby-input" variant="standard" type="text" autoComplete="off" label="Enter Lobby ID"></TextField>
-        <Button className="join-lobby-button" id="join-lobby-button" variant="contained">
+      <div class="join-lobby-div" id="invis">
+        <TextField className="join-lobby-input" hidden={true} id="join-lobby-input" variant="filled" type="text" autoComplete="off"
+          label="Enter Lobby ID" error={this.props.chatIDError} helperText={this.props.chatIDHelperText}
+          InputProps={{style: {position: "absolute", margin: "auto"}}} >
+         </TextField>
+        <Button className="join-lobby-button" id="join-input-button" variant="contained" color="primary" style={joinLobbyInputButtonStyle}>
           <p class="join-input-text">Join!</p>
         </Button>
       </div>
     );
   }
 
-  componentDidMount() {
-      var jlb = document.getElementById("join-lobby-box");
-      jlb.addEventListener("mouseover", this.joinLobbyHover);
-      jlb.addEventListener("mouseleave", this.joinLobbyNoHover);
+  joinHoverTrue() {
+    const div = document.getElementById("invis");
+    div.setAttribute("id", "not-invis");
   }
 
-  joinLobbyHover() {
-      var jlb = document.getElementById('join-lobby-box');
-
-      // if there input div is already attached, don't do anything
-      if (jlb.childElementCount > 1) {
-          return null;
-      }
-
-      // container for both the form input and the button
-      var inputDiv = document.createElement("div");
-      inputDiv.className = "join-lobby-div"
-
-      // the form input
-      var idInput = document.createElement("INPUT");
-      idInput.setAttribute("type", "text");
-      idInput.setAttribute("autocomplete", "off");
-      idInput.setAttribute("placeholder", "Enter Lobby ID");
-      idInput.className = "join-lobby-input";
-      idInput.id = "join-lobby-input";
-
-      // the button
-      var joinButton = document.createElement("BUTTON");
-      joinButton.className = "join-input-button";
-      joinButton.id = "join-input-button";
-
-      // the button inner text
-      var joinButtonText = document.createElement("p");
-      joinButtonText.className = "join-input-text";
-      joinButtonText.innerHTML = "Join!";
-
-      joinButton.appendChild(joinButtonText);
-      inputDiv.appendChild(idInput);
-      inputDiv.appendChild(joinButton);
-      jlb.appendChild(inputDiv);
-
-      // REPEATEDLY CALLS THIS, POSSIBLE ISSUE
-      joinLobbyTransition();
-  }
-
-  joinLobbyNoHover() {
-      var jlb = document.getElementById('join-lobby-box');
-      jlb.removeChild(jlb.lastChild);
+  joinHoverFalse() {
+    const div = document.getElementById("not-invis");
+    div.setAttribute("id", "invis");
   }
 
 }

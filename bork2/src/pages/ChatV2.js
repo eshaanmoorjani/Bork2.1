@@ -87,8 +87,6 @@ export default class LobbyApp extends Component {
         presenceRef.onDisconnect().set(true);
     }
 
-    /** DOESNT FLIP IN THE DATABASE THE FIRST TIME BECAUSE THE DATABASE's queue_ready IS false BUT THE CHAT'S queue_ready IS true */
-    /** TO FIX: NEED TO HAVE lobby_type IN THE DATABASE, BASED ON THE LOBBY TYPE, INIT queue_ready TO true/false. AND ALSO CHANGE queue_ready TO lobby_open */
     async handleLobbyStatusChange() {
         await db.collection("chats").doc(this.state.chatID).update({
             lobby_open: !this.state.lobbyOpen,

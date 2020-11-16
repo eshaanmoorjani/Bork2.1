@@ -39,15 +39,15 @@ function transition(button, signInType) {
         
         const joinLobbyInput = document.getElementById("join-lobby-input");
         const chatID = (joinLobbyInput === undefined || joinLobbyInput === null) ? null : joinLobbyInput.value;
-
         const usernameApproval = functions.httpsCallable('usernameApproval');
         const verifyChatID = functions.httpsCallable('verifyChatID');
-
         /* If the username is ok, make sure the chatID is ok, then sign in. If either is not ok, re-render the page with an error message */
         usernameApproval({username: username}).then(result => {
             const message = result.data;
             if(message === true) {
+                console.log("before verify");
                 verifyChatID({chatID: chatID, signInType: signInType}).then(result => {
+                    console.log("after verify:", result);
                     const verified = result.data;
                     if (verified) {
                         console.log("ITS VERIFIED!!!");
@@ -55,7 +55,7 @@ function transition(button, signInType) {
                     } else {
                         console.log("ITS NOT VERIFIED!!!");
                         /* Re-render the login page with the chatID error message */
-                        ReactDOM.render(<App chatIDError={true} chatIDErrorMessage="The chat does not exist or is full!"/>,
+                        ReactDOM.render(<App chatIDError={true} chatIDHelperText="The chat does not exist or is full!"/>,
                         document.getElementById("root"));
                     }
                 });
