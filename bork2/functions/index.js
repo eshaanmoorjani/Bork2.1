@@ -11,7 +11,7 @@ Need to turn the joinLobbyInput in LoginV2.js into a materialUI textfield so tha
 */
 
 
-exports.usernameApproval = functions.https.onCall((data, context) => {
+exports.usernameApproval = functions.https.onCall(async (data, context) => {
     const username = data.username
     if(username.length === 0) {
         return "Username cannot be 0 characters"
@@ -42,7 +42,7 @@ exports.assignForSoloQueue = functions.https.onCall(async (data, context) => {
             
             // create a new chat for the person
             if(chatId === null) {
-                chatId = await createNewChat(tags, true, "Normal")
+                chatId = await createNewChat(tags, true, "Normal", null)
             }
 
             console.log("AYO BRUH IM WRITING TO THE USER INFORMATIO THDAKFHASKFH")
@@ -57,17 +57,15 @@ exports.assignForSoloQueue = functions.https.onCall(async (data, context) => {
 exports.createLobby = functions.https.onCall(async (data, context) => {
     const userId = context.auth.uid;
     const username = data.username;
-
+    const chatID = data.chatID;
 
     userRef =  realtime.ref("users/" + userId + '/queuing');
     return await userRef.once("value").then(async function(snapshot) {
         snapshot_val = snapshot.val();
         if(snapshot_val === null) {
-            var chatId = await createNewChat(['Among Us'], false, "Premade");
-
-            await addToChatSequence(userId, chatId, username);
-
-            return chatId;
+            await createNewChat(['Among Us'], false, "Premade", chatID);
+            await addToChatSequence(userId, chatID, username);
+            return chatID;
         }
         return "button already pressed";
     });
@@ -88,56 +86,112 @@ exports.joinLobby = functions.https.onCall(async (data, context) => {
 });
 
 
+
+/**
+ * Verify that given chatID is ok.
+ * 
+ * Calls the necessary verifyChatID method for the given signInType.
+ * If the signInType is soloQueue, no need to verify the chatID; return true.
+ */
+exports.verifyChatID = functions.https.onCall(async (data, context) => {
+    const chatID = data.chatID;
+    const signInType = data.signInType;
+
+    if (signInType === "joinLobby") {
+        return await verifyJoinChatID(chatID);
+    } else if (signInType === "createLobby") {
+        return await verifyCreateChatID(chatID);
+    } else {
+        return true;
+    }
+
+});
+
+
 /**
  * Verify that a given chatID is ok.
  * 
- * If the given signInType wasn't joinLobby, then return true. (No need to verify the chatID for other sign in types)
  * Iterates through all the chats in the database that are not full, are premade lobbies, and are not open (to the outside world).
  * If there is a chat that matches the given chatID, return true.
  * Otherwise, no such chat exists; return false.
  * 
+ * @param {*} chatID
  */
-exports.verifyChatID = functions.https.onCall((data, context) => {
-    const chatID = data.chatID;
-    const signInType = data.signInType;
-
-    if (signInType === "assignForSoloQueue" || signInType === "createLobby") {
-        return true;
-    } else {
-        /* Had to create an index in cloud firestore to handle multiple where() queries */
-        return firestore.collection("chats")
-        .where("num_participants", "<", 10).where("lobby_type", "==", "Premade").where("lobby_open", "==", false)
-        .get().then(function(querySnapshot) {
-            for (var i in querySnapshot.docs) {
-                const doc = querySnapshot.docs[i];
-                if(doc.id === chatID) {
-                    return true;
-                }
+async function verifyJoinChatID(chatID) {
+    /* Had to create an index in cloud firestore to handle multiple where() queries */
+    return firestore.collection("chats")
+    .where("num_participants", "<", 10).where("lobby_type", "==", "Premade").where("lobby_open", "==", false).get().then(function(querySnapshot) {
+        for (var i in querySnapshot.docs) {
+            const doc = querySnapshot.docs[i];
+            if(doc.id === chatID) {
+                return true;
             }
-            return false;
-        })
-        .catch(function(error) {
-            console.log("Error: ", error);
-        });
-    }
-});
+        }
+        return "Lobby does not exist";
+    })
+    .catch(function(error) {
+        console.log("Error: ", error);
+    });
+}
 
-async function createNewChat(userTags, lobby_open, lobby_type) {
-    var chatId = null
-    chatId = await firestore.collection("chats").add({
+
+/**
+ * Verify that a given chatID is ok.
+ * 
+ * Iterates through all chats.
+ * If there is a chat with the same chatID, return false.
+ * Otherwise, no such chat exists; return true.
+ * 
+ * @param {*} chatID 
+ */
+async function verifyCreateChatID(chatID) {
+    return firestore.collection("chats").get().then(function(querySnapshot) {
+        for (var i in querySnapshot.docs) {
+            const doc = querySnapshot.docs[i];
+            if(doc.id === chatID) {
+                return "Lobby already exists";
+            }
+        }
+        return true;
+    })
+    .catch(function(error) {
+        console.log("Error: ", error);
+    });
+}
+
+
+/**
+ * Creates a new chat with the given properties.
+ * 
+ * If a chatID was passed in, create a chat with that ID.
+ * Otherwise, let firebase autogenerate the chatID.
+ * 
+ * @returns The chatID of the newly created chat.
+ * 
+ * @param {*} userTags 
+ * @param {*} lobby_open 
+ * @param {*} lobby_type 
+ * @param {*} chatID 
+ */
+async function createNewChat(userTags, lobby_open, lobby_type, chatID) {
+    var ref = null;
+    if (chatID === null || chatID === undefined) {
+        ref = firestore.collection("chats").doc();
+    } else {
+        ref = firestore.collection("chats").doc(chatID);
+    }
+    return await ref.set({
         num_participants: 0, // changed this to 0, the chat shouldn't know whats going on outside
         tags: userTags,
         lobby_type: lobby_type,
         lobby_open: lobby_open,
     })
-    .then(function(docRef) {
-        chatId = docRef.id
-        return docRef.id;
+    .then( e => {
+        return ref.id;
     })
     .catch(function(error) {
         console.log("Error adding document: ",error)
-    })
-    return chatId
+    });
 }
 
 async function findBestChat(userTags, userId, username) {

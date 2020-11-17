@@ -111,7 +111,7 @@
 
 #solo-queue-button {
   position: relative;
-  top: 40%;
+  top: 30%;
 
   height: 10%;
   
@@ -121,10 +121,14 @@
 
 .buttons {
   position: relative;
-  top: 41%;
+  top: 35%;
 
   height: 10%;
   width: 100%;
+
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
 
   display: flex;
   flex-direction: row;
@@ -142,6 +146,13 @@
   border-radius: 50px;
   
   font-weight: bold;
+}
+
+#create-lobby-box {
+  position: relative;
+
+  height: 100%;
+  width: 100%;
 }
 
 #join-lobby-box {
@@ -169,11 +180,13 @@
 
 .join-lobby-div {
   position: relative;
-  height: 100%;
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  padding-top: 5%;
+
+  height: 100%;
+  width: 100%;
+
+  text-align: center;
 
   -webkit-animation: fadein .5s;
   -moz-animation: fadein .5s; /* Firefox < 16 */
@@ -182,7 +195,28 @@
           animation: fadein .5s;
 }
 
-#invis {
+.create-lobby-div {
+  position: relative;
+
+  padding-top: 5%;
+
+  height: 100%;
+  width: 100%;
+
+  text-align: center;
+
+  -webkit-animation: fadein .5s;
+  -moz-animation: fadein .5s; /* Firefox < 16 */
+      -ms-animation: fadein .5s; /* Internet Explorer */
+        -o-animation: fadein .5s; /* Opera < 12.1 */
+          animation: fadein .5s;
+}
+
+#create-invis {
+  display: none;
+}
+
+#join-invis {
   display: none;
 }
 
@@ -191,44 +225,9 @@
   width: 60%;
 }
 
-.join-input-button {
-  width: 20%;
-
-  background:#21CBF3;
-  padding: 0;
-  border: none;
-  border-radius: 0px;
-
-
-  font-family: Tahoma;
-  font-style: normal;
-  font-weight: bold;
-  font-size: 15px;
-  line-height: 54px;
-
-
-  padding-bottom: 1px;
-  border-width: 0px;
-  border-style: solid;
-  border-bottom-right-radius: 20px;
-  border-top-right-radius: 5px;
-
-  border-color: #21CBF3;
-  
-  display: flex;
-  align-items: center;
-  text-align: center;
-
-  color: #FFFFFF;
-}
-
-.join-input-text {
-    /* This just centers the text within the button */
-
-  margin-top: auto;
-  margin-bottom: auto;
-  margin-left: auto;
-  margin-right: auto;
+.create-lobby-input {
+  position: absolute;
+  width: 60%;
 }
 
 .logo {

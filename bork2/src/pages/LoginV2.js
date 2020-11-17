@@ -26,8 +26,7 @@ export default class App extends Component {
   loginFrame() {
     return (
       <div class="login-frame">
-        <Form usernameError={this.props.usernameError} usernameHelperText={this.props.usernameHelperText}
-         chatIDError={this.props.chatIDError} chatIDHelperText={this.props.chatIDHelperText}></Form>
+        <Form {...this.props}></Form>
         <HogPub></HogPub>
       </div>
     );
@@ -43,7 +42,7 @@ class Form extends Component {
     return (
       <div class="form-frame">
         {this.description()}
-        {this.form()}
+        <FormGrid {...this.props}></FormGrid>
       </div>
     );
   }
@@ -61,21 +60,22 @@ class Form extends Component {
 
     );
   }
+}
 
-  form() {
-    const soloStyle = {
-      background: 'linear-gradient(45deg, #2196F3 5%, #21CBF3 90%)',
-      color: 'white',
-      fontSize: 20,
-    };
+class FormGrid extends Component {
+  constructor(props) {
+    super(props);
 
-    const otherStyle = {
-      borderColor: '#21CBF3',
-      color: '#21CBF3',
-      borderWidth: 1.2,
-      fontSize: 20,
-    };
+    this.styles = importStyles();
+  }
 
+  render() {
+    return this.formGrid();
+  }
+
+  
+
+  formGrid() {
     return (
       <Grid container class="container">
           <TextField class="username-textfield" id="username-textfield" variant="outlined" error={this.props.usernameError}
@@ -85,48 +85,72 @@ class Form extends Component {
           inputProps={{style: {fontSize: 40, textAlign: "center"}}}>
           </TextField>
 
-          <Button className="solo-queue-button" id="solo-queue-button" style={soloStyle} variant="contained" color="primary" size="large" fullWidth={true}>Solo Queue</Button>
+          <Button className="solo-queue-button" id="solo-queue-button" variant="contained" color="primary" size="large" fullWidth={true}
+           style={this.styles.soloStyle} >Solo Queue</Button>
 
           <Grid item class="buttons">
-            <Button id="create-lobby-button" variant="outlined" style={otherStyle} color="primary" size="large" fullWidth={true}>Create Lobby</Button>
-            <div id="join-lobby-box" onMouseEnter={this.joinHoverTrue} onMouseLeave={this.joinHoverFalse}>
-                <Button id="join-lobby-button" variant="outlined" style={otherStyle} color="primary" size="large" fullWidth={true} >Join Lobby</Button>
-                {this.joinLobbyDropdown()}
-            </div>
+            {this.createLobbyButtonSet()}
+            {this.joinLobbyButtonSet()}
           </Grid>
       </Grid>
     );
   }
 
-  joinLobbyDropdown() {
-    const joinLobbyInputButtonStyle = {
-      background: '#21CBF3',
-      color: 'white',
-    };
 
+  createLobbyButtonSet() {
     return (
-      <div class="join-lobby-div" id="invis">
-        <TextField className="join-lobby-input" hidden={true} id="join-lobby-input" variant="filled" type="text" autoComplete="off"
-          label="Enter Lobby ID" error={this.props.chatIDError} helperText={this.props.chatIDHelperText}
-          InputProps={{style: {position: "absolute", margin: "auto"}}} >
+      <div id="create-lobby-box" onMouseEnter={this.displayChange("create-invis", "create-show")} onMouseLeave={this.displayChange("create-show", "create-invis")} >
+        <Button id="create-lobby-button" variant="outlined" color="primary" size="large" fullWidth={true} style={this.styles.createStyle}>Create Lobby</Button>
+        {this.createLobbyDropdown()}
+      </div>
+    );
+  }
+
+  joinLobbyButtonSet() {
+    return (
+      <div id="join-lobby-box"
+       onMouseEnter={this.displayChange("join-invis", "join-show")} onMouseLeave={this.displayChange("join-show", "join-invis")} >
+          <Button id="join-lobby-button" variant="outlined" color="primary" size="large" fullWidth={true} style={this.styles.joinStyle} >Join Lobby</Button>
+          {this.joinLobbyDropdown()}
+      </div>
+    );
+  }
+
+  createLobbyDropdown() {
+    return (
+      <div class="create-lobby-div" id="create-invis">
+        <TextField className="create-lobby-input" hidden={true} id="create-lobby-input" variant="outlined" type="text" autoComplete="off"
+          label="Enter Lobby ID" error={this.props.createLobbyError} helperText={this.props.createLobbyHelperText} 
+          InputProps={{style: this.styles.textFieldStyle}} >
          </TextField>
-        <Button className="join-lobby-button" id="join-input-button" variant="contained" color="primary" style={joinLobbyInputButtonStyle}>
+        <Button id="create-input-button" variant="contained" color="primary" style={this.styles.buttonStyle}>
+          <p class="create-input-text">Join!</p>
+        </Button>
+      </div>
+    );
+  }
+
+  joinLobbyDropdown() {
+    return (
+      <div class="join-lobby-div" id="join-invis">
+        <TextField className="join-lobby-input" hidden={true} id="join-lobby-input" variant="outlined" type="text" autoComplete="off"
+          label="Enter Lobby ID" error={this.props.joinLobbyError} helperText={this.props.joinLobbyHelperText} 
+          InputProps={{style: this.styles.textFieldStyle}} >
+         </TextField>
+        <Button id="join-input-button" variant="contained" color="primary" style={this.styles.buttonStyle}>
           <p class="join-input-text">Join!</p>
         </Button>
       </div>
     );
   }
 
-  joinHoverTrue() {
-    const div = document.getElementById("invis");
-    div.setAttribute("id", "not-invis");
+  displayChange(idFrom, idTo) {
+    function helper() {
+      const div = document.getElementById(idFrom);
+      div.setAttribute("id", idTo);
+    }
+    return helper
   }
-
-  joinHoverFalse() {
-    const div = document.getElementById("not-invis");
-    div.setAttribute("id", "invis");
-  }
-
 }
 
 class HogPub extends Component {
@@ -159,3 +183,58 @@ class HogPub extends Component {
   }
 }
 
+
+function importStyles() {
+  return {
+    soloStyle: {
+      fontSize: 20,
+
+      background: 'linear-gradient(45deg, #2196F3 5%, #21CBF3 90%)',
+      color: 'white',
+    },
+
+    createStyle: {
+      height: '100%',
+      width: '100%',
+
+      borderWidth: 1.2,
+      borderColor: '#21CBF3',
+      
+      fontSize: 20,
+
+      color: '#21CBF3',
+    },
+
+    joinStyle: {
+      height: '100%',
+      width: '100%',
+
+      borderWidth: 1.2,
+      borderColor: '#21CBF3',
+      
+      fontSize: 20,
+
+      color: '#21CBF3',
+    },
+
+    textFieldStyle: {
+      borderTopRightRadius: '0px',
+      borderBottomRightRadius: '0px',
+      borderTopLeftRadius: '20px',
+      borderBottomLeftRadius: '20px',
+    },
+
+    buttonStyle: {
+      height: '95%',
+      width: '30%',
+
+      borderTopRightRadius: '20px',
+      borderBottomRightRadius: '20px',
+      borderTopLeftRadius: '0px',
+      borderBottomLeftRadius: '0px',
+
+      background: '#21CBF3',
+      color: 'white',
+    },
+  }
+}
