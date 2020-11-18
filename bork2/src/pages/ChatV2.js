@@ -330,17 +330,8 @@ class ChatFrame extends Component {
     }
 
     sendMessage(message) {
-        db.collection("chats/").doc(this.props.chatID).collection("messages/").add({
-            content: message,
-            timestamp: new Date(),
-            userID: this.props.userID,
-            username: this.props.username,
-            messageNumber: this.state.numMessagesSent,
-            type: "user_content",
-        });
-        db.collection("chats").doc(this.props.chatID).update({
-            last_message_time: new Date(),
-        });
+        const send = functions.httpsCallable('sendMessage');
+        const success = send({message: message, chatID: this.props.chatID, username: this.props.username, messageNumber: this.state.numMessagesSent});
     }
 }
 

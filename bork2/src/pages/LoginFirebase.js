@@ -22,37 +22,45 @@ export function createLobbyTransition() {
 }
 
 /**
- * Adds a listener to a given button.
- * On button press, verify the username and/or chatID.
- * If both are verified, then sign the user in.
- * Otherwise, re-render the login page with an error message.
+ * Retrive username, inputted chatID from input boxes in the login page.
  * 
- * Note: must only call this function once, at the beginning.
+ * Call server's sign in function.
  * 
- * @param {*} button 
- * @param {*} signInType 
+ * If it works, render the chat page.
+ * If it doesn't re-render the login page with the correct error message
+ * 
+ * @param {html button} button 
+ * @param {string} signInType 
+ * @returns {null}
+ * 
  */
 function transition(button, signInType) {
     button.addEventListener('click', async e => {
-        
-            const username_box = document.getElementById("username-textfield");
-            const username = username_box.value;
-            const inputChatID = getInputChatID(signInType);
-    
-            const signIn = functions.httpsCallable('signIn');
+        const username_box = document.getElementById("username-textfield");
+        const username = username_box.value;
+        const inputChatID = getInputChatID(signInType);
 
-            const obj = await signIn({username: username, chatID: inputChatID, signInType: signInType});
+        const signIn = functions.httpsCallable('signIn');
 
-            const data = obj.data;
-            console.log(data);
-            if (data.usernameError || data.createLobbyError || data.joinLobbyError) {
-                renderLogin(data.usernameError, data.usernameErrorMessage, data.createLobbyError, data.createLobbyErrorMessage, data.joinLobbyError, data.joinLobbyErrorMessage);
-            } else {
-                renderChat(data.chatID, data.username);
-            }
+        const obj = await signIn({username: username, chatID: inputChatID, signInType: signInType});
+
+        const data = obj.data;
+        console.log(data);
+        if (data.usernameError || data.createLobbyError || data.joinLobbyError) {
+            renderLogin(data.usernameError, data.usernameErrorMessage, data.createLobbyError, data.createLobbyErrorMessage, data.joinLobbyError, data.joinLobbyErrorMessage);
+        } else {
+            renderChat(data.chatID, data.username);
+        }
     });
 }
 
+/**
+ * Retrieves the user-inputted chatID from the input boxes, given their signInType.
+ * 
+ * @param {string} signInType 
+ * @returns {string} chatID
+ * 
+ */
 function getInputChatID(signInType) {
     const joinLobbyInput = document.getElementById("join-lobby-input");
     const createLobbyInput = document.getElementById("create-lobby-input");

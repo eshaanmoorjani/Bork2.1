@@ -9,8 +9,11 @@ signInType = {
     soloQueue: soloQueue,
     createLobby: createLobby,
     joinLobby: joinLobby,
+
+    
 };
 
+exports.hi = 
 
 /**
  * This function is called by the client to sign in.
@@ -310,6 +313,9 @@ async function sendMessage(chatId, userId, username, messageNumber, type, messag
         username: username,
         messageNumber: messageNumber,
         type: type,
+    })
+    .catch(function(error) {
+        console.log("ERROR SENDING MESSAGE", error);
     });
 }
 
@@ -350,9 +356,39 @@ async function findBestChat(userTags, userId, username) {
 
 
 
+exports.sendMessage = functions.https.onCall(async (data, context) => {
+    const message = data.message;
+    const chatID = data.chatID;
+    const userID = context.auth.uid;
+    const username = data.username;
+    const messageNumber = data.messageNumber;
+
+    const verified = await verifyChatMessage(message, userID, chatID);
+    if (!verified) {
+        return false;
+    }
+
+    await sendMessage(chatID, userID, username, messageNumber, "user_content", message);
+    await updateLastMessageTime(chatID);
+
+    return true;
+});
 
 
+async function verifyChatMessage(message, userID, chatID) {
+    // check if the user is in the chat they want to write to
+    // check if the message contains no profanity
+    return true;
+}
 
+async function updateLastMessageTime(chatID) {
+    await firestore.collection("chats").doc(chatID).update({
+        last_message_time: new Date(),
+    })
+    .catch(function(error) {
+        console.log("ERROR UPDATING LAST MESSAGE: ", error);
+    });
+}
 
 
 // how to do helper functions with firebase??
