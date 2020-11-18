@@ -5,117 +5,108 @@ admin.initializeApp();
 const firestore = admin.firestore();
 const realtime = admin.database();
 
+signInType = {
+    soloQueue: soloQueue,
+    createLobby: createLobby,
+    joinLobby: joinLobby,
+};
 
-/*
-Need to turn the joinLobbyInput in LoginV2.js into a materialUI textfield so that it can display an error message
-*/
+
+/**
+ * This function is called by the client to sign in.
+ * 
+ * Verifies that the given username and/or chatID was ok.
+ * If it they were not ok, returns an error message to render.
+ * Otherwise, add the user's information to the database and assigns them the correct chat room.
+ * 
+ * @param {obj} data containing username, chatID, and signInType
+ * @param {obj} context containing userID
+ * @returns {string} error message
+ * 
+ */
+exports.signIn = functions.https.onCall(async (data, context) => {
+    const userID = context.auth.uid;
+    const username = data.username;
+    const chatID = data.chatID;
+    const type = data.signInType;
+    console.log("INPUTS!!!: ", userID, username, chatID, type);
+
+    const signInFunction = signInType[type];
+
+    var returnObj = {}
+
+    returnObj = await verifyUsername(username);
+
+    if (returnObj.usernameError === true) {
+        return returnObj;
+    }
+
+    returnObj = await verifyChatID(chatID, type);
+
+    if (returnObj.joinError === true || returnObj.createError === true) {
+        return returnObj;
+    }
+
+    returnObj.chatID = await signInFunction(userID, username, chatID);
+    returnObj.username = username;
+
+    return returnObj;
+});
 
 
-exports.usernameApproval = functions.https.onCall(async (data, context) => {
-    const username = data.username
+/**
+ * Verifies that a username is ok.
+ * 
+ * @param {string} username 
+ * @return {string, boolean} message
+ * 
+ */
+async function verifyUsername(username) {
     if(username.length === 0) {
-        return "Username cannot be 0 characters"
+        return {usernameError: true, usernameErrorMessage: "Username cannot be empty"};
     }
     else if(username.length > 16) {
-        return "Username must be between 1-16 chracters"
+        return {usernameError: true, usernameErrorMessage: "Username must be between 1-16 chracters"};
     }
     const username_lower = username.toLowerCase()
     for(var i = 0; i < username.length; i++) {
         if(!(username_lower[i] >= 'a' && username_lower[i] <= 'z') && !(username_lower[i] >= '1' && username_lower[i] <= '9')) {
-            return "Username can only include letters and numbers."
+            return {usernameError: true, usernameErrorMessage: "Username can only include letters and numbers."};
         }
     }
-    return true;
-});
-
-exports.assignForSoloQueue = functions.https.onCall(async (data, context) => {
-    const userId = context.auth.uid
-    const username = data.username
-
-    userRef =  realtime.ref("users/" + userId + '/queuing')
-    return await userRef.once("value").then(async function(snapshot) {
-        if(snapshot.val() === null) {
-            userRef.set(true);
-            console.log("fuck me1", snapshot.val())
-            const tags = ['Among Us'] // data.tags
-            var chatId = await findBestChat(tags, userId, username)
-            
-            // create a new chat for the person
-            if(chatId === null) {
-                chatId = await createNewChat(tags, true, "Normal", null)
-            }
-
-            console.log("AYO BRUH IM WRITING TO THE USER INFORMATIO THDAKFHASKFH")
-            await addToChatSequence(userId, chatId, username);
-            return chatId;
-        }
-        return "button already pressed";
-    });
-
-});
-
-exports.createLobby = functions.https.onCall(async (data, context) => {
-    const userId = context.auth.uid;
-    const username = data.username;
-    const chatID = data.chatID;
-
-    userRef =  realtime.ref("users/" + userId + '/queuing');
-    return await userRef.once("value").then(async function(snapshot) {
-        snapshot_val = snapshot.val();
-        if(snapshot_val === null) {
-            await createNewChat(['Among Us'], false, "Premade", chatID);
-            await addToChatSequence(userId, chatID, username);
-            return chatID;
-        }
-        return "button already pressed";
-    });
-});
+    return {usernameError: false, usernameErrorMessage: ""};
+}
 
 /**
- * Writes the user's data into the correct chat room.
+ * Verify that the given chatID was ok.
+ * Calls the appropriate helper function for each signInType.
  * 
- * This function is only called if all user inputs (username, chatID) are valid.
+ * @param {string} chatID 
+ * @param {string} signInType 
+ * @returns {boolean}
  * 
  */
-exports.joinLobby = functions.https.onCall(async (data, context) => {
-    const userID = context.auth.uid;
-    const username = data.username;
-    const chatID = data.chatID;
-    
-    await addToChatSequence(userID, chatID, username);
-});
-
-
-
-/**
- * Verify that given chatID is ok.
- * 
- * Calls the necessary verifyChatID method for the given signInType.
- * If the signInType is soloQueue, no need to verify the chatID; return true.
- */
-exports.verifyChatID = functions.https.onCall(async (data, context) => {
-    const chatID = data.chatID;
-    const signInType = data.signInType;
-
+async function verifyChatID(chatID, signInType) {
     if (signInType === "joinLobby") {
         return await verifyJoinChatID(chatID);
     } else if (signInType === "createLobby") {
         return await verifyCreateChatID(chatID);
     } else {
-        return true;
+        return {joinLobbyError: false, createLobbyError: false};
     }
-
-});
+}
 
 
 /**
- * Verify that a given chatID is ok.
+ * Verify that the given chatID is ok.
  * 
  * Iterates through all the chats in the database that are not full, are premade lobbies, and are not open (to the outside world).
  * If there is a chat that matches the given chatID, return true.
  * Otherwise, no such chat exists; return false.
  * 
- * @param {*} chatID
+ * @param {string} chatID
+ * @returns {boolean}
+ * 
  */
 async function verifyJoinChatID(chatID) {
     /* Had to create an index in cloud firestore to handle multiple where() queries */
@@ -124,10 +115,10 @@ async function verifyJoinChatID(chatID) {
         for (var i in querySnapshot.docs) {
             const doc = querySnapshot.docs[i];
             if(doc.id === chatID) {
-                return true;
+                return {joinLobbyError: false}
             }
         }
-        return "Lobby does not exist";
+        return {joinLobbyError: true, joinLobbyErrorMessage: "Lobby does not exist"};
     })
     .catch(function(error) {
         console.log("Error: ", error);
@@ -136,27 +127,55 @@ async function verifyJoinChatID(chatID) {
 
 
 /**
- * Verify that a given chatID is ok.
+ * Verify that the given chatID is ok.
  * 
  * Iterates through all chats.
  * If there is a chat with the same chatID, return false.
  * Otherwise, no such chat exists; return true.
  * 
- * @param {*} chatID 
+ * @param {string} chatID 
+ * @returns {boolean}
+ * 
  */
 async function verifyCreateChatID(chatID) {
     return firestore.collection("chats").get().then(function(querySnapshot) {
         for (var i in querySnapshot.docs) {
             const doc = querySnapshot.docs[i];
             if(doc.id === chatID) {
-                return "Lobby already exists";
+                return {createLobbyError: true, createLobbyErrorMessage: "Lobby already exists"};
             }
         }
-        return true;
+        return {createLobbyError: false};
     })
     .catch(function(error) {
         console.log("Error: ", error);
     });
+}
+
+
+
+async function soloQueue(userID, username, chatID) {
+    chatID = await findBestChat(["Among us"], userID, username)
+    
+    if(chatID === null) {
+        chatID = await createNewChat(["Among us"], true, "Normal", null)
+    }
+
+    await addToChatSequence(userID, chatID, username);
+    return chatID;
+}
+
+
+async function createLobby(userID, username, chatID) {
+    await createNewChat(['Among Us'], false, "Premade", chatID);
+    await addToChatSequence(userID, chatID, username);
+    return chatID;
+}
+
+
+async function joinLobby(userID, username, chatID) {
+    await addToChatSequence(userID, chatID, username);
+    return chatID;
 }
 
 
@@ -166,12 +185,12 @@ async function verifyCreateChatID(chatID) {
  * If a chatID was passed in, create a chat with that ID.
  * Otherwise, let firebase autogenerate the chatID.
  * 
- * @returns The chatID of the newly created chat.
+ * @param {array} userTags 
+ * @param {boolean} lobby_open 
+ * @param {string} lobby_type 
+ * @param {string} chatID 
+ * @returns {string} The chatID of the newly created chat.
  * 
- * @param {*} userTags 
- * @param {*} lobby_open 
- * @param {*} lobby_type 
- * @param {*} chatID 
  */
 async function createNewChat(userTags, lobby_open, lobby_type, chatID) {
     var ref = null;
@@ -181,7 +200,7 @@ async function createNewChat(userTags, lobby_open, lobby_type, chatID) {
         ref = firestore.collection("chats").doc(chatID);
     }
     return await ref.set({
-        num_participants: 0, // changed this to 0, the chat shouldn't know whats going on outside
+        num_participants: 0,
         tags: userTags,
         lobby_type: lobby_type,
         lobby_open: lobby_open,
@@ -193,6 +212,107 @@ async function createNewChat(userTags, lobby_open, lobby_type, chatID) {
         console.log("Error adding document: ",error)
     });
 }
+
+
+/**
+ * Do the sequence of operations that must happen every time a user is added to a chat
+ * 
+ * 1. Write the user to the database -- who they are, what chat they are in, etc.
+ * 2. Add them to the chat's participants
+ * 3. Increase the chat's participants field by 1
+ * 4. Send an entry message
+ * 
+ * @param {*} userId 
+ * @param {*} chatId 
+ * @param {*} username 
+ * @returns {null}
+ * 
+ */
+async function addToChatSequence(userId, chatId, username) {
+    await addUserToChat(userId, chatId, username);
+    await addToParticipants(userId, chatId, username);
+    await changeNumParticipants(chatId, -1);
+    await sendMessage(chatId, userId, username, -1, "user_connect", username + " has joined the pub.",);
+}
+
+
+
+/**
+ * Writes the given user's information to the database.
+ * 
+ * @param {string} userId 
+ * @param {string} chatId 
+ * @param {string} username 
+ * @returns {null}
+ * 
+ */
+async function addUserToChat(userId, chatId, username) {
+    await firestore.collection("users").doc(userId).set({
+        user_id: userId,
+        username: username,
+        premade_tags: ['Among Us'],
+        custom_tags: [],
+        chat_id: chatId,
+    });
+}
+
+
+/**
+ * Given a chat and a user, add the user to the chat's participants
+ * 
+ * @param {string} chatId 
+ * @param {string} userId 
+ * @param {string} username
+ * @returns {null}
+ * 
+ */
+async function addToParticipants(userId, chatId, username) {
+    firestore.collection('chats').doc(chatId).collection('participants').doc(userId).set({
+        user_id: userId,
+        username: username,
+        timestamp: new Date(),
+    })
+}
+
+
+/**
+ * Changes the num_participants field of the given chat by a given amount
+ * 
+ * @param {string} chatId 
+ * @param {integer} num
+ * @returns {null}
+ * 
+ */
+async function changeNumParticipants(chatId, num) {
+    firestore.collection('chats').doc(chatId).update({
+        num_participants: admin.firestore.FieldValue.increment(num),
+    });
+}
+
+
+/**
+ * Sends a given message to a given chat.
+ * 
+ * @param {string} chatId 
+ * @param {string} userId 
+ * @param {string} username 
+ * @param {string} messageNumber 
+ * @param {string} type 
+ * @param {string} message 
+ * @returns {null}
+ * 
+ */
+async function sendMessage(chatId, userId, username, messageNumber, type, message) {
+    await firestore.collection('chats').doc(chatId).collection("messages").add({
+        content: message,
+        timestamp: new Date(),
+        userID: userId,
+        username: username,
+        messageNumber: messageNumber,
+        type: type,
+    });
+}
+
 
 async function findBestChat(userTags, userId, username) {
     // get every chat room where num_participants < 10
@@ -229,92 +349,6 @@ async function findBestChat(userTags, userId, username) {
 }
 
 
-/**
- * Do the sequence of operations that must happen every time a user is added to a chat
- * 
- * 1. Write the user to the database -- who they are, what chat they are in, etc.
- * 2. Add them to the chat's participants
- * 3. Increase the chat's participants field by 1
- * 4. Send an entry message
- * 
- * @param {*} userId 
- * @param {*} chatId 
- * @param {*} username 
- */
-async function addToChatSequence(userId, chatId, username) {
-    await addUserToChat(userId, chatId, username);
-    await addToParticipants(userId, chatId, username);
-    await increaseParticipants(chatId);
-    await sendMessage(chatId, userId, username, -1, "user_connect", username + " has joined the pub.",);
-}
-
-
-/**
- * Writes the given user's information to the database.
- * 
- * @param {*} userId 
- * @param {*} chatId 
- * @param {*} username 
- */
-async function addUserToChat(userId, chatId, username) {
-    await firestore.collection("users").doc(userId).set({
-        user_id: userId,
-        username: username,
-        premade_tags: ['Among Us'],
-        custom_tags: [],
-        chat_id: chatId,
-    });
-}
-
-
-/**
- * Given a chat and a user, add the user to the chat's participants
- * 
- * @param {*} chatId 
- * @param {*} userId 
- * @param {*} username
- */
-async function addToParticipants(userId, chatId, username) {
-    firestore.collection('chats').doc(chatId).collection('participants').doc(userId).set({
-        user_id: userId,
-        username: username,
-        timestamp: new Date(),
-    })
-}
-
-
-/**
- * Increases the num_participants field of the given chat by 1.
- * 
- * @param {*} chatId 
- */
-async function increaseParticipants(chatId) {
-    firestore.collection('chats').doc(chatId).update({
-        num_participants: admin.firestore.FieldValue.increment(1)
-    });
-}
-
-
-/**
- * Sends a given message to a given chat.
- * 
- * @param {*} chatId 
- * @param {*} userId 
- * @param {*} username 
- * @param {*} messageNumber 
- * @param {*} type 
- * @param {*} message 
- */
-async function sendMessage(chatId, userId, username, messageNumber, type, message) {
-    await firestore.collection('chats').doc(chatId).collection("messages").add({
-        content: message,
-        timestamp: new Date(),
-        userID: userId,
-        username: username,
-        messageNumber: messageNumber,
-        type: type,
-    });
-}
 
 
 
@@ -397,10 +431,7 @@ async function deleteChatInfo(userId, chatId, username) {
     // delete from current chat participants document
     const chatParticipantsPath = firestore.collection('chats').doc(chatId).collection('participants').doc(userId)
     const chatDeleteInfo = await chatParticipantsPath.delete();
-    const lowerParticipantsInfo = await firestore.collection('chats').doc(chatId).update({
-        num_participants: admin.firestore.FieldValue.increment(-1)
-    })
-
+    await changeNumParticipants(chatId, -1);
     await sendMessage(chatId, userId, username, -1, "user_disconnect", username + " has hogged out.");
     console.log("d")
 }
@@ -461,32 +492,3 @@ async function getInactiveUsers(users = [], nextPageToken) {
     
     return users;
 }
-
-/* 
-// listens for changes to the number of users and then finds the best chat for them
-exports.assignChatroom = functions.firestore.document('users/{userId}').onWrite(async (change, context) => {
-    const userId = context.params.userId;
-    const userInfo = change.after.data();
-    console.log(userInfo)
-    if(userInfo['chat_id'] !== '-1') {
-        return null;
-    }
-
-    const premadeTags = userInfo.premade_tags
-    const customTags = userInfo.custom_tags
-    const userTags = premadeTags.concat(customTags)
-    const username = userInfo.username
-
-    // iterate through every chat that exists, and see which one fits the tag
-    // create new chat for custom tag or 
-
-    var chatId = await findBestChat(userTags, userId, username)
-    
-    // create a new chat for the person
-    if(chatId === null) {
-        chatId = await createNewChat(userTags, true)
-    }
-
-    await modifyUserChatInfo(userId, chatId, username)
-});
-*/

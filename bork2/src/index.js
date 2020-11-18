@@ -9,37 +9,25 @@ import App from './pages/LoginV2';
 import LobbyApp from './pages/ChatV2';
 import { loginButtonTransition, joinLobbyTransition, createLobbyTransition } from './pages/LoginFirebase';
 
-// AUTH LISTENER
-auth.onAuthStateChanged(firebaseUser => {
-  console.log("auth changed: ",firebaseUser)
-  if(firebaseUser) { // and firebaseUser.assignedToChat
-    console.log("firebase user hehe", firebaseUser)
 
-    // create a listener because client writes to database --> cloud function is called --> chatId is assigned
-    db.collection("users").doc(auth.currentUser.uid).onSnapshot(function(doc) {
-      const data = doc.data();
-      if (data != null) {
-        const assignedChatID = data.chat_id;
-        const username = data.username;
+export function renderLogin(usernameError, usernameErrorMessage, createLobbyError, createLobbyErrorMessage, joinLobbyError, joinLobbyErrorMessage) {
+  ReactDOM.render(<App usernameError={usernameError} usernameHelperText={usernameErrorMessage}
+    createLobbyError={createLobbyError} createLobbyHelperText={createLobbyErrorMessage}
+    joinLobbyError={joinLobbyError} joinLobbyHelperText={joinLobbyErrorMessage}
+  />, document.getElementById('root'));
 
+  auth.signInAnonymously();
 
-        ReactDOM.render(
-          <LobbyApp chatID={assignedChatID} username={username} queueReady={true} joinTime={new Date()}/>,
-          document.getElementById('root')
-        );
-      }
-    }) 
-  }  
-  else {
-    ReactDOM.render(
-      <App />,
-      document.getElementById('root')
-    );
-    loginButtonTransition();
-    joinLobbyTransition();
-    createLobbyTransition();
-  }
-});
+  loginButtonTransition();
+  joinLobbyTransition();
+  createLobbyTransition();
+}
+
+export function renderChat(chatID, username) {
+  ReactDOM.render(<LobbyApp chatID={chatID} username={username}/>, document.getElementById('root'));
+}
+
+renderLogin();
 
 
 // If you want your app to work offline and load faster, you can change

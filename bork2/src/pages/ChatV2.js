@@ -7,6 +7,7 @@ import Button from '@material-ui/core/Button';
 
 import './ChatV2.css';
 import {auth, db, rt_db, functions, firebase} from '../services/firebase';
+import { renderLogin } from './../index';
 
 
 export default class LobbyApp extends Component {
@@ -109,6 +110,7 @@ export default class LobbyApp extends Component {
         this.refs.videoFrame.disconnect();
         
         auth.signOut().then(() => {
+            renderLogin();
         })
         .catch(function (error) {
             console.log("ERROR:", error);

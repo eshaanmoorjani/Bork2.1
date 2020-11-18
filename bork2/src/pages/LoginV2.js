@@ -225,7 +225,7 @@ function importStyles() {
     },
 
     buttonStyle: {
-      height: '95%',
+      height: '100%',
       width: '30%',
 
       borderTopRightRadius: '20px',
