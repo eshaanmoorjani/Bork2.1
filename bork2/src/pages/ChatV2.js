@@ -8,6 +8,7 @@ import Button from '@material-ui/core/Button';
 import './ChatV2.css';
 import {auth, db, rt_db, functions, firebase} from '../services/firebase';
 import { renderLogin } from './../index';
+import { setTransitions } from './LoginFirebase';
 
 
 export default class LobbyApp extends Component {
@@ -35,6 +36,7 @@ export default class LobbyApp extends Component {
         this.addAllListeners = this.addAllListeners.bind(this);
 
         this.addAllListeners();
+        console.log(this.props.username);
     }
 
     render() {
@@ -111,6 +113,7 @@ export default class LobbyApp extends Component {
         
         auth.signOut().then(() => {
             renderLogin();
+            setTransitions();
         })
         .catch(function (error) {
             console.log("ERROR:", error);

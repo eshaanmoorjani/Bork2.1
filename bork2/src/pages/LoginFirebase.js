@@ -4,21 +4,27 @@ import { renderLogin, renderChat } from './../index';
 
 import { auth, functions } from '../services/firebase';
 
-export function loginButtonTransition() {
+function loginButtonTransition() {
     const soloQueueButton = document.getElementById('solo-queue-button');
     transition(soloQueueButton, "soloQueue");
 }
 
-export function joinLobbyTransition() {
+function joinLobbyTransition() {
     const joinLobbyButton = document.getElementById("join-lobby-button");
     const joinDropdownButton = document.getElementById("join-input-button");
     transition(joinLobbyButton, "joinLobby");
     transition(joinDropdownButton, "joinLobby");
 }
 
-export function createLobbyTransition() {
+function createLobbyTransition() {
     const createLobbyButton = document.getElementById("create-lobby-button");
     transition(createLobbyButton, "createLobby");
+}
+
+export function setTransitions() {
+    loginButtonTransition();
+    joinLobbyTransition();
+    createLobbyTransition();
 }
 
 /**
@@ -35,7 +41,7 @@ export function createLobbyTransition() {
  * 
  */
 function transition(button, signInType) {
-    button.addEventListener('click', async e => {
+    button.addEventListener('click', throttle(async e => {
         const username_box = document.getElementById("username-textfield");
         const username = username_box.value;
         const inputChatID = getInputChatID(signInType);
@@ -51,8 +57,22 @@ function transition(button, signInType) {
         } else {
             renderChat(data.chatID, data.username);
         }
-    });
+    }, 2000)
+    );
 }
+
+function throttle(func, timeFrame) {
+    var lastTime = 0;
+    return function () {
+        var now = new Date();
+        if (now - lastTime >= timeFrame) {
+            func();
+            lastTime = now;
+        } else {
+            console.log("waiting");
+        }
+    };
+  }
 
 /**
  * Retrieves the user-inputted chatID from the input boxes, given their signInType.

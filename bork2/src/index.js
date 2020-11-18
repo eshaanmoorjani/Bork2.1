@@ -7,7 +7,7 @@ import {db, auth} from './services/firebase';
 import './index.css';
 import App from './pages/LoginV2';
 import LobbyApp from './pages/ChatV2';
-import { loginButtonTransition, joinLobbyTransition, createLobbyTransition } from './pages/LoginFirebase';
+import { setTransitions } from './pages/LoginFirebase';
 
 
 export function renderLogin(usernameError, usernameErrorMessage, createLobbyError, createLobbyErrorMessage, joinLobbyError, joinLobbyErrorMessage) {
@@ -18,9 +18,6 @@ export function renderLogin(usernameError, usernameErrorMessage, createLobbyErro
 
   auth.signInAnonymously();
 
-  loginButtonTransition();
-  joinLobbyTransition();
-  createLobbyTransition();
 }
 
 export function renderChat(chatID, username) {
@@ -28,6 +25,7 @@ export function renderChat(chatID, username) {
 }
 
 renderLogin();
+setTransitions();
 
 
 // If you want your app to work offline and load faster, you can change

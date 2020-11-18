@@ -13,7 +13,6 @@ signInType = {
     
 };
 
-exports.hi = 
 
 /**
  * This function is called by the client to sign in.
@@ -46,7 +45,7 @@ exports.signIn = functions.https.onCall(async (data, context) => {
 
     returnObj = await verifyChatID(chatID, type);
 
-    if (returnObj.joinError === true || returnObj.createError === true) {
+    if (returnObj.joinLobbyError === true || returnObj.createLobbyError === true) {
         return returnObj;
     }
 
