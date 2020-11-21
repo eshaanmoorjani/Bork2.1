@@ -47,7 +47,7 @@ export default class LobbyApp extends Component {
 
                 <ChatFrame chatID={this.state.chatID} userID={this.state.userID} username={this.props.username} initTime={new Date()}/>
 
-                <VideoFrame ref="videoFrame" videoCallURL="https://hogpub.daily.co/test"/>
+                <VideoFrame ref="videoFrame" videoCallURL={`https://hogpub.daily.co/${this.state.chatID}`}/>
             </div>
         );
     }

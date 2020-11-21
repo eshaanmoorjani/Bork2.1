@@ -140,6 +140,9 @@ async function verifyJoinChatID(chatID) {
  * 
  */
 async function verifyCreateChatID(chatID) {
+    // NEED TO ALSO MAKE SURE THAT CHATID CONTAINS NO SPECIAL CHARACTERS AND <41 CHARACTERS LONG 
+    // VERY IMPORTANT TO NOT BREAK DAILY.CO ROOM CREATION
+
     return firestore.collection("chats").get().then(function(querySnapshot) {
         for (var i in querySnapshot.docs) {
             const doc = querySnapshot.docs[i];
@@ -207,8 +210,10 @@ async function createNewChat(userTags, lobby_open, lobby_type, chatID) {
         lobby_type: lobby_type,
         lobby_open: lobby_open,
     })
-    .then( e => {
-        return ref.id;
+    .then(async e => {
+        const chatID = ref.id;
+        await createVideoRoomURL(chatID);
+        return chatID;
     })
     .catch(function(error) {
         console.log("Error adding document: ",error)
@@ -472,7 +477,7 @@ async function deleteChatInfo(userId, chatId, username) {
 }
 
 // Delete inactive signed-out accounts
-exports.accountCleanup = functions.runWith({timeoutSeconds: 540, memory: '2GB'}).pubsub.schedule('every 30 minutes').onRun(async context => {
+exports.accountCleanup = functions.runWith({timeoutSeconds: 540, memory: '2GB'}).pubsub.schedule('every 1000 minutes').onRun(async context => {
     const promisePool = require('es6-promise-pool');
     const PromisePool = promisePool.PromisePool;
 
@@ -487,7 +492,7 @@ exports.accountCleanup = functions.runWith({timeoutSeconds: 540, memory: '2GB'})
     console.log('User cleanup finished');
 
     return null
-})
+});
 
 async function deleteInactiveUser(inactiveUsers) {
     if (inactiveUsers.length > 0) {
@@ -526,4 +531,51 @@ async function getInactiveUsers(users = [], nextPageToken) {
     }
     
     return users;
+}
+
+
+/**
+ * Creates a daily.co video room with the same url as the given chatID
+ * Ex: "https://hogpub.daily.co/{CHATID}"
+ * 
+ * Dependency: need to run "npm i node-fetch --save"
+ * @param {string} chatID 
+ * @returns {obj} The room object
+ */
+async function createVideoRoomURL(chatID) {
+    const fetch = require("node-fetch");
+
+    const exp = Date.now() / 1000 + 3660 // room expires 1 hour from creation date without warning and kicks everyone out but we gotta save money
+
+    return await fetch("https://api.daily.co/v1/rooms", {
+        "method": "POST",
+        "headers": {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer 5fb08c86128cf2c43f26d08bc1037ee5ab80080c73d1c20132dbb3e3c3a31bd1" // this is our private API key!!!
+        },
+        "body": `{"properties":{"enable_chat":false,"start_video_off":true,"start_audio_off":true,"autojoin":false,`
+         + `"enable_screenshare":false,"max_participants":10, "exp": ${exp}, "eject_at_room_exp":true},"name":"${chatID}"}` // use backtick!!
+      })
+      .catch(err => {
+        console.error("ERROR CREATING VIDEO ROOM:",err);
+      });
+}
+
+
+/**
+ * 
+ * @param {string} chatID 
+ * @returns {Obj} Contains 2 fields: deleted, and name. Ex: {"deleted":true, "name":THE CHAT ID THAT WAS DELETED}
+ */
+async function deleteVideoRoomURL(chatID) {
+    const fetch = require("node-fetch");
+    return await fetch(`https://api.daily.co/v1/rooms/${chatID}`, {
+        "method": "DELETE",
+        "headers": {
+          "Authorization": "Bearer 5fb08c86128cf2c43f26d08bc1037ee5ab80080c73d1c20132dbb3e3c3a31bd1"
+        }
+      })
+      .catch(err => {
+        console.error("ERROR DELETING VIDEO ROOM", err);
+      });
 }
