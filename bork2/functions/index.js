@@ -229,16 +229,16 @@ async function createNewChat(userTags, lobby_open, lobby_type, chatID) {
  * 3. Increase the chat's participants field by 1
  * 4. Send an entry message
  * 
- * @param {*} userId 
- * @param {*} chatId 
- * @param {*} username 
+ * @param {string} userId 
+ * @param {string} chatId 
+ * @param {string} username 
  * @returns {null}
  * 
  */
 async function addToChatSequence(userId, chatId, username) {
     await addUserToChat(userId, chatId, username);
     await addToParticipants(userId, chatId, username);
-    await changeNumParticipants(chatId, -1);
+    await changeNumParticipants(chatId, 1);
     await sendMessage(chatId, userId, username, -1, "user_connect", username + " has joined the pub.",);
 }
 
