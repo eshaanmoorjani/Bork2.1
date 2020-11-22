@@ -85,7 +85,7 @@ export default class LobbyApp extends Component {
     }
 
     changeConnectionStatus() {
-        rt_db.ref('users/' + this.state.userID + "/is_disconnected").set(false); // ayoooo dont change baby girl
+        rt_db.ref('users/' + this.state.userID + "/is_disconnected").set(false); 
         var presenceRef = rt_db.ref("users/" + this.state.userID + "/is_disconnected");     
         presenceRef.onDisconnect().set(true);
     }
@@ -111,13 +111,7 @@ export default class LobbyApp extends Component {
         // disconnect from the video call using the VideoFrame class's method
         this.refs.videoFrame.disconnect();
         
-        auth.signOut().then(() => {
-            renderLogin();
-            setTransitions();
-        })
-        .catch(function (error) {
-            console.log("ERROR:", error);
-        })
+        auth.signOut()
     }
 
 }

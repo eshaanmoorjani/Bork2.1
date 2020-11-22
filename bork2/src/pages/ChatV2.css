@@ -22,7 +22,7 @@
     justify-content: center;
     flex-direction: column;
 
-    background-color:   #2196F3;
+    background-color:#d7faff;
 }
 
 .chat-frame-yes-video {
@@ -32,7 +32,7 @@
     
     height: 100%;
     width: 40%;
-    background-color: #ffffff;
+    background-color: #d6d6d6;
 }
 
 .video-frame-yes-video {
@@ -62,7 +62,12 @@
     
     height: 100%;
     width: 60%;
-    background-color: #ffffff;
+
+    border-left-width: 1px;
+    border-left-style: solid;
+    border-left-color: black;
+
+    background-color: #eeeeee;
 }
 
 .video-frame-no-video {
@@ -105,7 +110,7 @@
 
     font-size: 60px;
     font-weight: normal;
-    color: #ffffff;
+    color: #2196F3;
 }
 
 .lobby-title {
@@ -114,7 +119,7 @@
     bottom: 20%;
     font-size: 30px;
     font-weight: normal;
-    color: #ffffff;
+    color: #2196F3;
 }
 
 .misc-box {
@@ -139,7 +144,7 @@
     border-width: 2px;
     border-radius: 10px;
     border-style: solid;
-    border-color: #ffffff;
+    border-color: #2196F3;
 
     display: flex;
     align-items: center;
@@ -151,7 +156,7 @@
 
     font-size: 25px;
     font-weight: normal;
-    color: #ffffff;
+    color: #2196F3;
 }
 
 .lobby-info-text {
@@ -159,7 +164,7 @@
 
     font-size: 15px;
     font-weight: normal;
-    color: #ffffff;
+    color: #2196F3;
 }
 
 .start-queue-button {

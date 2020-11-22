@@ -18,7 +18,9 @@ function joinLobbyTransition() {
 
 function createLobbyTransition() {
     const createLobbyButton = document.getElementById("create-lobby-button");
+    const createDropdownButton = document.getElementById("create-input-button");
     transition(createLobbyButton, "createLobby");
+    transition(createDropdownButton, "createLobby");
 }
 
 export function setTransitions() {

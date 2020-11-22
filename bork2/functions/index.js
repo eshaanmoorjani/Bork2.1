@@ -9,8 +9,6 @@ signInType = {
     soloQueue: soloQueue,
     createLobby: createLobby,
     joinLobby: joinLobby,
-
-    
 };
 
 
@@ -37,15 +35,13 @@ exports.signIn = functions.https.onCall(async (data, context) => {
 
     var returnObj = {}
 
-    returnObj = await verifyUsername(username);
-
-    if (returnObj.usernameError === true) {
+    returnObj = await verifyString(username, "username", "Username");    
+    if (returnObj.usernameError) {
         return returnObj;
     }
 
     returnObj = await verifyChatID(chatID, type);
-
-    if (returnObj.joinLobbyError === true || returnObj.createLobbyError === true) {
+    if (returnObj.joinLobbyError || returnObj.createLobbyError) {
         return returnObj;
     }
 
@@ -57,26 +53,37 @@ exports.signIn = functions.https.onCall(async (data, context) => {
 
 
 /**
- * Verifies that a username is ok.
+ * Verifies that a string is ok.
  * 
- * @param {string} username 
+ * @param {string} string
  * @return {string, boolean} message
  * 
  */
-async function verifyUsername(username) {
-    if(username.length === 0) {
-        return {usernameError: true, usernameErrorMessage: "Username cannot be empty"};
+async function verifyString(string, type, message) {
+    var returnObj = {}
+    if(string.length === 0) {
+        returnObj[`${type}Error`] = true;
+        returnObj[`${type}ErrorMessage`] = `${message} cannot be empty`;
     }
-    else if(username.length > 16) {
-        return {usernameError: true, usernameErrorMessage: "Username must be between 1-16 chracters"};
-    }
-    const username_lower = username.toLowerCase()
-    for(var i = 0; i < username.length; i++) {
-        if(!(username_lower[i] >= 'a' && username_lower[i] <= 'z') && !(username_lower[i] >= '1' && username_lower[i] <= '9')) {
-            return {usernameError: true, usernameErrorMessage: "Username can only include letters and numbers."};
+    else if(string.length > 16) {
+        returnObj[`${type}Error`] = true;
+        returnObj[`${type}ErrorMessage`] = `${message} must be between 1-16 characters`;
+    } else {
+        const string_lower = string.toLowerCase()
+        for(var i = 0; i < string.length; i++) {
+            if(!(string_lower[i] >= 'a' && string_lower[i] <= 'z') && !(string_lower[i] >= '1' && string_lower[i] <= '9')) {
+                returnObj[`${type}Error`] = true;
+                returnObj[`${type}ErrorMessage`] = `${message} can only include letters and numbers`;
+                break;
+            }
         }
     }
-    return {usernameError: false, usernameErrorMessage: ""};
+
+    if (returnObj[`${type}Error`] === null || returnObj[`${type}Error`] === undefined) {
+        returnObj[`${type}Error`] = false;
+        returnObj[`${type}ErrorMessage`] = "";
+    }
+    return returnObj;
 }
 
 /**
@@ -111,7 +118,11 @@ async function verifyChatID(chatID, signInType) {
  * 
  */
 async function verifyJoinChatID(chatID) {
-    /* Had to create an index in cloud firestore to handle multiple where() queries */
+    const vdata = await verifyString(chatID, "joinLobby", "Lobby");
+    if (vdata.joinLobbyError) {
+        return vdata;
+    }
+
     return firestore.collection("chats")
     .where("num_participants", "<", 10).where("lobby_type", "==", "Premade").where("lobby_open", "==", false).get().then(function(querySnapshot) {
         for (var i in querySnapshot.docs) {
@@ -140,8 +151,10 @@ async function verifyJoinChatID(chatID) {
  * 
  */
 async function verifyCreateChatID(chatID) {
-    // NEED TO ALSO MAKE SURE THAT CHATID CONTAINS NO SPECIAL CHARACTERS AND <41 CHARACTERS LONG 
-    // VERY IMPORTANT TO NOT BREAK DAILY.CO ROOM CREATION
+    const vdata = await verifyString(chatID, "createLobby", "Lobby");
+    if (vdata.createLobbyError) {
+        return vdata;
+    }
 
     return firestore.collection("chats").get().then(function(querySnapshot) {
         for (var i in querySnapshot.docs) {
@@ -411,15 +424,17 @@ exports.removeDisconnectedUsers = functions.database.ref('/users/{userId}/is_dis
                 console.log("HAPPENED AFTER")
                 if(snapshot.val()) {
                     await admin.auth().deleteUser(userId).then(() => {
-                        return console.log('Deleted user account', userId, 'because of inactivity');
+                        return console.log('Deleted user account', userId, 'because of closed tab');
                     }).catch((error) => {
-                        return console.error('Deletion of inactive user account', userId, 'failed:', error);
+                        return console.error('Deletion of closed tab', userId, 'failed:', error);
                     });
                     const userInfo = await getChatId(userId)
                     await deleteUserInfoHelper(userId, userInfo[0], userInfo[1])
                     await deleteChatInfo(userId, userInfo[0], userInfo[1])
                 }
-                console.log("should not delete")
+                else {
+                    console.log("should not delete")
+                }
                 return null
             });
             return null
