@@ -5,10 +5,10 @@ import DailyIframe from '@daily-co/daily-js';
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
 
+import { auth, db, rt_db, functions } from '../services/firebase';
+
 import './ChatV2.css';
-import {auth, db, rt_db, functions, firebase} from '../services/firebase';
-import { renderLogin } from './../index';
-import { setTransitions } from './LoginFirebase';
+import { throttle } from './LoginFirebase';
 
 
 export default class LobbyApp extends Component {
@@ -20,13 +20,14 @@ export default class LobbyApp extends Component {
             userID: auth.currentUser.uid,
             username: this.props.username,
             
+            lobbyType: null,
             lobbyOpen: null,
 
             participants: {},
             numParticipants: 0,
         };
         
-        this.setLobbyOpen();
+        this.setLobbySettings();
 
         this.handleLogout = this.handleLogout.bind(this);
 
@@ -36,14 +37,14 @@ export default class LobbyApp extends Component {
         this.addAllListeners = this.addAllListeners.bind(this);
 
         this.addAllListeners();
-        console.log(this.props.username);
     }
 
     render() {
         return (
             <div class="full-frame">
-                <LobbyFrame chatID={this.state.chatID} lobbyOpen={this.state.lobbyOpen}
-                 handleLogout={this.handleLogout} handleLobbyStatusChange={this.handleLobbyStatusChange}/>
+                <LobbyFrame chatID={this.state.chatID} lobbyType={this.state.lobbyType} lobbyOpen={this.state.lobbyOpen}
+                 numParticipants={this.state.numParticipants} participants={this.state.participants}
+                 handleLogout={throttle(this.handleLogout, 10000)} handleLobbyStatusChange={this.handleLobbyStatusChange}/>
 
                 <ChatFrame chatID={this.state.chatID} userID={this.state.userID} username={this.props.username} initTime={new Date()}/>
 
@@ -77,10 +78,11 @@ export default class LobbyApp extends Component {
         });
     }
 
-    async setLobbyOpen() {
+    async setLobbySettings() {
         const chat = await db.collection("chats").doc(this.state.chatID).get();
         this.setState({
             lobbyOpen: chat.data().lobby_open,
+            lobbyType: chat.data().lobby_type,
         });
     }
 
@@ -171,14 +173,25 @@ class LobbyFrame extends Component {
             <div class="lobby-info-box">
                 <h3 class="lobby-info-header">Lobby Info</h3>
                 <div class="lobby-info-text">
-                    <p class="random-stuff">Chat ID: {this.props.chatID}</p>
+                    {this.showLobbyID()}
+                    <p class="num-participants">Lobby Capacity: {this.props.numParticipants}/10</p>
                 </div>
             </div>
         );
     }
 
+    showLobbyID() {
+        if (this.props.lobbyType === "Premade") {
+            return <p class="lobby-id">Lobby ID: {this.props.chatID}</p>
+        }
+    }
+
     getLobbyButtonMessage() {
-        return this.props.lobbyOpen ? "Close Lobby" : "Open Lobby";
+        if (this.props.lobbyType === "Premade") {
+            return this.props.lobbyOpen ? "Leave queue" : "Join queue";
+        } else {
+            return this.props.lobbyOpen ? "Close Lobby" : "Open Lobby";
+        }
     }
 }
 

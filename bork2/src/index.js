@@ -7,12 +7,11 @@ import {firebase, db, auth} from './services/firebase';
 import './index.css';
 import App from './pages/LoginV2';
 import LobbyApp from './pages/ChatV2';
-import { setTransitions } from './pages/LoginFirebase';
+import { setTransitions, removeTransitions } from './pages/LoginFirebase';
 
 
 
 export function renderLogin(usernameError, usernameErrorMessage, createLobbyError, createLobbyErrorMessage, joinLobbyError, joinLobbyErrorMessage) {
-  console.log("PENIS" ,auth.currentUser);
   ReactDOM.render(<App usernameError={usernameError} usernameHelperText={usernameErrorMessage}
     createLobbyError={createLobbyError} createLobbyHelperText={createLobbyErrorMessage}
     joinLobbyError={joinLobbyError} joinLobbyHelperText={joinLobbyErrorMessage}
@@ -20,10 +19,6 @@ export function renderLogin(usernameError, usernameErrorMessage, createLobbyErro
 
   auth.setPersistence(firebase.auth.Auth.Persistence.SESSION).then(function () {
     return auth.signInAnonymously();
-  })
-  .catch(function(error) {
-    var errorCode = error.code;
-    var errorMessage = error.message;
   });
 }
 
@@ -46,6 +41,7 @@ export async function renderPageWithUserID(userId) {
   }
   else {
     renderLogin();
+    removeTransitions();
     setTransitions();
   }
 }
@@ -56,12 +52,13 @@ export function renderChat(chatID, username) {
 
 
 auth.onAuthStateChanged(function(user) {
-  console.log("PENIS", user)
+  console.log("AUTH CHANGED!!!: ", user);
   if(user) {
     renderPageWithUserID(user.uid)
   }
   else {
     renderLogin();
+    removeTransitions();
     setTransitions();
   }
 });

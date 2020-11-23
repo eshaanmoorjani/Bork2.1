@@ -5,28 +5,53 @@ import { renderLogin, renderChat } from './../index';
 import { auth, functions } from '../services/firebase';
 
 function loginButtonTransition() {
-    const soloQueueButton = document.getElementById('solo-queue-button');
-    transition(soloQueueButton, "soloQueue");
+    const sqb = document.getElementById('solo-queue-button');
+    transition(sqb, "soloQueue");
 }
 
 function joinLobbyTransition() {
-    const joinLobbyButton = document.getElementById("join-lobby-button");
-    const joinDropdownButton = document.getElementById("join-input-button");
-    transition(joinLobbyButton, "joinLobby");
-    transition(joinDropdownButton, "joinLobby");
+    const jlb = document.getElementById("join-lobby-button");
+    const jdb = document.getElementById("join-input-button");
+    transition(jlb, "joinLobby");
+    transition(jdb, "joinLobby");
 }
 
 function createLobbyTransition() {
-    const createLobbyButton = document.getElementById("create-lobby-button");
-    const createDropdownButton = document.getElementById("create-input-button");
-    transition(createLobbyButton, "createLobby");
-    transition(createDropdownButton, "createLobby");
+    const clb = document.getElementById("create-lobby-button");
+    const cdb = document.getElementById("create-input-button");
+    transition(clb, "createLobby");
+    transition(cdb, "createLobby");
+}
+
+function removeLoginButtonTransition() {
+    const sqb = document.getElementById('solo-queue-button');
+    sqb.parentNode.replaceChild(sqb.cloneNode(true), sqb);
+}
+
+function removeJoinLobbyTransition() {
+    const jlb = document.getElementById("join-lobby-button");
+    const jdb = document.getElementById("join-input-button");
+    jlb.parentNode.replaceChild(jlb.cloneNode(true), jlb);
+    jdb.parentNode.replaceChild(jdb.cloneNode(true), jdb);
+}
+
+function removeCreateLobbyTransition() {
+    const clb = document.getElementById("create-lobby-button");
+    const cdb = document.getElementById("create-input-button");
+    clb.parentNode.replaceChild(clb.cloneNode(true), clb);
+    cdb.parentNode.replaceChild(cdb.cloneNode(true), cdb);
 }
 
 export function setTransitions() {
     loginButtonTransition();
     joinLobbyTransition();
     createLobbyTransition();
+}
+
+export function removeTransitions() {
+    removeLoginButtonTransition();
+    removeJoinLobbyTransition();
+    removeCreateLobbyTransition();
 }
 
 /**
@@ -43,15 +68,19 @@ export function setTransitions() {
  * 
  */
 function transition(button, signInType) {
-    button.addEventListener('click', throttle(async e => {
+    button.addEventListener('click', onClick(signInType));
+}
+
+function onClick(signInType) {
+    async function handleClick() {
         const username_box = document.getElementById("username-textfield");
         const username = username_box.value;
         const inputChatID = getInputChatID(signInType);
-
+    
         const signIn = functions.httpsCallable('signIn');
-
+    
         const obj = await signIn({username: username, chatID: inputChatID, signInType: signInType});
-
+    
         const data = obj.data;
         console.log(data);
         if (data.usernameError || data.createLobbyError || data.joinLobbyError) {
@@ -59,11 +88,11 @@ function transition(button, signInType) {
         } else {
             renderChat(data.chatID, data.username);
         }
-    }, 2000)
-    );
+    }
+    return throttle(handleClick, 2000);
 }
 
-function throttle(func, timeFrame) {
+export function throttle(func, timeFrame) {
     var lastTime = 0;
     return function () {
         var now = new Date();

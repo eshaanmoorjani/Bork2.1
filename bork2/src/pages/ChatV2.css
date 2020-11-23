@@ -167,6 +167,11 @@
     color: #2196F3;
 }
 
+.menu {
+    position: relative;
+    width: 100%;
+}
+
 .start-queue-button {
     position: relative;
 
