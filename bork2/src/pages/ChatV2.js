@@ -41,14 +41,16 @@ export default class LobbyApp extends Component {
 
     render() {
         return (
-            <div class="full-frame">
-                <LobbyFrame chatID={this.state.chatID} lobbyType={this.state.lobbyType} lobbyOpen={this.state.lobbyOpen}
-                 numParticipants={this.state.numParticipants} participants={this.state.participants}
-                 handleLogout={throttle(this.handleLogout, 10000)} handleLobbyStatusChange={this.handleLobbyStatusChange}/>
+            <div class="page">
+                <div class="full-frame-chat">
+                    <LobbyFrame chatID={this.state.chatID} lobbyType={this.state.lobbyType} lobbyOpen={this.state.lobbyOpen}
+                    numParticipants={this.state.numParticipants} participants={this.state.participants}
+                    handleLogout={throttle(this.handleLogout, 10000)} handleLobbyStatusChange={this.handleLobbyStatusChange}/>
 
-                <ChatFrame chatID={this.state.chatID} userID={this.state.userID} username={this.props.username} initTime={new Date()}/>
+                    <ChatFrame chatID={this.state.chatID} userID={this.state.userID} username={this.props.username} initTime={new Date()}/>
 
-                <VideoFrame ref="videoFrame" videoCallURL={`https://hogpub.daily.co/${this.state.chatID}`}/>
+                    <VideoFrame ref="videoFrame" videoCallURL={`https://hogpub.daily.co/${this.state.chatID}`}/>
+                </div>
             </div>
         );
     }

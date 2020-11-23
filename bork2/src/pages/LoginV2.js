@@ -17,7 +17,7 @@ export default class App extends Component {
 
   render() {
     return (
-      <div class="full-frame">
+      <div class="full-frame-login">
         {this.loginFrame()}
       </div>
     );

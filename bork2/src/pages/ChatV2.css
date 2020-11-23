@@ -1,48 +1,70 @@
-.full-frame {
+.page {
     position: fixed;
-    top: 0%;
-    bottom: 0%;
-    left: 0%;
-    right: 0%;
+    top: 0px;
+    left: 0px;
+    right: 0px;
+    bottom: 0px;
 
     height: 100%;
     width: 100%;
+
+    background: rgb(0, 0, 0);
+}
+
+.full-frame-chat {
+    position: fixed;
+    top: 5%;
+    left: 5%;
+
+    height: 90%;
+    width: 90%;
+
+    border-radius: 20px;
+    border-width: 1px;
+    border-style: solid;
+    border-color: black;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    box-shadow: 0px 0px 100px rgb(255, 0, 200)
 }
 
 .lobby-frame {
-    position: fixed;
-    top: 0%;
-    left: 0%;
+    position: relative;
 
     height: 100%;
     width: 20%;
+
+    border-top-left-radius: 20px;
+    border-bottom-left-radius: 20px;
 
     display: flex;
     align-items: center;
     justify-content: center;
     flex-direction: column;
 
-    background-color:#d7faff;
+    background-color:#f7d8e9;
 }
 
 .chat-frame-yes-video {
-    position: fixed;
-    top: 0%;
-    left: 20%;
-    
+    position: relative;
+
     height: 100%;
     width: 40%;
+
     background-color: #d6d6d6;
 }
 
 .video-frame-yes-video {
-    position: fixed;
-    top: 0%;
-    left: 60%;
+    position: relative;
 
     height: 100%;
     width: 40%;
 
+    border-top-right-radius: 20px;
+    border-bottom-right-radius: 20px;
     border-left-width: 1px;
     border-left-color: black;
     border-left-style: solid;
@@ -56,10 +78,8 @@
 }
 
 .chat-frame-no-video {
-    position: fixed;
-    top: 0%;
-    left: 20%;
-    
+    position: relative;
+
     height: 100%;
     width: 60%;
 
@@ -67,17 +87,17 @@
     border-left-style: solid;
     border-left-color: black;
 
-    background-color: #eeeeee;
+    background-color: #ffffff;
 }
 
 .video-frame-no-video {
-    position: fixed;
-    top: 0%;
-    left: 80%;
+    position: relative;
 
     height: 100%;
     width: 20%;
 
+    border-top-right-radius: 20px;
+    border-bottom-right-radius: 20px;
     border-left-width: 1px;
     border-left-color: black;
     border-left-style: solid;
@@ -93,11 +113,17 @@
 .hog-pub-box {
     position: relative;
 
-    height: 20%;
+    height: auto;
     width: 100%;
 
     margin-left: auto;
     margin-right: auto;
+    margin-top: 5%;
+    margin-bottom: 5%;
+
+    border-bottom-width: 1px;
+    border-bottom-color: black;
+    border-bottom-style: solid;
 
     display: flex;
     align-items: center;
@@ -107,6 +133,7 @@
 
 .hog-pub-header {
     margin-top: auto;
+    margin-bottom: auto;
 
     font-size: 60px;
     font-weight: normal;
@@ -115,10 +142,13 @@
 
 .lobby-title {
     position: relative;
-    margin-top: auto;
+    margin-top: 5%;
+    margin-bottom: auto;
     bottom: 20%;
+
     font-size: 30px;
     font-weight: normal;
+
     color: #2196F3;
 }
 
@@ -138,7 +168,7 @@
     margin-top: auto;
     margin-bottom: auto;
 
-    height: 80%;
+    height: 60%;
     width: 90%;
 
     border-width: 2px;
@@ -174,6 +204,7 @@
 
 .start-queue-button {
     position: relative;
+    margin-top: 5%;
 
     width: 90%;
     height: 5%;
@@ -201,7 +232,7 @@
 
 .leave-lobby-button {
     position: relative;
-    margin-bottom: auto;
+    margin-bottom: 10%;
 
     width: 90%;
     height: 5%;
