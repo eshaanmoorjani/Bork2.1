@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { renderLogin, renderChat } from './../index';
+import { renderLogin, renderChat, renderLoading } from './../index';
 
 import { auth, functions } from '../services/firebase';
 
@@ -79,12 +79,15 @@ function onClick(signInType) {
     
         const signIn = functions.httpsCallable('signIn');
     
+        renderLoading();
         const obj = await signIn({username: username, chatID: inputChatID, signInType: signInType});
     
         const data = obj.data;
         console.log(data);
         if (data.usernameError || data.createLobbyError || data.joinLobbyError) {
             renderLogin(data.usernameError, data.usernameErrorMessage, data.createLobbyError, data.createLobbyErrorMessage, data.joinLobbyError, data.joinLobbyErrorMessage);
+            removeTransitions();
+            setTransitions();
         } else {
             renderChat(data.chatID, data.username);
         }

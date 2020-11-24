@@ -9,6 +9,7 @@ import { auth, db, rt_db, functions } from '../services/firebase';
 
 import './ChatV2.css';
 import { throttle } from './LoginFirebase';
+import { renderLoading } from './../index';
 
 
 export default class LobbyApp extends Component {
@@ -94,18 +95,25 @@ export default class LobbyApp extends Component {
         presenceRef.onDisconnect().set(true);
     }
 
-    async handleLobbyStatusChange() {
-        await db.collection("chats").doc(this.state.chatID).update({
-            lobby_open: !this.state.lobbyOpen,
-        }); 
-        this.setState({
-            lobbyOpen: !this.state.lobbyOpen,
-        });
+    handleLobbyStatusChange() {
+        const changeLobbyStatus = functions.httpsCallable('changeLobbyStatus')
+        const status = changeLobbyStatus({}).then(result => {
+            if(result.data.message === "new chat") {
+                
+            }
+            else {
+                this.setState({
+                    lobbyOpen: result.data.lobby_open,
+                });
+            }
+        })
     }
 
     // this deletes from local participants, need to delete from DATABASE
     async handleLogout() {
         const deleteInfo = functions.httpsCallable('deleteUserInfo')
+        renderLoading();
+        
         await deleteInfo({userId: this.state.userID, chatId: this.state.chatID, username: this.state.username}).then(result => { // CORS error that wasn't there earlier
         })
         .catch(function (error) {
@@ -113,8 +121,9 @@ export default class LobbyApp extends Component {
         });
 
         // disconnect from the video call using the VideoFrame class's method
-        this.refs.videoFrame.disconnect();
-        
+        if (this.refs.videoFrame || null !== null) {
+            this.refs.videoFrame.disconnect();
+        } 
         auth.signOut()
     }
 
@@ -259,7 +268,10 @@ class ChatFrame extends Component {
     makeMessageBubble(messageID) {
         function getFormattedTime(date) {
             var timeFormatted = date.toTimeString().substr(0,5);
-            if (timeFormatted.substr(0, 2) <= 12) { // need to change 00:01 am to 12:01 am
+            const hour = timeFormatted.substr(0, 2);
+            if (hour == 0) {
+                timeFormatted = "12" + timeFormatted.substr(2) + " am";
+            } else if (hour <= 12) { // need to change 00:01 am to 12:01 am
                 timeFormatted += " am";
             } else {
                 timeFormatted = timeFormatted.substr(0, 2) % 12 + timeFormatted.substr(2, 5) + " pm";

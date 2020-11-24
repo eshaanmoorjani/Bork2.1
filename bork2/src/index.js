@@ -7,6 +7,7 @@ import {firebase, db, auth} from './services/firebase';
 import './index.css';
 import App from './pages/LoginV2';
 import LobbyApp from './pages/ChatV2';
+import Loading from './pages/Loading';
 import { setTransitions, removeTransitions } from './pages/LoginFirebase';
 
 
@@ -40,6 +41,7 @@ export async function renderPageWithUserID(userId) {
     renderChat(chatID, username)
   }
   else {
+    console.log("poo");
     renderLogin();
     removeTransitions();
     setTransitions();
@@ -48,6 +50,10 @@ export async function renderPageWithUserID(userId) {
 
 export function renderChat(chatID, username) {
   ReactDOM.render(<LobbyApp chatID={chatID} username={username}/>, document.getElementById('root'));
+}
+
+export function renderLoading() {
+  ReactDOM.render(<Loading />, document.getElementById("root"));
 }
 
 

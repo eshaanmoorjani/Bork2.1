@@ -1,0 +1,38 @@
+.full-frame-loading {
+    position: fixed;
+    left: 0px;
+    right: 0px;
+    top: 0px;
+    bottom: 0px;
+
+    height: 100%;
+    width: 100%;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    background: linear-gradient(135deg, #A9F1DF, #FFBBBB)
+}
+
+.loading {
+    position: relative;
+
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: auto;
+    margin-top: auto;
+}
+
+.hog-pub-text {
+    font-size: 100px;
+    font-weight: normal;
+
+    color: black;
+}
+
+.loading-text {
+    font-size: 20px;
+    font-weight: normal;
+    color: black;
+}

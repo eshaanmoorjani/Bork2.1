@@ -173,7 +173,7 @@ async function verifyCreateChatID(chatID) {
 
 
 async function soloQueue(userID, username, chatID) {
-    chatID = await findBestChat(["Among us"], userID, username)
+    chatID = await findBestChat(["Among us"])
     
     if(chatID === null) {
         chatID = await createNewChat(["Among us"], true, "Normal", null)
@@ -304,7 +304,7 @@ async function addToParticipants(userId, chatId, username) {
  * 
  */
 async function changeNumParticipants(chatId, num) {
-    firestore.collection('chats').doc(chatId).update({
+    await firestore.collection('chats').doc(chatId).update({
         num_participants: admin.firestore.FieldValue.increment(num),
     });
 }
@@ -337,7 +337,7 @@ async function sendMessage(chatId, userId, username, messageNumber, type, messag
 }
 
 
-async function findBestChat(userTags, userId, username) {
+async function findBestChat(userTags, numParticipants=1) {
     // get every chat room where num_participants < 10
 
     return firestore.collection("chats").where("num_participants", "<", 10).get() 
@@ -350,7 +350,7 @@ async function findBestChat(userTags, userId, username) {
                 const doc = querySnapshot.docs[i];
                 const data = doc.data();
 
-                if(data.lobby_open && data.lobby_type === "Normal") {
+                if(data.lobby_open && 10-data.num_participants <= numParticipants) { //  && data.lobby_type === "Normal"
                     chatId = doc.id;
                     chatTags = doc.tags;
                     score = 1; // chatScore(chatId, chatTags)
@@ -407,6 +407,26 @@ async function updateLastMessageTime(chatID) {
     });
 }
 
+
+
+exports.changeLobbyStatus = functions.https.onCall(async (data, context) => {
+    const userId = context.auth.uid;
+    const userInfo = await getChatId(userId);
+    const chatId = userInfo[0]
+
+    return await firestore.collection('chats').doc(chatId).get().then(async function(doc) {
+        const docData = doc.data()
+        if(doc.exists){
+            if(!docData.lobby_open) {
+                const numParticipants = docData.num_participants;
+                findBestChat([], numParticipants)
+            }
+            await doc.ref.update({lobby_open: !docData.lobby_open});
+            return {message: "successful", lobby_open: !docData.lobby_open}
+        }
+        return {message: "file does not exist"}
+    })
+})
 
 // how to do helper functions with firebase??
 function chatScore(chatTags, userTags) {
@@ -487,8 +507,28 @@ async function deleteChatInfo(userId, chatId, username) {
     const chatParticipantsPath = firestore.collection('chats').doc(chatId).collection('participants').doc(userId)
     const chatDeleteInfo = await chatParticipantsPath.delete();
     await changeNumParticipants(chatId, -1);
+    await deleteEmptyChat(chatId);
     await sendMessage(chatId, userId, username, -1, "user_disconnect", username + " has hogged out.");
     console.log("d")
+}
+
+// call this function when participants <= 0 HELOOOOO so like
+// inside changeParticipants() we call this function if its 0
+async function deleteEmptyChat(chatId) {
+    const chatInfo = firestore.collection('chats').doc(chatId);
+
+    return await chatInfo.get().then(async function(doc) {
+        const docData = doc.data()
+        if(doc.exists && docData.num_participants <= 0) {
+            console.log("Removing a chat")
+            await chatInfo.delete()
+            await deleteVideoRoomURL(chatId)
+            return "Successfully deleted: "+ chatId
+        }
+        return "Did not delete anything"
+    }).catch(function(error) {
+        console.error("broke here ", error)
+    });
 }
 
 // Delete inactive signed-out accounts
