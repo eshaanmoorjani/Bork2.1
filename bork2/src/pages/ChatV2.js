@@ -118,19 +118,18 @@ export default class LobbyApp extends Component {
 
     // this deletes from local participants, need to delete from DATABASE
     async handleLogout() {
-        const deleteInfo = functions.httpsCallable('deleteUserInfo')
+        // disconnect from the video call using the VideoFrame class's method
+        if (this.refs.videoFrame || null !== null) {
+            this.refs.videoFrame.disconnect();
+        } 
         renderLoading();
+        const deleteInfo = functions.httpsCallable('deleteUserInfo');
         
         await deleteInfo({userId: this.state.userID, chatId: this.state.chatID, username: this.state.username}).then(result => { // CORS error that wasn't there earlier
         })
         .catch(function (error) {
             console.log(error);
         });
-
-        // disconnect from the video call using the VideoFrame class's method
-        if (this.refs.videoFrame || null !== null) {
-            this.refs.videoFrame.disconnect();
-        } 
         auth.signOut()
     }
 
@@ -416,9 +415,12 @@ class VideoFrame extends Component {
             iframeStyle: {
                 position: "fixed",
                 left: "60%",
-                width: "40%",
-                height: "100%",
+                top: "5%",
+                width: "35%",
+                height: "90%",
                 borderWidth: 0,
+                borderTopRightRadius: '20px',
+                borderBottomRightRadius: '20px',
 
             },
             showLeaveButton: true,

@@ -77,9 +77,9 @@ function onClick(signInType) {
         const username = username_box.value;
         const inputChatID = getInputChatID(signInType);
     
-        const signIn = functions.httpsCallable('signIn');
-    
         renderLoading();
+        
+        const signIn = functions.httpsCallable('signIn');
         const obj = await signIn({username: username, chatID: inputChatID, signInType: signInType});
     
         const data = obj.data;

@@ -305,7 +305,7 @@ async function addToParticipants(userId, chatId, username) {
  */
 async function changeNumParticipants(chatId, num) {
     await firestore.collection('chats').doc(chatId).update({
-        num_participants: admin.firestore.FieldValue.increment(num),
+        num_participants: admin.firestore.FieldValue.increment(num), 
     });
 }
 
@@ -350,7 +350,7 @@ async function findBestChat(userTags, numParticipants=1) {
                 const doc = querySnapshot.docs[i];
                 const data = doc.data();
 
-                if(data.lobby_open && 10-data.num_participants <= numParticipants) { //  && data.lobby_type === "Normal"
+                if(data.lobby_open && 10-data.num_participants >= numParticipants) { //  && data.lobby_type === "Normal"
                     chatId = doc.id;
                     chatTags = doc.tags;
                     score = 1; // chatScore(chatId, chatTags)
