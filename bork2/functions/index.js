@@ -419,7 +419,11 @@ exports.changeLobbyStatus = functions.https.onCall(async (data, context) => {
         if(doc.exists){
             if(!docData.lobby_open) {
                 const numParticipants = docData.num_participants;
-                findBestChat([], numParticipants)
+                const chatId = await findBestChat(["Among us"], numParticipants)
+                console.log("PENIS", chatId, numParticipants)
+                if(chatId !== null) {
+                    return {message: "new chat", chatId: chatId}
+                }
             }
             await doc.ref.update({lobby_open: !docData.lobby_open});
             return {message: "successful", lobby_open: !docData.lobby_open}
@@ -507,8 +511,9 @@ async function deleteChatInfo(userId, chatId, username) {
     const chatParticipantsPath = firestore.collection('chats').doc(chatId).collection('participants').doc(userId)
     const chatDeleteInfo = await chatParticipantsPath.delete();
     await changeNumParticipants(chatId, -1);
-    await deleteEmptyChat(chatId);
-    await sendMessage(chatId, userId, username, -1, "user_disconnect", username + " has hogged out.");
+    if(!(await deleteEmptyChat(chatId))) {
+        await sendMessage(chatId, userId, username, -1, "user_disconnect", username + " has hogged out.");
+    }
     console.log("d")
 }
 
@@ -523,9 +528,9 @@ async function deleteEmptyChat(chatId) {
             console.log("Removing a chat")
             await chatInfo.delete()
             await deleteVideoRoomURL(chatId)
-            return "Successfully deleted: "+ chatId
+            return true
         }
-        return "Did not delete anything"
+        return false
     }).catch(function(error) {
         console.error("broke here ", error)
     });

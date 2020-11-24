@@ -62,21 +62,27 @@ export default class LobbyApp extends Component {
     }
 
     getParticipants() {
-        const ref = db.collection("chats").doc(this.state.chatID).collection("participants").orderBy("timestamp");
-        ref.onSnapshot(collection => {
+        const ref = db.collection("chats").doc(this.state.chatID)
+        ref.collection("participants").orderBy("timestamp").onSnapshot(collection => {
             var participants = {};
-            var numParticipants = 0;
 
             collection.forEach(doc => {
                 const data = doc.data();
                 participants[data.user_id] = data.username;
-
-                numParticipants += 1;
             });
 
             this.setState({
-                numParticipants: numParticipants,
                 participants: participants,
+            });
+        });
+
+        ref.onSnapshot(doc => {
+            if (!doc.exists) {
+                return null;
+            }
+            const numParticipants = doc.data().num_participants;
+            this.setState({
+                numParticipants: numParticipants,
             });
         });
     }
@@ -98,6 +104,7 @@ export default class LobbyApp extends Component {
     handleLobbyStatusChange() {
         const changeLobbyStatus = functions.httpsCallable('changeLobbyStatus')
         const status = changeLobbyStatus({}).then(result => {
+            console.log(result.data)
             if(result.data.message === "new chat") {
                 
             }
