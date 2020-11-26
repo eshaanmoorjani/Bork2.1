@@ -48,15 +48,15 @@ export default class LobbyApp extends Component {
             <div class="page">
                     <div class="full-frame-chat">
                         <LobbyFrame chatID={this.state.chatID} lobbyType={this.state.lobbyType} lobbyOpen={this.state.lobbyOpen}
-                        numParticipants={this.state.numParticipants} participants={this.state.participants}
-                        handleLogout={throttle(this.handleLogout, 10000)} handleLobbyStatusChange={this.handleLobbyStatusChange}/>
+                        numParticipants={this.state.numParticipants} participants={this.state.participants}/>
 
                         <ChatFrame chatID={this.state.chatID} userID={this.state.userID} username={this.props.username} initTime={new Date()}/>
 
                         <VideoFrame ref="videoFrame" videoCallURL={`https://hogpub.daily.co/${this.state.chatID}`}/>
                     </div>
 
-                    <HeaderFrame></HeaderFrame>
+                    <HeaderFrame handleLogout={throttle(this.handleLogout, 10000)} handleLobbyStatusChange={this.handleLobbyStatusChange}
+                     lobbyType={this.state.lobbyType} lobbyOpen={this.state.lobbyOpen}></HeaderFrame>
             </div>
         );
     }
@@ -146,30 +146,35 @@ class HeaderFrame extends Component {
     }
 
     render() {
-        const buttonStyle1 = {      
-            background: 'black',
+        const buttonStyle2 = {
+            background: '#2196F3',
             color: 'white',
         };
-        
-        const buttonStyle2 = {
-            background: '#21CBF3',
+
+        const buttonStyle3 = {
+            height: '80%',
             color: 'white',
         };
         
         return (
             <AppBar className="appbar" position="sticky">
-                <div class="toolbar">
-                    <Toolbar>
-                        <Button className="leave-lobby-temp" variant="contained" color="secondary">Leave Lobby</Button>
-                        <Button className="start-queue-temp" variant="contained" color="primary" style={buttonStyle2}>Start Queue</Button>
-                        <Button className="show-participants-temp" variant="contained" color="primary" style={buttonStyle1}>Show Participants</Button>
-                        <Typography variant="h5" className="hog-pub-header-temp">
-                            The Pub
-                        </Typography>
-                    </Toolbar>
+                <div className="toolbar">
+                        <Button className="leave-lobby-temp" variant="contained" color="secondary"
+                         onClick={this.props.handleLogout}>Leave Lobby</Button>
+                        <Button className="start-queue-temp" variant="contained" color="primary" style={buttonStyle2}
+                         onClick={this.props.handleLobbyStatusChange}>{this.getLobbyButtonMessage()}</Button>
+                        <Button className="hog-pub-header-temp" variant="outlined" color="primary" style={buttonStyle3}><h1>The Pub</h1></Button>
                 </div>
             </AppBar>
         );
+    }
+
+    getLobbyButtonMessage() {
+        if (this.props.lobbyType === "Premade") {
+            return this.props.lobbyOpen ? "Leave queue" : "Join queue";
+        } else {
+            return this.props.lobbyOpen ? "Close Lobby" : "Open Lobby";
+        }
     }
 }
 
@@ -199,25 +204,19 @@ class LobbyFrame extends Component {
     misc() {
         return (
             <div class="misc-box">
-                {this.openLobbyButton()}
-                {this.leaveLobbyButton()}
+                {this.showParticipantsButton()}
             </div>
         );
     }
 
-    openLobbyButton() {
-        return (
-            <Button class="start-queue-button" onClick={this.props.handleLobbyStatusChange}>
-                <p class="start-queue-text">{this.getLobbyButtonMessage()}</p>
-            </Button>
-        );
-    }
+    showParticipantsButton() {
+        const buttonStyle = { 
+            color: 'black',     
+            borderColor: 'black',
+        };
 
-    leaveLobbyButton() {
         return (
-            <Button class="leave-lobby-button" onClick={this.props.handleLogout}>
-                <p class="leave-lobby-text">Leave Lobby</p>
-            </Button>
+            <Button className="show-participants-temp" variant="outlined" color="primary" style={buttonStyle}>Show Participants</Button>
         );
     }
 

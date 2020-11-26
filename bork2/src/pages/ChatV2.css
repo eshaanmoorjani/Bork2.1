@@ -352,7 +352,7 @@
     
     margin-left: auto;
     margin-right: auto;
-    top: 2%;
+    margin-top: 2%;
 
     font-size: 15px;
     text-align: center;
@@ -368,23 +368,24 @@
 }
 
 .appbar {
-    position: relative;
     height: 5%;
 }
 
 .toolbar {
     position: relative;
-
+    
     height: 100%;
     width: 100%;
 
     display: flex;
+    flex-direction: row;
     align-items: center;
+    justify-content: space-between;
 }
 
 .leave-lobby-temp {
     position: absolute;
-    left: 100%;
+    left: 1%;
 }
 
 .hog-pub-header-temp {
@@ -393,10 +394,10 @@
 
 .start-queue-temp {
     position: absolute;
-    left: 100%;
+    left: 17%;
 }
 
 .show-participants-temp {
-    position: absolute;
-    left: 100%;
+    position: relative;
+    top: 5%;
 }
