@@ -4,6 +4,9 @@ import DailyIframe from '@daily-co/daily-js';
 
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
+import AppBar from '@material-ui/core/AppBar';
+import Toolbar from '@material-ui/core/Toolbar';
+import Typography from '@material-ui/core/Typography';
 
 import { auth, db, rt_db, functions } from '../services/firebase';
 
@@ -43,15 +46,17 @@ export default class LobbyApp extends Component {
     render() {
         return (
             <div class="page">
-                <div class="full-frame-chat">
-                    <LobbyFrame chatID={this.state.chatID} lobbyType={this.state.lobbyType} lobbyOpen={this.state.lobbyOpen}
-                    numParticipants={this.state.numParticipants} participants={this.state.participants}
-                    handleLogout={throttle(this.handleLogout, 10000)} handleLobbyStatusChange={this.handleLobbyStatusChange}/>
+                    <div class="full-frame-chat">
+                        <LobbyFrame chatID={this.state.chatID} lobbyType={this.state.lobbyType} lobbyOpen={this.state.lobbyOpen}
+                        numParticipants={this.state.numParticipants} participants={this.state.participants}
+                        handleLogout={throttle(this.handleLogout, 10000)} handleLobbyStatusChange={this.handleLobbyStatusChange}/>
 
-                    <ChatFrame chatID={this.state.chatID} userID={this.state.userID} username={this.props.username} initTime={new Date()}/>
+                        <ChatFrame chatID={this.state.chatID} userID={this.state.userID} username={this.props.username} initTime={new Date()}/>
 
-                    <VideoFrame ref="videoFrame" videoCallURL={`https://hogpub.daily.co/${this.state.chatID}`}/>
-                </div>
+                        <VideoFrame ref="videoFrame" videoCallURL={`https://hogpub.daily.co/${this.state.chatID}`}/>
+                    </div>
+
+                    <HeaderFrame></HeaderFrame>
             </div>
         );
     }
@@ -135,6 +140,39 @@ export default class LobbyApp extends Component {
 
 }
 
+class HeaderFrame extends Component {
+    constructor(props) {
+        super(props);
+    }
+
+    render() {
+        const buttonStyle1 = {      
+            background: 'black',
+            color: 'white',
+        };
+        
+        const buttonStyle2 = {
+            background: '#21CBF3',
+            color: 'white',
+        };
+        
+        return (
+            <AppBar className="appbar" position="sticky">
+                <div class="toolbar">
+                    <Toolbar>
+                        <Button className="leave-lobby-temp" variant="contained" color="secondary">Leave Lobby</Button>
+                        <Button className="start-queue-temp" variant="contained" color="primary" style={buttonStyle2}>Start Queue</Button>
+                        <Button className="show-participants-temp" variant="contained" color="primary" style={buttonStyle1}>Show Participants</Button>
+                        <Typography variant="h5" className="hog-pub-header-temp">
+                            The Pub
+                        </Typography>
+                    </Toolbar>
+                </div>
+            </AppBar>
+        );
+    }
+}
+
 class LobbyFrame extends Component {
     constructor(props) {
         super(props);
@@ -143,7 +181,6 @@ class LobbyFrame extends Component {
     render() {
         return (
             <div class="lobby-frame">
-                {this.hogPub()}
                 {this.misc()}
             </div>
         );
@@ -162,7 +199,6 @@ class LobbyFrame extends Component {
     misc() {
         return (
             <div class="misc-box">
-                {this.lobbyInfoBox()}
                 {this.openLobbyButton()}
                 {this.leaveLobbyButton()}
             </div>
