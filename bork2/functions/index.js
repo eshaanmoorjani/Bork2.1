@@ -477,6 +477,8 @@ exports.deleteUserInfo = functions.https.onCall(async (data, context) => {
     return "success"
 });
 
+
+/* Should make this return an object, not an array */
 async function getChatId(userId) {
     const userInfo = firestore.collection('users').doc(userId);
 

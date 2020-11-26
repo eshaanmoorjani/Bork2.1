@@ -162,8 +162,8 @@ class LobbyFrame extends Component {
     misc() {
         return (
             <div class="misc-box">
-                {this.openLobbyButton()}
                 {this.lobbyInfoBox()}
+                {this.openLobbyButton()}
                 {this.leaveLobbyButton()}
             </div>
         );

@@ -8,7 +8,7 @@
     height: 100%;
     width: 100%;
 
-    background: linear-gradient(135deg, #A9F1DF, #FFBBBB);
+    background: linear-gradient(135deg, #caf0e6, #f8d9d9);
 }
 
 .full-frame-chat {
@@ -19,7 +19,7 @@
     height: 90%;
     width: 90%;
 
-    border-radius: 20px;
+    border-radius: 10px;
     border-width: 1px;
     border-style: solid;
     border-color: black;
@@ -28,24 +28,27 @@
     justify-content: center;
     align-items: center;
 
-    box-shadow: 5px 5px 10px rgb(181, 247, 247);
+    box-shadow: 5px 5px 5px rgb(65, 65, 65);
 }
 
 .lobby-frame {
     position: relative;
+    z-index: 1;
 
     height: 100%;
     width: 20%;
 
-    border-top-left-radius: 20px;
-    border-bottom-left-radius: 20px;
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
 
     display: flex;
     align-items: center;
     justify-content: center;
     flex-direction: column;
 
-    background-color:#f7d8e9;
+    background-color:white;
+
+    box-shadow: 10px 0 10px -7px #000;
 }
 
 .chat-frame-yes-video {
@@ -53,6 +56,10 @@
 
     height: 100%;
     width: 40%;
+
+    border-left-width: 1px;
+    border-left-style: solid;
+    border-left-color: black;
 
     background-color: #d6d6d6;
 }
@@ -63,8 +70,8 @@
     height: 100%;
     width: 40%;
 
-    border-top-right-radius: 20px;
-    border-bottom-right-radius: 20px;
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
     border-left-width: 1px;
     border-left-color: black;
     border-left-style: solid;
@@ -96,8 +103,8 @@
     height: 100%;
     width: 20%;
 
-    border-top-right-radius: 20px;
-    border-bottom-right-radius: 20px;
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
     border-left-width: 1px;
     border-left-color: black;
     border-left-style: solid;
@@ -129,6 +136,8 @@
     align-items: center;
     justify-content: center;
     flex-direction: column;
+
+    color: black;
 }
 
 .hog-pub-header {
@@ -137,7 +146,7 @@
 
     font-size: 60px;
     font-weight: normal;
-    color: #2196F3;
+
 }
 
 .lobby-title {
@@ -149,7 +158,6 @@
     font-size: 30px;
     font-weight: normal;
 
-    color: #2196F3;
 }
 
 .misc-box {
@@ -171,14 +179,16 @@
     height: 60%;
     width: 90%;
 
-    border-width: 2px;
-    border-radius: 10px;
+    border-width: 1px;
+    border-radius: 5px;
     border-style: solid;
-    border-color: #2196F3;
+    border-color: black;
 
     display: flex;
     align-items: center;
     flex-direction: column;
+
+    color: black;
 }
 
 .lobby-info-header {
@@ -186,7 +196,6 @@
 
     font-size: 25px;
     font-weight: normal;
-    color: #2196F3;
 }
 
 .lobby-info-text {
@@ -194,7 +203,6 @@
 
     font-size: 15px;
     font-weight: normal;
-    color: #2196F3;
 }
 
 .menu {
@@ -204,7 +212,7 @@
 
 .start-queue-button {
     position: relative;
-    margin-top: 5%;
+    margin-bottom: 5%;
 
     width: 90%;
     height: 5%;
@@ -216,7 +224,7 @@
     align-items: center;
     text-align: center;
 
-    background: #4ed6f8;
+    background: #347e1d;
 }
 
 .start-queue-text {
@@ -244,7 +252,7 @@
     align-items: center;
     text-align: center;
 
-    background: #FFBBBB;
+    background: rgb(238, 111, 106);
 }
 
 .leave-lobby-text {
