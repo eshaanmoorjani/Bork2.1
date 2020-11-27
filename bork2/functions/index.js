@@ -453,7 +453,7 @@ exports.changeLobbyStatus = functions.https.onCall(async (data, context) => {
     })
 
     // Delete old chat's document
-    const oldChatRef =  "chats/"+ chatId // firestore.collection('chats').doc(chatId
+    const oldChatRef =  "chats/" + chatId // firestore.collection('chats').doc(chatId
     return await firebase_tools.firestore.delete(oldChatRef, {
         project: process.env.GCLOUD_PROJECT,
         recursive: true,
