@@ -28,8 +28,9 @@ export default class LobbyApp extends Component {
             participants: {},
             numParticipants: 0,
         };
-        this.getChatIDTemp = this.getChatIDTemp.bind(this);
-        this.getChatIDTemp().then(() => {
+
+        this.getChatIDInit = this.getChatIDInit.bind(this);
+        this.getChatIDInit().then(() => {
             this.setLobbySettings();
 
             this.handleLogout = this.handleLogout.bind(this);
@@ -37,8 +38,9 @@ export default class LobbyApp extends Component {
             this.getParticipants = this.getParticipants.bind(this);
             this.handleLobbyStatusChange = this.handleLobbyStatusChange.bind(this);
             this.changeConnectionStatus = this.changeConnectionStatus.bind(this);
-            this.addAllListeners = this.addAllListeners.bind(this);
+            this.chatListener = this.chatListener.bind(this);
             this.getChatID = this.getChatID.bind(this);
+            this.addAllListeners = this.addAllListeners.bind(this);
     
             this.addAllListeners();
         });
@@ -48,8 +50,6 @@ export default class LobbyApp extends Component {
         if (this.state.chatID === null) {
             return null;
         }
-        console.log(this.state.chatID);
-        console.log("im rendering")
         return (
             <div class="page">
                     <div class="full-frame-chat">
@@ -67,13 +67,21 @@ export default class LobbyApp extends Component {
         );
     }
 
+    /* Redirect listeners after chatID has changed */
+    componentDidUpdate(prevProps, prevState) {
+        if (prevState.chatID !== this.state.chatID) {
+            this.addAllListeners();
+        }
+    }
+
     addAllListeners() {
         this.getChatID();
         this.getParticipants();
         this.changeConnectionStatus();
+        this.chatListener();
     }
 
-    async getChatIDTemp() {
+    async getChatIDInit() {
         await db.collection("users").doc(this.state.userID).get().then(user => {
             this.setState({
                 chatID: user.data().chat_id,
@@ -83,17 +91,14 @@ export default class LobbyApp extends Component {
 
     getChatID() {
         const ref = db.collection("users").doc(this.state.userID);
-        console.log("GETTING CHATID");
         ref.onSnapshot(doc => {
             if (!doc.exists) {
                 return null;
             }
-            console.log("GETTING!!!!!!!!!!!!!!!");
             const chatID = doc.data().chat_id; 
             this.setState({
                 chatID: chatID,
             });
-            console.log(this.state.chatID);
         });
     }
 
@@ -111,22 +116,25 @@ export default class LobbyApp extends Component {
                 participants: participants,
             });
         });
+    }
 
+    chatListener() {
+        const ref = db.collection("chats").doc(this.state.chatID)
         ref.onSnapshot(doc => {
             if (!doc.exists) {
                 return null;
             }
             const numParticipants = doc.data().num_participants;
+            const lobbyOpen = doc.data().lobby_open;
             this.setState({
                 numParticipants: numParticipants,
+                lobbyOpen: lobbyOpen,
             });
         });
     }
 
     async setLobbySettings() {
-        console.log(this.state.chatID);
         const chat = await db.collection("chats").doc(this.state.chatID).get();
-        console.log(chat.data());
         this.setState({
             lobbyOpen: chat.data().lobby_open,
             lobbyType: chat.data().lobby_type,
@@ -286,7 +294,6 @@ class LobbyFrame extends Component {
 class ChatFrame extends Component {
     constructor(props) {
         super(props);
-        console.log("dck"+ props)
 
         this.state = {
             numMessagesSent: 0,
@@ -321,7 +328,7 @@ class ChatFrame extends Component {
             scrollDiv.scrollIntoView(true, { behavior: "smooth" });
         }
 
-        /* If the premade lobby started queue and was assigned to a new chat, listen to the new chat instead of the old one */
+        /* Redirect listeners after chatID has changed */
         if (prevProps.chatID !== this.props.chatID) {
             this.addAllListeners();
         }
@@ -419,7 +426,6 @@ class ChatFrame extends Component {
                         numMessagesReceived: this.state.numMessagesReceived + 1,
                         lastMessageTime: data.timestamp.seconds,
                     });
-                    console.log(data);
             });
         });
     }
@@ -438,7 +444,6 @@ class ChatFrame extends Component {
     }
 
     sendMessage(message) {
-        console.log(this.props.chatID);
         const send = functions.httpsCallable('sendMessage');
         const success = send({message: message, messageNumber: this.state.numMessagesSent}).then(function(result) {
             console.log(result)
