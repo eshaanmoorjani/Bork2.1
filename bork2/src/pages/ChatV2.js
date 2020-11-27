@@ -268,11 +268,11 @@ class LobbyFrame extends Component {
     }
 
     lobbyIDText() {
-        return this.state.showLobbyID ? this.props.lobbyID : "Lobby ID";
+        return this.state.showLobbyID ? this.props.lobbyID : "Show Lobby ID";
     }
 
     lobbyCapacityText() {
-        return this.state.showLobbyCapacity ? this.props.numParticipants + "/10" : "Lobby Capacity";
+        return this.state.showLobbyCapacity ? this.props.numParticipants + "/10" : "Show Lobby Capacity";
     }
 
     participantsText() {
@@ -299,6 +299,7 @@ class ChatFrame extends Component {
             numMessagesReceived: 0,
             messages: {},
             lastMessageTime: Math.floor(this.props.initTime.getTime() / 1000),
+            messageHelperText: "",
         }
 
         this.handleSendMessage = this.handleSendMessage.bind(this);
@@ -407,7 +408,7 @@ class ChatFrame extends Component {
         return (
             <form class="send-message-form" onSubmit={this.handleSendMessage}>
                 <TextField className="send-message-input" id="message-input" variant="outlined"
-                 label="Enter a message" fullWidth={true} autoComplete="off"></TextField>
+                 label="Enter a message" error={this.state.messageHelperText} helperText={this.state.messageHelperText} fullWidth={true} autoComplete="off"></TextField>
             </form>
         );
     }
@@ -444,8 +445,18 @@ class ChatFrame extends Component {
 
     sendMessage(message) {
         const send = functions.httpsCallable('sendMessage');
+        const curState = this
         const success = send({message: message, messageNumber: this.state.numMessagesSent}).then(function(result) {
-            console.log(result)
+            if(!result.data.verified) {
+                curState.setState({
+                    messageHelperText: result.data.message,
+                });
+            }
+            else {
+                curState.setState({
+                    messageHelperText: ""
+                })
+            }
         });
     }
 }

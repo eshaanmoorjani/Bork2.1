@@ -338,7 +338,7 @@ async function sendMessage(chatId, userId, username, messageNumber, type, messag
 }
 
 
-async function findBestChat(userTags, numParticipants=1) {
+async function findBestChat(userTags, numParticipants=1, ignoredChatId = null) {
     // get every chat room where num_participants < 10
 
     return firestore.collection("chats").where("num_participants", "<", 10).get() 
@@ -350,9 +350,9 @@ async function findBestChat(userTags, numParticipants=1) {
             for (var i in querySnapshot.docs) {
                 const doc = querySnapshot.docs[i];
                 const data = doc.data();
+                chatId = doc.id;
 
-                if(data.lobby_open && 10-data.num_participants >= numParticipants) { //  && data.lobby_type === "Normal"
-                    chatId = doc.id;
+                if(data.lobby_open && 10-data.num_participants >= numParticipants && chatId !== ignoredChatId) { //  && data.lobby_type === "Normal"
                     chatTags = data.tags;
                     score = 1; // chatScore(chatId, chatTags)
 
@@ -384,13 +384,13 @@ exports.sendMessage = functions.https.onCall(async (data, context) => {
 
     const approval = await verifyChatMessage(message, userID, chatID);
     if (!approval.verified) {
-        return approval.message
+        return approval;
     }
 
     await sendMessage(chatID, userID, username, messageNumber, "user_content", message);
     await updateLastMessageTime(chatID);
 
-    return true;
+    return approval;
 });
 
 
@@ -418,13 +418,15 @@ exports.changeLobbyStatus = functions.https.onCall(async (data, context) => {
     const userId = context.auth.uid;
     const userInfo = await getChatId(userId);
     const chatId = userInfo[0]
+    console.log("peen: "+chatId)
 
     await firestore.collection('chats').doc(chatId).get().then(async function(doc) {
         const docData = doc.data()
         if(doc.exists){
             if(!docData.lobby_open) {
                 const numParticipants = docData.num_participants;
-                const new_chatId = await findBestChat(["Among us"], numParticipants)
+                const new_chatId = await findBestChat(["Among us"], numParticipants, chatId)
+                console.log("leen: "+new_chatId)
                 if(new_chatId !== null) {
                     const chatParticipants = firestore.collection('chats').doc(chatId).collection('participants')
                     await chatParticipants.get().then(async function(querySnapshot) {
@@ -440,13 +442,19 @@ exports.changeLobbyStatus = functions.https.onCall(async (data, context) => {
                         }
                         return await Promise.all(promises)                        
                     })
+
+                    return await deleteChat(chatId)
                 }
             }
+            await doc.ref.update({
+                lobby_open: !docData.lobby_open,
+                lobby_type: "Normal"
+            });
         }
         return "success"
     })
     // Delete old chat's document
-    return await deleteChat(chatId)
+    return null
 })
 
 // how to do helper functions with firebase??
