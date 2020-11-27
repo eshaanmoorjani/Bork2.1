@@ -8,7 +8,7 @@ export default class Loading extends Component {
         return (
             <div class="full-frame-loading">
                 <h1 class="hog-pub-text">Hog Pub</h1>
-                <h2 class="loading-text">Your lobby is loading...</h2>
+                <h2 class="loading-text">Loading...</h2>
                 <Circle size={100} className="loading"></Circle>
             </div>
         );

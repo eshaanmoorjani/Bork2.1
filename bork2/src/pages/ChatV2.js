@@ -5,8 +5,6 @@ import DailyIframe from '@daily-co/daily-js';
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
 import AppBar from '@material-ui/core/AppBar';
-import Toolbar from '@material-ui/core/Toolbar';
-import Typography from '@material-ui/core/Typography';
 
 import { auth, db, rt_db, functions } from '../services/firebase';
 
@@ -20,7 +18,7 @@ export default class LobbyApp extends Component {
         super(props);
 
         this.state = {
-            chatID: this.props.chatID,
+            chatID: null,
             userID: auth.currentUser.uid,
             username: this.props.username,
             
@@ -30,25 +28,32 @@ export default class LobbyApp extends Component {
             participants: {},
             numParticipants: 0,
         };
-        
-        this.setLobbySettings();
+        this.getChatIDTemp = this.getChatIDTemp.bind(this);
+        this.getChatIDTemp().then(() => {
+            this.setLobbySettings();
 
-        this.handleLogout = this.handleLogout.bind(this);
-
-        this.getParticipants = this.getParticipants.bind(this);
-        this.handleLobbyStatusChange = this.handleLobbyStatusChange.bind(this);
-        this.changeConnectionStatus = this.changeConnectionStatus.bind(this);
-        this.addAllListeners = this.addAllListeners.bind(this);
-        this.getChatID = this.getChatID.bind(this);
-
-        this.addAllListeners();
+            this.handleLogout = this.handleLogout.bind(this);
+    
+            this.getParticipants = this.getParticipants.bind(this);
+            this.handleLobbyStatusChange = this.handleLobbyStatusChange.bind(this);
+            this.changeConnectionStatus = this.changeConnectionStatus.bind(this);
+            this.addAllListeners = this.addAllListeners.bind(this);
+            this.getChatID = this.getChatID.bind(this);
+    
+            this.addAllListeners();
+        });
     }
 
     render() {
+        if (this.state.chatID === null) {
+            return null;
+        }
+        console.log(this.state.chatID);
+        console.log("im rendering")
         return (
             <div class="page">
                     <div class="full-frame-chat">
-                        <LobbyFrame chatID={this.state.chatID} lobbyType={this.state.lobbyType} lobbyOpen={this.state.lobbyOpen}
+                        <LobbyFrame lobbyID={this.state.chatID} lobbyType={this.state.lobbyType} lobbyOpen={this.state.lobbyOpen}
                         numParticipants={this.state.numParticipants} participants={this.state.participants}/>
 
                         <ChatFrame chatID={this.state.chatID} userID={this.state.userID} username={this.props.username} initTime={new Date()}/>
@@ -63,24 +68,32 @@ export default class LobbyApp extends Component {
     }
 
     addAllListeners() {
+        this.getChatID();
         this.getParticipants();
         this.changeConnectionStatus();
-        this.getChatID();
+    }
+
+    async getChatIDTemp() {
+        await db.collection("users").doc(this.state.userID).get().then(user => {
+            this.setState({
+                chatID: user.data().chat_id,
+            });
+        });
     }
 
     getChatID() {
-        const ref = db.collection("users").doc(this.state.userID)
-
+        const ref = db.collection("users").doc(this.state.userID);
+        console.log("GETTING CHATID");
         ref.onSnapshot(doc => {
-            console.log("boobies")
             if (!doc.exists) {
                 return null;
             }
-            const chatID = doc.data().chat_id;
+            console.log("GETTING!!!!!!!!!!!!!!!");
+            const chatID = doc.data().chat_id; 
             this.setState({
                 chatID: chatID,
             });
-            this.render()
+            console.log(this.state.chatID);
         });
     }
 
@@ -111,7 +124,9 @@ export default class LobbyApp extends Component {
     }
 
     async setLobbySettings() {
+        console.log(this.state.chatID);
         const chat = await db.collection("chats").doc(this.state.chatID).get();
+        console.log(chat.data());
         this.setState({
             lobbyOpen: chat.data().lobby_open,
             lobbyType: chat.data().lobby_type,
@@ -128,14 +143,12 @@ export default class LobbyApp extends Component {
         const changeLobbyStatus = functions.httpsCallable('changeLobbyStatus')
         const status = changeLobbyStatus({}).then(result => {
             console.log(result.data)
-            if(result.data.message === "new chat") {
-                
-            }
-            else {
-                this.setState({
-                    lobbyOpen: result.data.lobby_open,
-                });
-            }
+        // if(result.data 
+        //     else {
+        //         this.setState({
+        //             lobbyOpen: result.data.lobby_open,
+        //         });
+        //     }
         })
     }
 
@@ -199,6 +212,16 @@ class HeaderFrame extends Component {
 class LobbyFrame extends Component {
     constructor(props) {
         super(props);
+
+        this.state = {
+            showLobbyID: false,
+            showLobbyCapacity: false,
+            showParticipants: false,
+        };
+
+        this.handleLobbyCapacityClick = this.handleLobbyCapacityClick.bind(this);
+        this.handleLobbyIDClick = this.handleLobbyIDClick.bind(this);
+        this.handleParticipantsClick = this.handleParticipantsClick.bind(this);
     }
 
     render() {
@@ -209,65 +232,61 @@ class LobbyFrame extends Component {
         );
     }
 
-    hogPub() {
-        return (
-            <div class="hog-pub-box">
-                <h1 class="hog-pub-header">The Pub</h1>
-                <h2 class="lobby-title">Among Us</h2>
-            </div>
-
-        );
-    }
-
     misc() {
         return (
             <div class="misc-box">
-                {this.showParticipantsButton()}
+                {this.lobbyFrameButton(this.lobbyIDText(), this.handleLobbyIDClick)}
+                {this.lobbyFrameButton(this.participantsText(), this.handleParticipantsClick)}
+                {this.lobbyFrameButton(this.lobbyCapacityText(), this.handleLobbyCapacityClick)}
             </div>
         );
     }
 
-    showParticipantsButton() {
-        const buttonStyle = { 
-            color: 'black',     
-            borderColor: 'black',
-        };
+    handleLobbyIDClick() {
+        this.setState({
+            showLobbyID: !this.state.showLobbyID,
+        });
+    }
 
+    handleLobbyCapacityClick() {
+        this.setState({
+            showLobbyCapacity: !this.state.showLobbyCapacity,
+        });
+    }
+
+    handleParticipantsClick() {
+        this.setState({
+            showParticipants: !this.state.showParticipants,
+        })
+    }
+
+    lobbyIDText() {
+        return this.state.showLobbyID ? this.props.lobbyID : "Lobby ID";
+    }
+
+    lobbyCapacityText() {
+        return this.state.showLobbyCapacity ? this.props.numParticipants + "/10" : "Lobby Capacity";
+    }
+
+    participantsText() {
+        return this.state.showParticipants ? this.makeParticipants() : "Show Participants";
+    }
+
+    makeParticipants() {
+        
+    }
+
+    lobbyFrameButton(text, clickHandler) {
         return (
-            <Button className="show-participants-temp" variant="outlined" color="primary" style={buttonStyle}>Show Participants</Button>
+            <Button className="lobby-frame-button" variant="outlined" onClick={clickHandler}>{text}</Button>
         );
-    }
-
-    lobbyInfoBox() {
-        return (
-            <div class="lobby-info-box">
-                <h3 class="lobby-info-header">Lobby Info</h3>
-                <div class="lobby-info-text">
-                    {this.showLobbyID()}
-                    <p class="num-participants">Lobby Capacity: {this.props.numParticipants}/10</p>
-                </div>
-            </div>
-        );
-    }
-
-    showLobbyID() {
-        if (this.props.lobbyType === "Premade") {
-            return <p class="lobby-id">Lobby ID: {this.props.chatID}</p>
-        }
-    }
-
-    getLobbyButtonMessage() {
-        if (this.props.lobbyType === "Premade") {
-            return this.props.lobbyOpen ? "Leave queue" : "Join queue";
-        } else {
-            return this.props.lobbyOpen ? "Close Lobby" : "Open Lobby";
-        }
     }
 }
 
 class ChatFrame extends Component {
     constructor(props) {
         super(props);
+        console.log("dck"+ props)
 
         this.state = {
             numMessagesSent: 0,
@@ -295,11 +314,16 @@ class ChatFrame extends Component {
         );
     }
 
-    // auto scroll down
-    componentDidUpdate() {
+    componentDidUpdate(prevProps, prevState) {
+        /* Auto scroll down */
         const scrollDiv = document.getElementById("dummyScroll");
         if (scrollDiv != null) {
             scrollDiv.scrollIntoView(true, { behavior: "smooth" });
+        }
+
+        /* If the premade lobby started queue and was assigned to a new chat, listen to the new chat instead of the old one */
+        if (prevProps.chatID !== this.props.chatID) {
+            this.addAllListeners();
         }
     }
 
@@ -384,7 +408,7 @@ class ChatFrame extends Component {
 
     getMessages() {
         const ref = db.collection("chats").doc(this.props.chatID).collection("messages").orderBy("timestamp", "desc").limit(1);
-        ref.onSnapshot(collection => {
+        const unsubscribe = ref.onSnapshot(collection => {
             collection.forEach(doc => {
                 const data = doc.data();
                     this.setState({
@@ -395,6 +419,7 @@ class ChatFrame extends Component {
                         numMessagesReceived: this.state.numMessagesReceived + 1,
                         lastMessageTime: data.timestamp.seconds,
                     });
+                    console.log(data);
             });
         });
     }
@@ -413,6 +438,7 @@ class ChatFrame extends Component {
     }
 
     sendMessage(message) {
+        console.log(this.props.chatID);
         const send = functions.httpsCallable('sendMessage');
         const success = send({message: message, messageNumber: this.state.numMessagesSent}).then(function(result) {
             console.log(result)
@@ -482,9 +508,7 @@ class VideoFrame extends Component {
             showFullscreenButton: true,
         };
         const callFrame = DailyIframe.createFrame(style);
-        console.log(callFrame);
         this.state.callFrame = callFrame;
-        console.log(this.state.callFrame);
     }
 
     addListeners() {

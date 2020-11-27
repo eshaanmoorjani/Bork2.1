@@ -382,9 +382,9 @@ exports.sendMessage = functions.https.onCall(async (data, context) => {
     const username = userInfo[1]; // changed to getting username from db
     const messageNumber = data.messageNumber;
 
-    const verified = await verifyChatMessage(message, userID, chatID);
-    if (!verified) {
-        return false;
+    const approval = await verifyChatMessage(message, userID, chatID);
+    if (!approval.verified) {
+        return approval.message
     }
 
     await sendMessage(chatID, userID, username, messageNumber, "user_content", message);
@@ -397,7 +397,10 @@ exports.sendMessage = functions.https.onCall(async (data, context) => {
 async function verifyChatMessage(message, userID, chatID) {
     // check if the user is in the chat they want to write to
     // check if the message contains no profanity
-    return true;
+    if(message.length > 100) {
+        return {verified: false, message: "Message should be under 100 characters. "}
+    }
+    return {verified: true, message: ""};
 }
 
 async function updateLastMessageTime(chatID) {
@@ -435,30 +438,15 @@ exports.changeLobbyStatus = functions.https.onCall(async (data, context) => {
                             
                             promises.push(addToChatSequence(userId, new_chatId, username))
                         }
-                        return await Promise.all(promises)
-                        
-                        // // Delete old chat's subcollections
-                        // const batch = db.batch();
-                        // const participantsRef = firestore.collection('chats').doc(chatId).collection("participants")
-                        // const messagesRef = firestore.collection('chats').doc(chatId).collection("messages")
-                        // batch.delete(participantsRef)
-                        // batch.delete(messagesRef)
-                        // await batch.commit();
-                        
+                        return await Promise.all(promises)                        
                     })
                 }
             }
         }
         return "success"
     })
-
     // Delete old chat's document
-    const oldChatRef =  "chats/" + chatId // firestore.collection('chats').doc(chatId
-    return await firebase_tools.firestore.delete(oldChatRef, {
-        project: process.env.GCLOUD_PROJECT,
-        recursive: true,
-        yes: true
-    }); 
+    return await deleteChat(chatId)
 })
 
 // how to do helper functions with firebase??
@@ -501,7 +489,6 @@ exports.deleteUserInfo = functions.https.onCall(async (data, context) => {
     const chatId = data.chatId;
     const username = data.username
     await deleteUserInfoHelper(userId)
-    console.log("switching to the next: ", chatId)
     await deleteChatInfo(userId, chatId, username)
     return "success"
 });
@@ -545,7 +532,17 @@ async function deleteChatInfo(userId, chatId, username) {
     if(!(await deleteEmptyChat(chatId))) {
         await sendMessage(chatId, userId, username, -1, "user_disconnect", username + " has hogged out.");
     }
-    console.log("d")
+}
+
+async function deleteChat(chatID) {
+    // Delete old chat's document
+    const oldChatRef =  "chats/" + chatID + '/'
+    return await firebase_tools.firestore.delete(oldChatRef, {
+        project: process.env.GCLOUD_PROJECT,
+        token: functions.config().ci_token,
+        recursive: true,
+        yes: true
+    }); 
 }
 
 // call this function when participants <= 0 HELOOOOO so like
@@ -557,7 +554,7 @@ async function deleteEmptyChat(chatId) {
         const docData = doc.data()
         if(doc.exists && docData.num_participants <= 0) {
             console.log("Removing a chat")
-            await chatInfo.delete()
+            await deleteChat(chatId)
             await deleteVideoRoomURL(chatId)
             return true
         }
