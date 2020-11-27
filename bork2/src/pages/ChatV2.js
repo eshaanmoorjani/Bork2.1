@@ -20,7 +20,6 @@ export default class LobbyApp extends Component {
         this.state = {
             chatID: null,
             userID: auth.currentUser.uid,
-            username: this.props.username,
             
             lobbyType: null,
             lobbyOpen: null,
@@ -58,7 +57,7 @@ export default class LobbyApp extends Component {
 
                         <ChatFrame chatID={this.state.chatID} userID={this.state.userID} username={this.props.username} initTime={new Date()}/>
 
-                        <VideoFrame ref="videoFrame" videoCallURL={`https://hogpub.daily.co/${this.state.chatID}`}/>
+                        <VideoFrame ref="videoFrame" videoCallURL={`https://hogpub.daily.co/${this.state.chatID}`} username={this.props.username} />
                     </div>
 
                     <HeaderFrame handleLogout={throttle(this.handleLogout, 10000)} handleLobbyStatusChange={this.handleLobbyStatusChange}
@@ -169,7 +168,7 @@ export default class LobbyApp extends Component {
         renderLoading();
         const deleteInfo = functions.httpsCallable('deleteUserInfo');
         
-        await deleteInfo({userId: this.state.userID, chatId: this.state.chatID, username: this.state.username}).then(result => { // CORS error that wasn't there earlier
+        await deleteInfo({userId: this.state.userID, chatId: this.state.chatID, username: this.props.username}).then(result => { // CORS error that wasn't there earlier
         })
         .catch(function (error) {
             console.log(error);
@@ -475,6 +474,12 @@ class VideoFrame extends Component {
         );
     }
 
+    componentDidUpdate(prevProps, prevState) {
+        if (prevProps.videoCallURL !== this.props.videoCallURL) {
+            this.disconnect();
+        }
+    }
+
     joinButton() {
         const style = {
 
@@ -511,6 +516,7 @@ class VideoFrame extends Component {
             },
             showLeaveButton: true,
             showFullscreenButton: true,
+            userName: this.props.username,
         };
         const callFrame = DailyIframe.createFrame(style);
         this.state.callFrame = callFrame;

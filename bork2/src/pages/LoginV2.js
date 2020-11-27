@@ -147,6 +147,10 @@ class FormGrid extends Component {
   displayChange(idFrom, idTo) {
     function helper() {
       const div = document.getElementById(idFrom);
+      /* If someone is already hovering on the button when a re-render occurs, the idFrom will be opposite. Just do nothing in this case */
+      if (div === null) {
+        return;
+      }
       div.setAttribute("id", idTo);
     }
     return helper
