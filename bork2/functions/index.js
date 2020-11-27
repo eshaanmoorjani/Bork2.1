@@ -1,5 +1,6 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
+const firebase_tools = require('firebase-tools');
 admin.initializeApp();
 
 const firestore = admin.firestore();
@@ -352,7 +353,7 @@ async function findBestChat(userTags, numParticipants=1) {
 
                 if(data.lobby_open && 10-data.num_participants >= numParticipants) { //  && data.lobby_type === "Normal"
                     chatId = doc.id;
-                    chatTags = doc.tags;
+                    chatTags = data.tags;
                     score = 1; // chatScore(chatId, chatTags)
 
                     // moved adding one to participants to assignForSoloQueue; findBestChat shouldn't know about that
@@ -375,9 +376,10 @@ async function findBestChat(userTags, numParticipants=1) {
 
 exports.sendMessage = functions.https.onCall(async (data, context) => {
     const message = data.message;
-    const chatID = data.chatID;
     const userID = context.auth.uid;
-    const username = data.username;
+    const userInfo = await getChatId(userID)
+    const chatID = userInfo[0]; // changed to getting chatid from db
+    const username = userInfo[1]; // changed to getting username from db
     const messageNumber = data.messageNumber;
 
     const verified = await verifyChatMessage(message, userID, chatID);
@@ -414,22 +416,49 @@ exports.changeLobbyStatus = functions.https.onCall(async (data, context) => {
     const userInfo = await getChatId(userId);
     const chatId = userInfo[0]
 
-    return await firestore.collection('chats').doc(chatId).get().then(async function(doc) {
+    await firestore.collection('chats').doc(chatId).get().then(async function(doc) {
         const docData = doc.data()
         if(doc.exists){
             if(!docData.lobby_open) {
                 const numParticipants = docData.num_participants;
-                const chatId = await findBestChat(["Among us"], numParticipants)
-                console.log("PENIS", chatId, numParticipants)
-                if(chatId !== null) {
-                    return {message: "new chat", chatId: chatId}
+                const new_chatId = await findBestChat(["Among us"], numParticipants)
+                if(new_chatId !== null) {
+                    const chatParticipants = firestore.collection('chats').doc(chatId).collection('participants')
+                    await chatParticipants.get().then(async function(querySnapshot) {
+                        const promises = []
+                        for (var i in querySnapshot.docs) {
+                            const doc = querySnapshot.docs[i];
+                            const data = doc.data();
+
+                            const userId = data.user_id
+                            const username = data.username
+                            
+                            promises.push(addToChatSequence(userId, new_chatId, username))
+                        }
+                        return await Promise.all(promises)
+                        
+                        // // Delete old chat's subcollections
+                        // const batch = db.batch();
+                        // const participantsRef = firestore.collection('chats').doc(chatId).collection("participants")
+                        // const messagesRef = firestore.collection('chats').doc(chatId).collection("messages")
+                        // batch.delete(participantsRef)
+                        // batch.delete(messagesRef)
+                        // await batch.commit();
+                        
+                    })
                 }
             }
-            await doc.ref.update({lobby_open: !docData.lobby_open});
-            return {message: "successful", lobby_open: !docData.lobby_open}
         }
-        return {message: "file does not exist"}
+        return "success"
     })
+
+    // Delete old chat's document
+    const oldChatRef =  "chats/"+ chatId // firestore.collection('chats').doc(chatId
+    return await firebase_tools.firestore.delete(oldChatRef, {
+        project: process.env.GCLOUD_PROJECT,
+        recursive: true,
+        yes: true
+    }); 
 })
 
 // how to do helper functions with firebase??
@@ -545,7 +574,7 @@ exports.accountCleanup = functions.runWith({timeoutSeconds: 540, memory: '2GB'})
     console.log("length of inactive users: ", inactiveUsers.length)
 
     // Maximum concurrent account deletions.
-    const MAX_CONCURRENT = Math.max(3, inactiveUsers.length);
+    const MAX_CONCURRENT = Math.min(3, inactiveUsers.length);
     // await deleteInactiveUser(inactiveUsers)
     const new_promisePool = new PromisePool(() => deleteInactiveUser(inactiveUsers), MAX_CONCURRENT);
     await new_promisePool.start();

@@ -36,6 +36,7 @@ export default class LobbyApp extends Component {
         this.handleLobbyStatusChange = this.handleLobbyStatusChange.bind(this);
         this.changeConnectionStatus = this.changeConnectionStatus.bind(this);
         this.addAllListeners = this.addAllListeners.bind(this);
+        this.getChatID = this.getChatID.bind(this);
 
         this.addAllListeners();
     }
@@ -59,6 +60,23 @@ export default class LobbyApp extends Component {
     addAllListeners() {
         this.getParticipants();
         this.changeConnectionStatus();
+        this.getChatID();
+    }
+
+    getChatID() {
+        const ref = db.collection("users").doc(this.state.userID)
+
+        ref.onSnapshot(doc => {
+            console.log("boobies")
+            if (!doc.exists) {
+                return null;
+            }
+            const chatID = doc.data().chat_id;
+            this.setState({
+                chatID: chatID,
+            });
+            this.render()
+        });
     }
 
     getParticipants() {
@@ -361,7 +379,9 @@ class ChatFrame extends Component {
 
     sendMessage(message) {
         const send = functions.httpsCallable('sendMessage');
-        const success = send({message: message, chatID: this.props.chatID, username: this.props.username, messageNumber: this.state.numMessagesSent});
+        const success = send({message: message, messageNumber: this.state.numMessagesSent}).then(function(result) {
+            console.log(result)
+        });
     }
 }
 

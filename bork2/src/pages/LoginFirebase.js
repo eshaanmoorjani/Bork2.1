@@ -78,7 +78,7 @@ function onClick(signInType) {
         const inputChatID = getInputChatID(signInType);
     
         renderLoading();
-        
+
         const signIn = functions.httpsCallable('signIn');
         const obj = await signIn({username: username, chatID: inputChatID, signInType: signInType});
     
