@@ -18,7 +18,7 @@ export function renderLogin(usernameError, usernameErrorMessage, createLobbyErro
     joinLobbyError={joinLobbyError} joinLobbyHelperText={joinLobbyErrorMessage}
   />, document.getElementById('root'));
 
-  auth.setPersistence(firebase.auth.Auth.Persistence.SESSION).then(function () {
+  auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(function () {
     return auth.signInAnonymously();
   });
 }

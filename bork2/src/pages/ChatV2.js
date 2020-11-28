@@ -172,7 +172,6 @@ class HeaderFrame extends Component {
 
     render() {
         const lightBlue = {
-            height: '60%',
             background: '#2196F3',
             color: 'white',
         };
