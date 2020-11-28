@@ -124,7 +124,7 @@ class FormGrid extends Component {
           InputProps={{style: this.styles.textFieldStyle}} >
          </TextField>
         <Button id="create-input-button" variant="contained" color="primary" style={this.styles.buttonStyle}>
-          <p class="create-input-text">Join!</p>
+          <p class="create-input-text">Create!</p>
         </Button>
       </div>
     );

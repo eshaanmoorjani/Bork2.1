@@ -324,6 +324,7 @@ async function changeNumParticipants(chatId, num) {
  * 
  */
 async function sendMessage(chatId, userId, username, messageNumber, type, message) {
+    console.log("message: ", message)
     await firestore.collection('chats').doc(chatId).collection("messages").add({
         content: message,
         timestamp: new Date(),
@@ -396,9 +397,13 @@ exports.sendMessage = functions.https.onCall(async (data, context) => {
 
 async function verifyChatMessage(message, userID, chatID) {
     // check if the user is in the chat they want to write to
-    // check if the message contains no profanity
-    if(message.length > 100) {
-        return {verified: false, message: "Message should be under 100 characters. "}
+    // check if the message contains no profanity -- when seung hyun is on so he types the n word
+    message = message.trim()
+
+    if (message.length > 200) {
+        return {verified: false, message: "Message should be under 200 characters. "}
+    } else if (message === "") {
+        return {verified: false, message: "Message cannot be empty."}
     }
     return {verified: true, message: ""};
 }
@@ -412,8 +417,6 @@ async function updateLastMessageTime(chatID) {
     });
 }
 
-
-
 exports.changeLobbyStatus = functions.https.onCall(async (data, context) => {
     const userId = context.auth.uid;
     const userInfo = await getChatId(userId);
@@ -423,7 +426,6 @@ exports.changeLobbyStatus = functions.https.onCall(async (data, context) => {
     console.log("peen: " + chatId)
 
     /* Should send a message saying *username* has open/closed the lobby */
-    await sendMessage(chatId, userId, username, -1, "lobby_status_change", `${username} has changed the lobby status`);
 
     await firestore.collection('chats').doc(chatId).get().then(async function(doc) {
         const docData = doc.data()
@@ -433,6 +435,7 @@ exports.changeLobbyStatus = functions.https.onCall(async (data, context) => {
                 const new_chatId = await findBestChat(["Among us"], numParticipants, chatId)
                 console.log("leen: "+new_chatId)
                 if(new_chatId !== null) {
+                    await sendMessage(chatId, userId, username, -1, "lobby_status_change", `${username} has started the queue. You are now joining a new lobby with other players...`);
                     const chatParticipants = firestore.collection('chats').doc(chatId).collection('participants')
                     await chatParticipants.get().then(async function(querySnapshot) {
                         const promises = []
@@ -447,9 +450,14 @@ exports.changeLobbyStatus = functions.https.onCall(async (data, context) => {
                         }
                         return await Promise.all(promises)                        
                     })
-
                     return await deleteChat(chatId)
                 }
+            }
+            if (docData.lobby_open) {
+                await sendMessage(chatId, userId, username, -1, "lobby_status_change", `${username} has closed the lobby.`);
+            }
+            else {
+                await sendMessage(chatId, userId, username, -1, "lobby_status_change", `${username} has opened the lobby.`);
             }
             await doc.ref.update({
                 lobby_open: !docData.lobby_open,
@@ -646,7 +654,7 @@ async function getInactiveUsers(users = [], nextPageToken) {
 async function createVideoRoomURL(chatID) {
     const fetch = require("node-fetch");
 
-    const exp = Date.now() / 1000 + 3660 // room expires 1 hour from creation date without warning and kicks everyone out but we gotta save money
+    const exp = Date.now() / 1000 + 18000 // room expires 1 hour from creation date without warning and kicks everyone out but we gotta save money
 
     return await fetch("https://api.daily.co/v1/rooms", {
         "method": "POST",

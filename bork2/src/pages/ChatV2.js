@@ -30,24 +30,21 @@ export default class LobbyApp extends Component {
             numParticipants: 0,
         };
 
-        this.getChatIDInit = this.getChatIDInit.bind(this);
-        this.getChatIDInit().then(() => {
-            this.setLobbySettings();
-
-            this.handleLogout = this.handleLogout.bind(this);
+        this.init = this.init.bind(this);
+        this.handleLogout = this.handleLogout.bind(this);
     
-            this.getParticipants = this.getParticipants.bind(this);
-            this.handleLobbyStatusChange = this.handleLobbyStatusChange.bind(this);
-            this.changeConnectionStatus = this.changeConnectionStatus.bind(this);
-            this.chatListener = this.chatListener.bind(this);
-            this.getChatID = this.getChatID.bind(this);
-            this.addAllListeners = this.addAllListeners.bind(this);
-    
+        this.changeConnectionStatus = this.changeConnectionStatus.bind(this);
+        this.chatListener = this.chatListener.bind(this);
+        this.getChatID = this.getChatID.bind(this);
+        this.addAllListeners = this.addAllListeners.bind(this);
+        
+        this.init().then(() => {
             this.addAllListeners();
         });
     }
 
     render() {
+        /* If the chat is still being created, do not render anything!! */
         if (this.state.chatID === null) {
             return null;
         }
@@ -68,7 +65,9 @@ export default class LobbyApp extends Component {
         );
     }
 
-    /* Redirect listeners after chatID has changed */
+    /** 
+     * Redirect listeners after chatID has changed 
+     */
     componentDidUpdate(prevProps, prevState) {
         if (prevState.chatID !== this.state.chatID) {
             this.addAllListeners();
@@ -77,15 +76,22 @@ export default class LobbyApp extends Component {
 
     addAllListeners() {
         this.getChatID();
-        this.getParticipants();
         this.changeConnectionStatus();
         this.chatListener();
     }
 
-    async getChatIDInit() {
-        await db.collection("users").doc(this.state.userID).get().then(user => {
-            this.setState({
-                chatID: user.data().chat_id,
+    /**
+     * Assign this chat its correct chatID, lobbyOpen, and lobbyType
+     */
+    async init() {
+        await db.collection("users").doc(this.state.userID).get().then(async user => {
+            const chatID = user.data().chat_id;
+            await db.collection("chats").doc(chatID).get().then(doc => {
+                this.setState({
+                    chatID: chatID,
+                    lobbyOpen: doc.data().lobby_open,
+                    lobbyType: doc.data().lobby_type,
+                });
             });
         });
     }
@@ -103,22 +109,6 @@ export default class LobbyApp extends Component {
         });
     }
 
-    getParticipants() {
-        const ref = db.collection("chats").doc(this.state.chatID)
-        ref.collection("participants").orderBy("timestamp").onSnapshot(collection => {
-            var participants = {};
-
-            collection.forEach(doc => {
-                const data = doc.data();
-                participants[data.user_id] = data.username;
-            });
-
-            this.setState({
-                participants: participants,
-            });
-        });
-    }
-
     chatListener() {
         const ref = db.collection("chats").doc(this.state.chatID)
         ref.onSnapshot(doc => {
@@ -128,22 +118,23 @@ export default class LobbyApp extends Component {
             const numParticipants = doc.data().num_participants;
             const lobbyOpen = doc.data().lobby_open;
             const lobbyType = doc.data().lobby_type;
-            this.setState({
-                numParticipants: numParticipants,
-                lobbyOpen: lobbyOpen,
-                lobbyType: lobbyType,
+
+            ref.collection("participants").orderBy("timestamp").get().then(querySnapshot => {
+                var participants = {}
+                querySnapshot.forEach(doc => {
+                    participants[doc.data().user_id] = doc.data().username;
+                });
+                this.setState({
+                    participants: participants,
+                    numParticipants: numParticipants,
+                    lobbyOpen: lobbyOpen,
+                    lobbyType: lobbyType,
+                });
             });
         });
     }
 
-    async setLobbySettings() {
-        const chat = await db.collection("chats").doc(this.state.chatID).get();
-        this.setState({
-            lobbyOpen: chat.data().lobby_open,
-            lobbyType: chat.data().lobby_type,
-        });
-    }
-
+    /* Could put this as a cloud function? Doesn't really belong in chat.js */
     changeConnectionStatus() {
         rt_db.ref('users/' + this.state.userID + "/is_disconnected").set(false); 
         var presenceRef = rt_db.ref("users/" + this.state.userID + "/is_disconnected");     
@@ -152,15 +143,7 @@ export default class LobbyApp extends Component {
 
     handleLobbyStatusChange() {
         const changeLobbyStatus = functions.httpsCallable('changeLobbyStatus')
-        const status = changeLobbyStatus({}).then(result => {
-            console.log(result.data)
-        // if(result.data 
-        //     else {
-        //         this.setState({
-        //             lobbyOpen: result.data.lobby_open,
-        //         });
-        //     }
-        })
+        const status = changeLobbyStatus({});
     }
 
     // this deletes from local participants, need to delete from DATABASE
@@ -188,12 +171,13 @@ class HeaderFrame extends Component {
     }
 
     render() {
-        const buttonStyle2 = {
+        const lightBlue = {
+            height: '60%',
             background: '#2196F3',
             color: 'white',
         };
 
-        const buttonStyle3 = {
+        const darkBlue = {
             height: '80%',
             color: 'white',
         };
@@ -203,9 +187,9 @@ class HeaderFrame extends Component {
                 <div className="toolbar">
                         <Button className="leave-lobby-temp" variant="contained" color="secondary"
                          onClick={this.props.handleLogout}>Leave Lobby</Button>
-                        <Button className="start-queue-temp" variant="contained" color="primary" style={buttonStyle2}
+                        <Button className="start-queue-temp" variant="contained" color="primary" style={lightBlue}
                          onClick={this.props.handleLobbyStatusChange}>{this.getLobbyButtonMessage()}</Button>
-                        <Button className="hog-pub-header-temp" variant="outlined" color="primary" style={buttonStyle3}><h1>The Pub</h1></Button>
+                        <Button className="hog-pub-header-temp" variant="outlined" color="primary" style={darkBlue}><h1>The Pub</h1></Button>
                 </div>
             </AppBar>
         );
@@ -213,9 +197,9 @@ class HeaderFrame extends Component {
 
     getLobbyButtonMessage() {
         if (this.props.lobbyType === "Premade") {
-            return this.props.lobbyOpen ? "Loading..." : "Find a match!";
+            return this.props.lobbyOpen ? "Loading..." : "Find more players!";
         } else {
-            return this.props.lobbyOpen ? "Close Lobby" : "Open Lobby";
+            return this.props.lobbyOpen ? "Close Lobby" : "Find more players!";
         }
     }
 }
@@ -286,8 +270,20 @@ class LobbyFrame extends Component {
     }
 
     lobbyFrameButton(text, clickHandler, id) {
+        const style = {
+            height: '5%',
+            width: '85%',
+            marginLeft: 'auto',
+            marginRight: 'auto',
+    
+            outline: 'none',
+            color: 'black',
+            borderColor: 'black',
+            boxShadow: '2px 2px 5px -3px black',
+        }
+
         return (
-            <Button className="lobby-frame-button" id={id} variant="outlined" onClick={clickHandler}>{text}</Button>
+            <Button className="lobby-frame-button" id={id} variant="outlined" onClick={clickHandler} style={style}>{text}</Button>
         );
     }
 
@@ -316,8 +312,8 @@ class LobbyFrame extends Component {
         return (
             <React.Fragment>
                 {this.lobbyFrameButton("Show Participants", handleClick, "participants")}
-                <Menu keepMounted anchorEl={this.state.anchorEl} open={this.state.menuOpen} onClose={handleClose}
-                 anchorOrigin={{vertical: 'bottom', horizontal: 'center'}} transformOrigin={{vertical: 'bottom', horizontal: 'center'}}> 
+                <Menu keepMounted anchorEl={this.state.anchorEl} getContentAnchorEl={null} open={this.state.menuOpen} onClose={handleClose} 
+                 anchorOrigin={{vertical: 'bottom', horizontal: 'center'}} transformOrigin={{vertical: 'top', horizontal: 'center'}}> 
                     {makeParticipants()}
                 </Menu>
             </React.Fragment>
@@ -404,7 +400,7 @@ class ChatFrame extends Component {
             return timeFormatted
         }
 
-        function makeRealMessage(messageData, userID) {
+        function makeUserMessage(messageData, userID) {
             const messageClass = (messageData.userID == userID) ? "user-message" : "other-message";
             var date = new Date(messageData.timestamp.seconds * 1000);
             var timeFormatted = getFormattedTime(date);
@@ -433,7 +429,7 @@ class ChatFrame extends Component {
 
         const messageData = this.state.messages[messageID];
         if (messageData.type == "user_content") {
-            return makeRealMessage(messageData, this.props.userID);
+            return makeUserMessage(messageData, this.props.userID);
         } else {
             return makeStatusMessage(messageData, this.props.userID);
         }
@@ -480,18 +476,10 @@ class ChatFrame extends Component {
 
     sendMessage(message) {
         const send = functions.httpsCallable('sendMessage');
-        const curState = this
-        const success = send({message: message, messageNumber: this.state.numMessagesSent}).then(function(result) {
-            if(!result.data.verified) {
-                curState.setState({
-                    messageHelperText: result.data.message,
-                });
-            }
-            else {
-                curState.setState({
-                    messageHelperText: ""
-                })
-            }
+        const success = send({message: message, messageNumber: this.state.numMessagesSent}).then(result => {
+            this.setState({
+                messageHelperText: result.data.verified ? "" : result.data.message,
+            });
         });
     }
 }
@@ -528,7 +516,8 @@ class VideoFrame extends Component {
 
     joinButton() {
         const style = {
-
+            marginLeft: 'auto',
+            marginRight: 'auto',
           };
 
         return (
@@ -551,14 +540,10 @@ class VideoFrame extends Component {
         const style = {
             iframeStyle: {
                 position: "fixed",
-                left: "60%",
-                top: "5%",
-                width: "35%",
+                left: "16%",
+                top: "8%",
+                width: "48%",
                 height: "90%",
-                borderWidth: 0,
-                borderTopRightRadius: '20px',
-                borderBottomRightRadius: '20px',
-
             },
             showLeaveButton: true,
             showFullscreenButton: true,

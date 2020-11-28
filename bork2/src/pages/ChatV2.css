@@ -11,9 +11,9 @@
 
 .full-frame-chat {
     position: fixed;
-    margin-top: 4%;
+    margin-top: 70px;
     
-    height: 92%;
+    height: 90%;
     width: 100%;
 
     display: flex;
@@ -27,9 +27,6 @@
 
     height: 100%;
     width: 15%;
-
-    border-top-left-radius: 10px;
-    border-bottom-left-radius: 10px;
 
     display: flex;
     align-items: center;
@@ -45,20 +42,22 @@
     position: relative;
 
     height: 100%;
-    width: 40%;
+    left: 50%;
+    width: 35%;
 
     border-left-width: 1px;
     border-left-style: solid;
     border-left-color: black;
 
-    background-color: #d6d6d6;
+    background-color: #ffffff;
 }
 
 .video-frame-yes-video {
     position: relative;
 
     height: 100%;
-    width: 40%;
+    right: 50%;
+    flex: 6;
 
     border-top-right-radius: 10px;
     border-bottom-right-radius: 10px;
@@ -78,7 +77,8 @@
     position: relative;
 
     height: 100%;
-    width: 70%;
+    flex: 8;
+
 
     border-left-width: 1px;
     border-left-style: solid;
@@ -91,7 +91,7 @@
     position: relative;
 
     height: 100%;
-    width: 20%;
+    flex: 2;
 
     border-top-right-radius: 10px;
     border-bottom-right-radius: 10px;
@@ -313,19 +313,15 @@
 
 .message-bubble {
     position: relative;
-
-    min-width: 100px;
-    max-width: 800px;
-    
     padding: 12px;
 
     overflow-x: hidden;
 }
 
 .other-message {
-    margin-top: 10px;
-    margin-bottom: 0px;
-
+    margin-top: 20px;
+    margin-bottom: 2px;
+    
     align-self: flex-start;
 
     border-radius: 15px;
@@ -338,12 +334,14 @@
 
 .user-message  {
     margin-top: 20px;
-    margin-bottom: 0px;
+    margin-bottom: 2px;
     margin-right: 5px;
 
+    max-width: 80%;
+    
     align-self: flex-end;
 
-    border-radius: 5px;
+    border-radius: 15px;
     border-bottom-right-radius: 0px;
 
     background: #7BDFFF;
@@ -399,18 +397,4 @@
 
 .start-queue-temp {
     position: absolute;
-}
-
-.show-participants-temp {
-    position: relative;
-    top: 5%;
-}
-
-.lobby-frame-button {
-    height: 5%;
-    width: 85%;
-
-    color: black;
-    border-color: black;
-    box-shadow: 2px 2px 5px -3px black;
 }
