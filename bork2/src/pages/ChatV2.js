@@ -5,6 +5,8 @@ import DailyIframe from '@daily-co/daily-js';
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
 import AppBar from '@material-ui/core/AppBar';
+import Menu from '@material-ui/core/Menu';
+import MenuItem from '@material-ui/core/MenuItem';
 
 import { auth, db, rt_db, functions } from '../services/firebase';
 
@@ -125,9 +127,11 @@ export default class LobbyApp extends Component {
             }
             const numParticipants = doc.data().num_participants;
             const lobbyOpen = doc.data().lobby_open;
+            const lobbyType = doc.data().lobby_type;
             this.setState({
                 numParticipants: numParticipants,
                 lobbyOpen: lobbyOpen,
+                lobbyType: lobbyType,
             });
         });
     }
@@ -209,7 +213,7 @@ class HeaderFrame extends Component {
 
     getLobbyButtonMessage() {
         if (this.props.lobbyType === "Premade") {
-            return this.props.lobbyOpen ? "Leave queue" : "Join queue";
+            return this.props.lobbyOpen ? "Loading..." : "Find a match!";
         } else {
             return this.props.lobbyOpen ? "Close Lobby" : "Open Lobby";
         }
@@ -224,6 +228,8 @@ class LobbyFrame extends Component {
             showLobbyID: false,
             showLobbyCapacity: false,
             showParticipants: false,
+            menuOpen: false,
+            anchorEl: null,
         };
 
         this.handleLobbyCapacityClick = this.handleLobbyCapacityClick.bind(this);
@@ -243,7 +249,7 @@ class LobbyFrame extends Component {
         return (
             <div class="misc-box">
                 {this.lobbyFrameButton(this.lobbyIDText(), this.handleLobbyIDClick)}
-                {this.lobbyFrameButton(this.participantsText(), this.handleParticipantsClick)}
+                {this.simpleMenu()}
                 {this.lobbyFrameButton(this.lobbyCapacityText(), this.handleLobbyCapacityClick)}
             </div>
         );
@@ -279,17 +285,46 @@ class LobbyFrame extends Component {
         return this.state.showParticipants ? this.makeParticipants() : "Show Participants";
     }
 
-    makeParticipants() {
-        
+    lobbyFrameButton(text, clickHandler, id) {
+        return (
+            <Button className="lobby-frame-button" id={id} variant="outlined" onClick={clickHandler}>{text}</Button>
+        );
     }
 
-    lobbyFrameButton(text, clickHandler) {
+    simpleMenu() {
+        const handleClick = (event) => {
+            this.setState({
+                menuOpen: !this.state.menuOpen,
+                anchorEl: event.currentTarget,
+            })
+        }
+
+        const handleClose = () => {
+            this.setState({
+                menuOpen: false,
+            })
+        }
+
+        const makeParticipants = () => {
+            var participants = []
+            for (var key in this.props.participants) {
+                participants.push(<MenuItem onClick={handleClose}>{this.props.participants[key]}</MenuItem>)
+            }
+            return participants;
+        }
+      
         return (
-            <Button className="lobby-frame-button" variant="outlined" onClick={clickHandler}>{text}</Button>
+            <React.Fragment>
+                {this.lobbyFrameButton("Show Participants", handleClick, "participants")}
+                <Menu keepMounted anchorEl={this.state.anchorEl} open={this.state.menuOpen} onClose={handleClose}
+                 anchorOrigin={{vertical: 'bottom', horizontal: 'center'}} transformOrigin={{vertical: 'bottom', horizontal: 'center'}}> 
+                    {makeParticipants()}
+                </Menu>
+            </React.Fragment>
         );
     }
 }
-
+  
 class ChatFrame extends Component {
     constructor(props) {
         super(props);

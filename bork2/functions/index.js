@@ -417,8 +417,13 @@ async function updateLastMessageTime(chatID) {
 exports.changeLobbyStatus = functions.https.onCall(async (data, context) => {
     const userId = context.auth.uid;
     const userInfo = await getChatId(userId);
-    const chatId = userInfo[0]
-    console.log("peen: "+chatId)
+    const chatId = userInfo[0];
+    const username = userInfo[1];
+
+    console.log("peen: " + chatId)
+
+    /* Should send a message saying *username* has open/closed the lobby */
+    await sendMessage(chatId, userId, username, -1, "lobby_status_change", `${username} has changed the lobby status`);
 
     await firestore.collection('chats').doc(chatId).get().then(async function(doc) {
         const docData = doc.data()
