@@ -36,6 +36,7 @@ export default class LobbyApp extends Component {
         
         this.init().then(() => {
             this.addAllListeners();
+            this.changeConnectionStatus();
         });
     }
 
@@ -72,7 +73,6 @@ export default class LobbyApp extends Component {
 
     addAllListeners() {
         this.getChatID();
-        this.changeConnectionStatus();
         this.chatListener();
     }
 
@@ -131,10 +131,16 @@ export default class LobbyApp extends Component {
     }
 
     /* Could put this as a cloud function? Doesn't really belong in chat.js */
+    /* Don't call in setAllListeners: this is a USER listener not a CHAT Listener */
     changeConnectionStatus() {
         rt_db.ref('users/' + this.state.userID + "/is_disconnected").set(false); 
         var presenceRef = rt_db.ref("users/" + this.state.userID + "/is_disconnected");     
-        presenceRef.onDisconnect().set(true);
+        presenceRef.onDisconnect().set(true).then(() => {
+            console.log(auth.currentUser);
+            if (!auth.currentUser) {
+                alert("poo");
+            }
+        });
     }
 
     handleLobbyStatusChange() {
@@ -315,7 +321,7 @@ class LobbyFrame extends Component {
         );
     }
 }
-  
+
 class ChatFrame extends Component {
     constructor(props) {
         super(props);

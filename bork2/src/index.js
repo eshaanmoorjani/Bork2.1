@@ -41,7 +41,6 @@ export async function renderPageWithUserID(userId) {
     renderChat(chatID, username)
   }
   else {
-    console.log("poo");
     renderLogin();
     removeTransitions();
     setTransitions();
@@ -58,8 +57,7 @@ export function renderLoading() {
 
 
 auth.onAuthStateChanged(function(user) {
-  console.log("AUTH CHANGED!!!: ", user);
-  if(user) {
+  if(user !== null) {
     renderPageWithUserID(user.uid)
   }
   else {

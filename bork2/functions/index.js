@@ -30,7 +30,6 @@ exports.signIn = functions.https.onCall(async (data, context) => {
     const username = data.username;
     const chatID = data.chatID;
     const type = data.signInType;
-    console.log("INPUTS!!!: ", userID, username, chatID, type);
 
     const signInFunction = signInType[type];
 
@@ -250,9 +249,12 @@ async function createNewChat(userTags, lobby_open, lobby_type, chatID) {
  * 
  */
 async function addToChatSequence(userId, chatId, username) {
-    await addUserToChat(userId, chatId, username);
-    await addToParticipants(userId, chatId, username);
-    await changeNumParticipants(chatId, 1);
+    var promises = []
+    promises.push(addUserToChat(userId, chatId, username))
+    promises.push(addToParticipants(userId, chatId, username))
+    promises.push(realtime.ref('users/' + userId + "/is_processing").set(false))
+    promises.push(changeNumParticipants(chatId, 1));
+    await Promise.all(promises)
     await sendMessage(chatId, userId, username, -1, "user_connect", username + " has joined the pub.",);
 }
 
@@ -305,7 +307,7 @@ async function addToParticipants(userId, chatId, username) {
  * 
  */
 async function changeNumParticipants(chatId, num) {
-    await firestore.collection('chats').doc(chatId).update({
+    return await firestore.collection('chats').doc(chatId).update({
         num_participants: admin.firestore.FieldValue.increment(num), 
     });
 }
@@ -423,8 +425,6 @@ exports.changeLobbyStatus = functions.https.onCall(async (data, context) => {
     const chatId = userInfo[0];
     const username = userInfo[1];
 
-    console.log("peen: " + chatId)
-
     /* Should send a message saying *username* has open/closed the lobby */
 
     await firestore.collection('chats').doc(chatId).get().then(async function(doc) {
@@ -433,12 +433,11 @@ exports.changeLobbyStatus = functions.https.onCall(async (data, context) => {
             if(!docData.lobby_open) {
                 const numParticipants = docData.num_participants;
                 const new_chatId = await findBestChat(["Among us"], numParticipants, chatId)
-                console.log("leen: "+new_chatId)
                 if(new_chatId !== null) {
                     await sendMessage(chatId, userId, username, -1, "lobby_status_change", `${username} has started the queue. You are now joining a new lobby with other players...`);
                     const chatParticipants = firestore.collection('chats').doc(chatId).collection('participants')
                     await chatParticipants.get().then(async function(querySnapshot) {
-                        const promises = []
+                        var promises = []
                         for (var i in querySnapshot.docs) {
                             const doc = querySnapshot.docs[i];
                             const data = doc.data();
@@ -478,31 +477,32 @@ function chatScore(chatTags, userTags) {
 exports.removeDisconnectedUsers = functions.database.ref('/users/{userId}/is_disconnected').onWrite(async (change, context) => {
     const is_disconnected = change.after.val();
     const userId = context.params.userId;
-    // console.log(original)
-    // console.log(userId)
-    if(is_disconnected) {
-        await setTimeout(async function() {
-            await realtime.ref('/users/' + userId + "/is_disconnected").once('value').then(async function(snapshot) {
-                console.log("HAPPENED AFTER")
-                if(snapshot.val()) {
-                    await admin.auth().deleteUser(userId).then(() => {
-                        return console.log('Deleted user account', userId, 'because of closed tab');
-                    }).catch((error) => {
-                        return console.error('Deletion of closed tab', userId, 'failed:', error);
-                    });
-                    const userInfo = await getChatId(userId)
-                    await deleteUserInfoHelper(userId, userInfo[0], userInfo[1])
-                    await deleteChatInfo(userId, userInfo[0], userInfo[1])
-                }
-                else {
-                    console.log("should not delete")
-                }
-                return null
-            });
-            return null
-        },5000)
-    }
+    await realtime.ref('/users/' + userId + "/is_processing").once('value').then(async function(cumshot) {
+        if(is_disconnected && !cumshot.val()) {
+            realtime.ref('users/' + userId + "/is_processing").set(true)
+            setTimeout(async function() {
+                await realtime.ref('/users/' + userId + "/is_disconnected").once('value').then(async function(snapshot) {
+                    if(snapshot.val()) {
+                        var promises = []
+                        const userInfo = await getChatId(userId)
+    
+                        promises.push(admin.auth().deleteUser(userId))
+                        promises.push(deleteChatInfo(userId, userInfo[0], userInfo[1]))
 
+                        await Promise.all(promises)
+                        await deleteUserInfoHelper(userId, userInfo[0], userInfo[1])
+
+                    }
+                    else {
+                        console.log("should not delete")
+                    }
+                    return null
+                });
+                return null
+            },500)
+        }
+        return null
+    })
 });
 
 exports.deleteUserInfo = functions.https.onCall(async (data, context) => {
@@ -527,6 +527,9 @@ async function getChatId(userId) {
             const username = doc.data().username
             return [chatId, username]
         }
+        else {
+            console.log("USERID DOES NOT EXIST IN THE CURRENT CHAT", userId)
+        }
         return [null, null]
     }).catch(function(error) {
         console.error("broke here ", error)
@@ -539,7 +542,7 @@ async function deleteUserInfoHelper(userId) {
     // delete the user document from firestore and realtime database
     const userDeletePath = firestore.collection('users').doc(userId)
     const userDeleteInfo = await userDeletePath.delete();
-    await realtime.ref('users/'+userId).remove()
+    await realtime.ref('users/'+userId +'/').remove()
 
     // delete the user from the chat if they are the last person 
     return "success"
