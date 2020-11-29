@@ -1,149 +1,242 @@
-import './Login.css';
 import React, { Component } from 'react';
-import { Button, Form, Container, Row, Col } from 'react-bootstrap';
-import 'bootstrap/dist/css/bootstrap.min.css';
 
-export function App() {
-  return (
-    <div className="App">
-      <BorkHeader />
-      <BorkDescription />
-      <InputBoxes />
-    </div>
-  );
-}
+import TextField from '@material-ui/core/TextField';
+import Grid from '@material-ui/core/Grid';
+import Button from '@material-ui/core/Button';
 
-export function BorkHeader() {
-  return (<h1 id="header">Meet.Game</h1>);
-}
-
-function BorkDescription() {
-  return (<h2>Find Among Us lobbies, Valorant teams, and some fun people to chill with!</h2>);
-}
-
-function NoUsernameWarning() {
-  return (<p id="no-username-warning"></p>);
-}
-
-function InputBoxes() {
-  return (<Form inline id="login-input">
-    <Container fluid>
-    <Row>
-      <Col md="auto">
-        <Form.Label id="inputForm">Username</Form.Label>
-        <Form.Control id="username" type="username" placeholder="Your Username" size="lg" autocomplete="off"/> 
-      </Col>
-
-      <Col md="auto">
-        <Form.Label id="inputForm">Custom Tags (coming soon!)</Form.Label>
-        <Form.Control id="customTags" type="tags" disabled={true} placeholder="Enter tags" size="lg" autocomplete="off"/> 
-      </Col>
-
-      <GenerateTagBoxes tags={["Among Us"]} />
-      {
-        //, "League of Legends", "Valorant", "Brawl", "Overwatch", "CS:GO"
-      }
-
-      <Col md="auto">
-        <Form.Label id="inputForm">Enter a lobby!</Form.Label>
-        <Button id="submit_button" variant="info" size="lg" >Submit</Button>
-      </Col>
-
-      <Col md="auto">
-        <Form.Label id="inputForm"> </Form.Label>
-        <NoUsernameWarning />
-      </Col>
-
-    </Row>
-    </Container>
-  </Form>);
-}
+import './Login.css';
+import Logo from './../pig_logo/pig_logo.png';
 
 
-class GenerateTagBoxes extends Component {
+export default class App extends Component {
   constructor(props) {
     super(props);
-    this.state = {
-      tagBoxes: [],
-    };
-    this.callMakeTagBoxes = this.callMakeTagBoxes.bind(this);
-    this.makeTagBoxes = this.makeTagBoxes.bind(this);
-  }
-  
-  callMakeTagBoxes() {
-    const cols = []
-    for (var i = 0; i < this.props.tags.length; i += 3) { // i += 3 means 3 tags per line
-      const end = Math.min(this.props.tags.length, i + 3);
-      cols.push(<Col md="auto">
-        <Form.Label id="inputForm"> </Form.Label>
-        {this.makeTagBoxes(this.props.tags.slice(i, end))}
-      </Col>)
-    }
-    return (cols);
-  }
-
-  makeTagBoxes(tagSubarray) {
-    const tagForms = []
-    for (var i = 0; i < tagSubarray.length; i++) {
-      const tag = <TagBox tag={tagSubarray[i]} />;
-      tagForms.push(tag);
-      this.state.tagBoxes.push(tag);
-    }
-
-    // temporary other games coming soon tag
-    tagForms.push(
-      <Form.Check
-      inline
-      id="poop"
-      label="Other games"
-      disabled={true}
-      checked={false}
-      name="tag_checkbox"
-      type="checkbox"
-/>
-    )
-    tagForms.push(
-      <div id="also-coming-soon">
-        Also coming soon!
-      </div>
-    )
-    return (tagForms);
   }
 
   render() {
-    return (this.callMakeTagBoxes());
-  }
-}
-
-class TagBox extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      checked: false,
-    };
-    this.tag = props.tag;
-    this.handleChange = this.handleChange.bind(this);
-  }
-
-  handleChange() {
-    this.setState({checked: !this.state.checked})
-  }
-  
-  render() {
-    // disabled = true, checked=true, temporarily
     return (
-        <Form.Check
-          inline
-          id={this.tag}
-          label={this.tag}
-          disabled={true}
-          checked={true}
-          name="tag_checkbox"
-          type="checkbox"
-        />
+      <div class="full-frame-login">
+        {this.loginFrame()}
+      </div>
+    );
+  }
+
+  loginFrame() {
+    return (
+      <div class="login-frame">
+        <Form {...this.props}></Form>
+        <HogPub></HogPub>
+      </div>
     );
   }
 }
 
+class Form extends Component {
+  constructor(props) {
+    super(props);
+  }
 
-export default App;
+  render() {
+    return (
+      <div class="form-frame">
+        {this.description()}
+        <FormGrid {...this.props}></FormGrid>
+      </div>
+    );
+  }
+
+  description() {
+    return (
+      <div class="descriptions">
+        <h2 class="main-description">
+          Enter Among Us Lobbies!
+        </h2>
+        <h3 class="sub-description">
+          <p id="username-warning"></p>
+        </h3>
+      </div>
+
+    );
+  }
+}
+
+class FormGrid extends Component {
+  constructor(props) {
+    super(props);
+
+    this.styles = importStyles();
+  }
+
+  render() {
+    return this.formGrid();
+  }
+
+  
+
+  formGrid() {
+    return (
+      <Grid container class="container">
+          <TextField class="username-textfield" id="username-textfield" variant="outlined" error={this.props.usernameError}
+          label="Username" helperText={this.props.usernameHelperText} fullWidth={true} autoComplete="off"
+          InputLabelProps={{style: {fontSize: 25}}}
+          InputProps={{style: {height: 65, fontSize: 25}}}
+          inputProps={{style: {fontSize: 40, textAlign: "center"}}}>
+          </TextField>
+
+          <Button className="solo-queue-button" id="solo-queue-button" variant="contained" color="primary" size="large" fullWidth={true}
+           style={this.styles.soloStyle} >Solo Queue</Button>
+
+          <Grid item class="buttons">
+            {this.createLobbyButtonSet()}
+            {this.joinLobbyButtonSet()}
+          </Grid>
+      </Grid>
+    );
+  }
+
+
+  createLobbyButtonSet() {
+    return (
+      <div id="create-lobby-box" onMouseEnter={this.displayChange("create-invis", "create-show")} onMouseLeave={this.displayChange("create-show", "create-invis")} >
+        <Button id="create-lobby-button" variant="outlined" color="primary" size="large" fullWidth={true} style={this.styles.createStyle}>Create Lobby</Button>
+        {this.createLobbyDropdown()}
+      </div>
+    );
+  }
+
+  joinLobbyButtonSet() {
+    return (
+      <div id="join-lobby-box"
+       onMouseEnter={this.displayChange("join-invis", "join-show")} onMouseLeave={this.displayChange("join-show", "join-invis")} >
+          <Button id="join-lobby-button" variant="outlined" color="primary" size="large" fullWidth={true} style={this.styles.joinStyle} >Join Lobby</Button>
+          {this.joinLobbyDropdown()}
+      </div>
+    );
+  }
+
+  createLobbyDropdown() {
+    return (
+      <div class="create-lobby-div" id={this.props.createLobbyError ? "create-show" : "create-invis"}>
+        <TextField className="create-lobby-input" hidden={true} id="create-lobby-input" variant="outlined" type="text" autoComplete="off"
+          label="Enter Lobby ID" error={this.props.createLobbyError} helperText={this.props.createLobbyHelperText} 
+          InputProps={{style: this.styles.textFieldStyle}} >
+         </TextField>
+        <Button id="create-input-button" variant="contained" color="primary" style={this.styles.buttonStyle}>
+          <p class="create-input-text">Create!</p>
+        </Button>
+      </div>
+    );
+  }
+
+  joinLobbyDropdown() {
+    return (
+      <div class="join-lobby-div" id={this.props.joinLobbyError ? "join-show" : "join-invis"}>
+        <TextField className="join-lobby-input" hidden={true} id="join-lobby-input" variant="outlined" type="text" autoComplete="off"
+          label="Enter Lobby ID" error={this.props.joinLobbyError} helperText={this.props.joinLobbyHelperText} 
+          InputProps={{style: this.styles.textFieldStyle}} >
+         </TextField>
+        <Button id="join-input-button" variant="contained" color="primary" style={this.styles.buttonStyle}>
+          <p class="join-input-text">Join!</p>
+        </Button>
+      </div>
+    );
+  }
+
+  displayChange(idFrom, idTo) {
+    function helper() {
+      const div = document.getElementById(idFrom);
+      /* If someone is already hovering on the button when a re-render occurs, the idFrom will be opposite. Just do nothing in this case */
+      if (div === null) {
+        return;
+      }
+      div.setAttribute("id", idTo);
+    }
+    return helper
+  }
+}
+
+class HogPub extends Component {
+  render() {
+    return (
+      <div class="hog-pub-frame">
+        {this.hogPubHeader()}
+        {this.comingSoon()}
+        {this.logo()}
+      </div>
+    );
+  }
+
+  hogPubHeader() {
+    return (
+      <h1 class="header">Hog Pub</h1>
+    )
+  }
+
+  comingSoon() {
+    return (
+      <h3 class="coming-soon">Other games coming soon!</h3>
+    );
+  }
+
+  logo() {
+    return (
+      <img class="logo" src={Logo} alt="logo"/>
+    )
+  }
+}
+
+
+function importStyles() {
+  return {
+    soloStyle: {
+      fontSize: 20,
+
+      background: 'linear-gradient(45deg, #2196F3 5%, #21CBF3 90%)',
+      color: 'white',
+    },
+
+    createStyle: {
+      height: '100%',
+      width: '100%',
+
+      borderWidth: 1.2,
+      borderColor: '#21CBF3',
+      
+      fontSize: 20,
+
+      color: '#21CBF3',
+    },
+
+    joinStyle: {
+      height: '100%',
+      width: '100%',
+
+      borderWidth: 1.2,
+      borderColor: '#21CBF3',
+      
+      fontSize: 20,
+
+      color: '#21CBF3',
+    },
+
+    textFieldStyle: {
+      borderTopRightRadius: '0px',
+      borderBottomRightRadius: '0px',
+      borderTopLeftRadius: '20px',
+      borderBottomLeftRadius: '20px',
+    },
+
+    buttonStyle: {
+      height: '96%',
+      width: '30%',
+
+      borderTopRightRadius: '20px',
+      borderBottomRightRadius: '20px',
+      borderTopLeftRadius: '0px',
+      borderBottomLeftRadius: '0px',
+
+      background: '#21CBF3',
+      color: 'white',
+    },
+  }
+}

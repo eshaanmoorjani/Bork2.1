@@ -1,327 +1,581 @@
 import React, { Component } from 'react';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import {auth, db, rt_db, functions, firebase} from '../services/firebase';
+
+import DailyIframe from '@daily-co/daily-js';
+
+import { TextField, Button, AppBar, Menu, MenuItem } from '@material-ui/core';
+
+import { auth, db, rt_db, functions } from '../services/firebase';
 
 import './Chat.css';
-import { BorkHeader } from './Login';
-import { Button, Navbar, Nav, NavDropdown, Form, FormControl, NavItem } from 'react-bootstrap';
+import { throttle } from './LoginFirebase';
+import { renderLoading } from './../index';
 
-class ChatApp extends Component {
+
+export default class LobbyApp extends Component {
     constructor(props) {
         super(props);
-        var date = new Date();
-        const userID = auth.currentUser.uid;
+
         this.state = {
-            chatID: this.props.chatID,
-            userID: userID,
-            username: this.props.username,
+            chatID: null,
+            userID: auth.currentUser.uid,
+            
+            lobbyType: null,
+            lobbyOpen: null,
+
+            participants: {},
             numParticipants: 0,
-            queueReady: true,
-            joinTime: this.props.joinTime,
-            lastMessageTime: Math.floor(date.getTime() / 1000),
-            numMessagesSent: 0, // might not need this but whatever
-            numMessagesReceived: 0,
-            messages: {
-            }, // messageID: {message: "a", username: "vijen", userID: "q3d8ds", time: "12:08:2032"}
-            participants: {
-            }, // usernames
         };
-        this.getQueueStatus = this.getQueueStatus.bind(this);
-        this.getMessage = this.getMessage.bind(this);
-        this.getParticipants = this.getParticipants.bind(this);
-        this.handleSend = this.handleSend.bind(this);
-        this.handleEnter = this.handleEnter.bind(this);
+
+        this.init = this.init.bind(this);
         this.handleLogout = this.handleLogout.bind(this);
-        this.handleQueueChange = this.handleQueueChange.bind(this);
-        this.chatConnection = this.chatConnection.bind(this);
-        this.sendMessage = this.sendMessage.bind(this);
-        this.chatConnection();
-        this.getMessage();
-        this.getParticipants();
-        this.getQueueStatus();
+    
+        this.changeConnectionStatus = this.changeConnectionStatus.bind(this);
+        this.chatListener = this.chatListener.bind(this);
+        this.getChatID = this.getChatID.bind(this);
+        this.addAllListeners = this.addAllListeners.bind(this);
+        
+        this.init().then(() => {
+            this.addAllListeners();
+        });
     }
 
-    chatConnection() {
-        firebase.database().ref('users/'+this.state.userID+"/is_disconnected").set(false); // ayoooo dont change baby girl
-        var presenceRef = rt_db.ref("users/"+this.state.userID+"/is_disconnected");     
+    render() {
+        /* If the chat is still being created, do not render anything!! */
+        if (this.state.chatID === null) {
+            return null;
+        }
+        return (
+            <div class="page">
+                    <div class="full-frame-chat">
+                        <LobbyFrame lobbyID={this.state.chatID} lobbyType={this.state.lobbyType} lobbyOpen={this.state.lobbyOpen}
+                        numParticipants={this.state.numParticipants} participants={this.state.participants}/>
+
+                        <ChatFrame chatID={this.state.chatID} userID={this.state.userID} username={this.props.username} initTime={new Date()}/>
+
+                        <VideoFrame ref="videoFrame" videoCallURL={`https://hogpub.daily.co/${this.state.chatID}`} username={this.props.username} />
+                    </div>
+
+                    <HeaderFrame handleLogout={throttle(this.handleLogout, 10000)} handleLobbyStatusChange={this.handleLobbyStatusChange}
+                     lobbyType={this.state.lobbyType} lobbyOpen={this.state.lobbyOpen}></HeaderFrame>
+            </div>
+        );
+    }
+
+    /** 
+     * Redirect listeners after chatID has changed 
+     */
+    componentDidUpdate(prevProps, prevState) {
+        if (prevState.chatID !== this.state.chatID) {
+            this.addAllListeners();
+        }
+    }
+
+    addAllListeners() {
+        this.getChatID();
+        this.changeConnectionStatus();
+        this.chatListener();
+    }
+
+    /**
+     * Assign this chat its correct chatID, lobbyOpen, and lobbyType
+     */
+    async init() {
+        await db.collection("users").doc(this.state.userID).get().then(async user => {
+            const chatID = user.data().chat_id;
+            await db.collection("chats").doc(chatID).get().then(doc => {
+                this.setState({
+                    chatID: chatID,
+                    lobbyOpen: doc.data().lobby_open,
+                    lobbyType: doc.data().lobby_type,
+                });
+            });
+        });
+    }
+
+    getChatID() {
+        const ref = db.collection("users").doc(this.state.userID);
+        ref.onSnapshot(doc => {
+            if (!doc.exists) {
+                return null;
+            }
+            const chatID = doc.data().chat_id; 
+            this.setState({
+                chatID: chatID,
+            });
+        });
+    }
+
+    chatListener() {
+        const ref = db.collection("chats").doc(this.state.chatID)
+        ref.onSnapshot(doc => {
+            if (!doc.exists) {
+                return null;
+            }
+            const numParticipants = doc.data().num_participants;
+            const lobbyOpen = doc.data().lobby_open;
+            const lobbyType = doc.data().lobby_type;
+
+            ref.collection("participants").orderBy("timestamp").get().then(querySnapshot => {
+                var participants = {}
+                querySnapshot.forEach(doc => {
+                    participants[doc.data().user_id] = doc.data().username;
+                });
+                this.setState({
+                    participants: participants,
+                    numParticipants: numParticipants,
+                    lobbyOpen: lobbyOpen,
+                    lobbyType: lobbyType,
+                });
+            });
+        });
+    }
+
+    /* Could put this as a cloud function? Doesn't really belong in chat.js */
+    changeConnectionStatus() {
+        rt_db.ref('users/' + this.state.userID + "/is_disconnected").set(false); 
+        var presenceRef = rt_db.ref("users/" + this.state.userID + "/is_disconnected");     
         presenceRef.onDisconnect().set(true);
     }
-    
-    makeChat() {
+
+    handleLobbyStatusChange() {
+        const changeLobbyStatus = functions.httpsCallable('changeLobbyStatus')
+        const status = changeLobbyStatus({});
+    }
+
+    // this deletes from local participants, need to delete from DATABASE
+    async handleLogout() {
+        // disconnect from the video call using the VideoFrame class's method
+        if (this.refs.videoFrame || null !== null) {
+            this.refs.videoFrame.disconnect();
+        } 
+        renderLoading();
+        const deleteInfo = functions.httpsCallable('deleteUserInfo');
+        
+        await deleteInfo({userId: this.state.userID, chatId: this.state.chatID, username: this.props.username}).then(result => { // CORS error that wasn't there earlier
+        })
+        .catch(function (error) {
+            console.log(error);
+        });
+        auth.signOut()
+    }
+
+}
+
+class HeaderFrame extends Component {
+    constructor(props) {
+        super(props);
+    }
+
+    render() {
+        const lightBlue = {
+            background: '#2196F3',
+            color: 'white',
+        };
+
+        const darkBlue = {
+            height: '80%',
+            color: 'white',
+        };
+        
         return (
-        <section class="msger" id="chatbox">
-            <main class="msger-chat">    
-                {this.makeAllMessages()}
-                <div id="dummyScroll"></div>
-            </main>
-            <form class="msger-inputarea" onSubmit={this.handleEnter}>
-                <input type="text" id="input" class="msger-input" autocomplete="off" placeholder="Send a message!"/>
-                <Button type="button" class="msger-send-btn" onClick={this.handleSend}>Send</Button>
-            </form>
-        </section>
+            <AppBar className="appbar" position="sticky">
+                <div className="toolbar">
+                        <Button className="leave-lobby-temp" variant="contained" color="secondary"
+                         onClick={this.props.handleLogout}>Leave Lobby</Button>
+                        <Button className="start-queue-temp" variant="contained" color="primary" style={lightBlue}
+                         onClick={this.props.handleLobbyStatusChange}>{this.getLobbyButtonMessage()}</Button>
+                        <Button className="hog-pub-header-temp" variant="outlined" color="primary" style={darkBlue}><h1>The Pub</h1></Button>
+                </div>
+            </AppBar>
         );
     }
 
-    // auto scroll down
-    componentDidUpdate() {
-        const scrollDiv = document.getElementById("dummyScroll");
-        if (scrollDiv != null) {
-            scrollDiv.scrollIntoView(true, { behavior: "smooth" });
-        }
-    }
-
-    // bork header, not being used rn, using navbar
-    makeHeader() {
-        return (
-        <header class="msger-header">
-            <div class="msger-header-title">
-                <i class="fas fa-comment-alt"></i> Meet.Game
-            </div>
-            <div class="msger-header-options">
-                <span><i class="fas fa-cog"></i></span>
-            </div>
-        </header>
-        );
-    }
-
-    // need to make multiple lines of text if too long
-    makeMessageBubble(messageID) {
-        const messageData = this.state.messages[messageID];
-        // check if its a disconnect message
-        if (messageData.type == "user_content") {
-            return makeUserContentMessage(messageData, this.state.userID);
+    getLobbyButtonMessage() {
+        if (this.props.lobbyType === "Premade") {
+            return this.props.lobbyOpen ? "Loading..." : "Find more players!";
         } else {
-            console.log(messageData)
-            return makeEntryStatusMessage(messageData);
+            return this.props.lobbyOpen ? "Close Lobby" : "Find more players!";
         }
     }
+}
 
-    makeAllMessages() {
-        var allMessages = [];
-        for (var key in this.state.messages) {
-            allMessages.push(this.makeMessageBubble(key))
-        }
-        return allMessages;
-    }
+class LobbyFrame extends Component {
+    constructor(props) {
+        super(props);
 
-    makeNavbar() {
-        return (
-            <div class="navbar">
-                <Navbar fixed="top" bg="light" variant="light" expand="lg">
-                    <Navbar.Brand>Among Us Pub</Navbar.Brand>
-                    <Navbar.Toggle aria-controls="basic-navbar-nav" />
-                    <Navbar.Collapse id="basic-navbar-nav">
-                        <Nav className='mr-auto'>
-                            <Form>
-                                <Button id="queueInfoButton" variant="warning" onClick={this.handleQueueChange}>{this.getQueueButtonMessage()}</Button>
-                            </Form>
-                        </Nav>
-                        <Nav>
-                            {this.displayCapacity()}
-                        </Nav>
-                        <Nav>
-                            <NavDropdown title="Participants" id="participants-dropdown">
-                                {this.makeParticipants()}
-                            </NavDropdown>
-                        </Nav>
-                        <Form inline>
-                            <Button variant="danger" onClick={this.handleLogout}>Logout</Button>
-                        </Form>
-                    </Navbar.Collapse>
-                </Navbar>
-            </div>
-        );
+        this.state = {
+            showLobbyID: false,
+            showLobbyCapacity: false,
+            showParticipants: false,
+            menuOpen: false,
+            anchorEl: null,
+        };
+
+        this.handleLobbyCapacityClick = this.handleLobbyCapacityClick.bind(this);
+        this.handleLobbyIDClick = this.handleLobbyIDClick.bind(this);
+        this.handleParticipantsClick = this.handleParticipantsClick.bind(this);
     }
 
     render() {
         return (
-            <div>
-                {this.makeNavbar()}
-                {this.makeChat(this.state.messages)}
+            <div class="lobby-frame">
+                {this.misc()}
             </div>
-            );
-    }
-    
-    getQueueButtonMessage() {
-        if (this.state.queueReady) {
-            return "Stop Queue";
-        } else {
-            return "Start Queue";
-        }
-    }
-
-    async handleQueueChange() {
-        await db.collection("chats").doc(this.state.chatID).update({
-            queue_ready: !this.state.queueReady
-        })
-        this.setState({
-            queueReady: !this.state.queueReady,
-        });
-    }
-
-    // change the button depending on whether it's an opened or closed chat
-    async getQueueStatus() {
-        this.state.queueReady = await db.collection("chats").doc(this.state.chatID).get().then(function(doc) {
-            return doc.data().queue_ready
-        });
-    }
-
-    // every room 10 people max for now 
-    displayCapacity() {
-        return (
-        <div id="capacity">
-            {this.state.numParticipants}/10
-        </div>
         );
     }
 
-    getMessage() {
-        const ref = db.collection("chats").doc(this.state.chatID).collection("messages").orderBy("timestamp", "desc").limit(1);
-        ref.onSnapshot(collection => {
+    misc() {
+        return (
+            <div class="misc-box">
+                {this.lobbyFrameButton(this.lobbyIDText(), this.handleLobbyIDClick)}
+                {this.simpleMenu()}
+                {this.lobbyFrameButton(this.lobbyCapacityText(), this.handleLobbyCapacityClick)}
+            </div>
+        );
+    }
+
+    handleLobbyIDClick() {
+        this.setState({
+            showLobbyID: !this.state.showLobbyID,
+        });
+    }
+
+    handleLobbyCapacityClick() {
+        this.setState({
+            showLobbyCapacity: !this.state.showLobbyCapacity,
+        });
+    }
+
+    handleParticipantsClick() {
+        this.setState({
+            showParticipants: !this.state.showParticipants,
+        })
+    }
+
+    lobbyIDText() {
+        return this.state.showLobbyID ? this.props.lobbyID : "Show Lobby ID";
+    }
+
+    lobbyCapacityText() {
+        return this.state.showLobbyCapacity ? this.props.numParticipants + "/10" : "Show Lobby Capacity";
+    }
+
+    participantsText() {
+        return this.state.showParticipants ? this.makeParticipants() : "Show Participants";
+    }
+
+    lobbyFrameButton(text, clickHandler, id) {
+        const style = {
+            height: '5%',
+            width: '85%',
+            marginLeft: 'auto',
+            marginRight: 'auto',
+    
+            outline: 'none',
+            color: 'black',
+            borderColor: 'black',
+            boxShadow: '2px 2px 5px -3px black',
+        }
+
+        return (
+            <Button className="lobby-frame-button" id={id} variant="outlined" onClick={clickHandler} style={style}>{text}</Button>
+        );
+    }
+
+    simpleMenu() {
+        const handleClick = (event) => {
+            this.setState({
+                menuOpen: !this.state.menuOpen,
+                anchorEl: event.currentTarget,
+            })
+        }
+
+        const handleClose = () => {
+            this.setState({
+                menuOpen: false,
+            })
+        }
+
+        const makeParticipants = () => {
+            var participants = []
+            for (var key in this.props.participants) {
+                participants.push(<MenuItem onClick={handleClose}>{this.props.participants[key]}</MenuItem>)
+            }
+            return participants;
+        }
+      
+        return (
+            <React.Fragment>
+                {this.lobbyFrameButton("Show Participants", handleClick, "participants")}
+                <Menu keepMounted anchorEl={this.state.anchorEl} getContentAnchorEl={null} open={this.state.menuOpen} onClose={handleClose} 
+                 anchorOrigin={{vertical: 'bottom', horizontal: 'center'}} transformOrigin={{vertical: 'top', horizontal: 'center'}}> 
+                    {makeParticipants()}
+                </Menu>
+            </React.Fragment>
+        );
+    }
+}
+  
+class ChatFrame extends Component {
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            numMessagesSent: 0,
+            numMessagesReceived: 0,
+            messages: {},
+            lastMessageTime: Math.floor(this.props.initTime.getTime() / 1000),
+            messageHelperText: "",
+        }
+
+        this.handleSendMessage = this.handleSendMessage.bind(this);
+        this.sendMessage = this.sendMessage.bind(this);
+        this.makeMessageBubble = this.makeMessageBubble.bind(this);
+
+        this.getMessages = this.getMessages.bind(this);
+        this.addAllListeners = this.addAllListeners.bind(this);
+
+        this.addAllListeners();
+    }
+
+    render() {
+        return (
+            <div class="chat-frame-no-video" id="chat-frame">
+                {this.messages()}
+                {this.sendMessageBox()}
+            </div>
+        );
+    }
+
+    componentDidUpdate(prevProps, prevState) {
+        /* Auto scroll down */
+        const scrollDiv = document.getElementById("dummyScroll");
+        if (scrollDiv != null) {
+            scrollDiv.scrollIntoView(true, { behavior: "smooth" });
+        }
+
+        /* Redirect listeners after chatID has changed */
+        if (prevProps.chatID !== this.props.chatID) {
+            this.addAllListeners();
+        }
+    }
+
+    addAllListeners() {
+        this.getMessages();
+    }
+
+    messages() {
+        return (
+            <div class="messages-frame">
+                {this.makeMessages()}
+                <div id="dummyScroll"></div>
+            </div>
+        );
+    }
+
+    makeMessages() {
+        var messages = [];
+        for (var key in this.state.messages) {
+            messages.push(this.makeMessageBubble(key))
+        }
+        return messages;
+    }
+
+    makeMessageBubble(messageID) {
+        function getFormattedTime(date) {
+            var timeFormatted = date.toTimeString().substr(0,5);
+            const hour = timeFormatted.substr(0, 2);
+            if (hour == 0) {
+                timeFormatted = "12" + timeFormatted.substr(2) + " am";
+            } else if (hour <= 12) { // need to change 00:01 am to 12:01 am
+                timeFormatted += " am";
+            } else {
+                timeFormatted = timeFormatted.substr(0, 2) % 12 + timeFormatted.substr(2, 5) + " pm";
+            }
+            return timeFormatted
+        }
+
+        function makeUserMessage(messageData, userID) {
+            const messageClass = (messageData.userID == userID) ? "user-message" : "other-message";
+            var date = new Date(messageData.timestamp.seconds * 1000);
+            var timeFormatted = getFormattedTime(date);
+            return (
+                <div class={messageClass}>
+                    <div class="message-bubble">
+                        <div class="message-metadata">
+                            <div class="message-username">{messageData.username}</div>
+                            <div class="message-timestamp">{timeFormatted}</div>
+                        </div>
+                        <div class="message-content">
+                            {messageData.content}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function makeStatusMessage(messageData, userID) {
+            return (
+                <div class="status-msg">
+                    {messageData.content}
+                </div>
+            );
+        }
+
+        const messageData = this.state.messages[messageID];
+        if (messageData.type == "user_content") {
+            return makeUserMessage(messageData, this.props.userID);
+        } else {
+            return makeStatusMessage(messageData, this.props.userID);
+        }
+    }
+
+    sendMessageBox() {
+        return (
+            <form class="send-message-form" onSubmit={this.handleSendMessage}>
+                <TextField className="send-message-input" id="message-input" variant="outlined"
+                 label="Enter a message" error={this.state.messageHelperText} helperText={this.state.messageHelperText} fullWidth={true} autoComplete="off"></TextField>
+            </form>
+        );
+    }
+
+    getMessages() {
+        const ref = db.collection("chats").doc(this.props.chatID).collection("messages").orderBy("timestamp", "desc").limit(1);
+        const unsubscribe = ref.onSnapshot(collection => {
             collection.forEach(doc => {
                 const data = doc.data();
-                    this.setState({lastMessageTime: data.timestamp.seconds});
                     this.setState({
-                        ...this.state,
                         messages: {
                             ...this.state.messages,
                             [this.state.numMessagesReceived + 1]: data,
-                        }
+                        },
+                        numMessagesReceived: this.state.numMessagesReceived + 1,
+                        lastMessageTime: data.timestamp.seconds,
                     });
-                    this.state.numMessagesReceived += 1;
             });
         });
     }
 
-    getParticipants() {
-        const ref = db.collection("chats").doc(this.state.chatID).collection("participants").orderBy("timestamp");
-        ref.onSnapshot(collection => {
-            console.log("THE PARTICIPANTS HAVE CHANGED")
-            var numParticipants = 0;
-            var participants = {};
-            collection.forEach(doc => {
-                numParticipants++;
-                const data = doc.data();
-                console.log(data);
-                participants[data.user_id] = data.username;
-                // this.setState({
-                //     ...this.state,
-                //     numParticipants: participants,
-                //     participants: {
-                //         ...this.state.participants,
-                //         [data.user_id]: data.username,
-                //     },
-                // });
-            });
-            this.setState({
-                numParticipants: numParticipants,
-                participants: participants,
-            })
-        });
-    }
-
-    makeParticipants() {
-        const participants = this.state.participants;
-        var dropDown = [];
-        for (var userID in participants) {
-            dropDown.push(<NavDropdown.Item>{participants[userID]}</NavDropdown.Item>);
-        }
-        return dropDown;
-    }
-    
-    handleSend() {
-        const inputForm = document.getElementById("input");
+    handleSendMessage(event) {
+        event.preventDefault();
+        const inputForm = document.getElementById("message-input");
         const message = inputForm.value;
         inputForm.value = "";
         if (message != "") {
-            this.state.numMessagesSent += 1;
+            this.setState({
+                numMessagesSent: this.state.numMessagesSent + 1,
+            });
             this.sendMessage(message);
         }
     }
 
     sendMessage(message) {
-        db.collection("chats/").doc(this.state.chatID).collection("messages/").add({
-            content: message,
-            timestamp: new Date(),
-            userID: this.state.userID,
-            username: this.state.username,
-            messageNumber: this.state.numMessagesSent,
-            type: "user_content",
+        const send = functions.httpsCallable('sendMessage');
+        const success = send({message: message, messageNumber: this.state.numMessagesSent}).then(result => {
+            this.setState({
+                messageHelperText: result.data.verified ? "" : result.data.message,
+            });
         });
-        db.collection("chats").doc(this.state.chatID).update({
-            last_message_time: new Date()
-        })
-    }
-    
-    // this deletes from local participants, need to delete from DATABASE
-    async handleLogout() {
-        const deleteInfo = functions.httpsCallable('deleteUserInfo')
-        await deleteInfo({userId: this.state.userID, chatId: this.state.chatID, username: this.state.username}).then(result => { // CORS error that wasn't there earlier
-            console.log(result.data); // Will tell you if they signed them out or not
-        })
-        .catch(function (error) {
-            console.log(error);
-        });
-        console.log("c");
-        auth.signOut().then(() => {
-            
-        })
-        .catch(function (error) {
-            console.log("ERROR:", error);
-        })
-    }
-
-    handleEnter(event) {
-        event.preventDefault();
-        this.handleSend();
     }
 }
 
-function getFormattedTime(date) {
-    var timeFormatted = date.toTimeString().substr(0,5);
-    if (timeFormatted.substr(0, 2) <= 12) {
-        timeFormatted += " am";
-    } else {
-        timeFormatted = timeFormatted.substr(0, 2) % 12 + timeFormatted.substr(2, 5) + " pm";
-    }
-    return timeFormatted
-}
+class VideoFrame extends Component {
+    constructor(props) {
+        super(props);
 
-function assignRightOrLeft(messageData, userID) {
-    var rightOrLeft = "";
-    if (messageData["userID"] == userID) {
-        rightOrLeft = "msg right-msg";
-    } else {
-        rightOrLeft = "msg left-msg";
+        this.state = {
+            callFrame: null,
+        };
+
+        this.joinCall = this.joinCall.bind(this);
+        this.makeCallFrame = this.makeCallFrame.bind(this);
+        this.joinButton = this.joinButton.bind(this);
+
+        this.addDisconnectListener = this.addDisconnectListener.bind(this);
+        this.addListeners = this.addListeners.bind(this);
     }
-    return rightOrLeft;
-}
-// yo when can i save to test 2 min okok
-function makeUserContentMessage(messageData, userID) {
-    var rightOrLeft = assignRightOrLeft(messageData, userID);
-    var date = new Date(messageData.timestamp.seconds * 1000);
-    var timeFormatted = getFormattedTime(date);
-    return (
-        <div class={rightOrLeft}>
-            <div class="msg-bubble">
-                <div class="msg-info">
-                    <div class="msg-info-name">{messageData.username}</div>
-                    <div class="msg-info-time">{timeFormatted}</div>
-                </div>
-                <div class="msg-text">
-                    {messageData.content}
-                </div>
+
+    render() {
+        return (
+            <div class="video-frame-no-video" id="video-frame">
+                {this.joinButton()}
             </div>
-        </div>
-    );
-}
+        );
+    }
 
-function makeEntryStatusMessage(messageData) {
-    return (
-        <div class="disconnect-msg">
-            {messageData.content}
-        </div>
-    );
-}
+    componentDidUpdate(prevProps, prevState) {
+        if (prevProps.videoCallURL !== this.props.videoCallURL) {
+            this.disconnect();
+        }
+    }
 
-export default ChatApp;
+    joinButton() {
+        const style = {
+            marginLeft: 'auto',
+            marginRight: 'auto',
+          };
+
+        return (
+            <Button className="join-video-button" id="join-video-button" variant="contained" color="primary" style={style} onClick={this.joinCall}>
+                <p class="join-video-text">Join Voice and Video!</p>
+            </Button>
+        );
+    }
+
+    joinCall() {
+        this.makeCallFrame();
+
+        this.state.callFrame.join({url: this.props.videoCallURL});
+
+        this.addListeners();
+        this.cssYesVideo();
+    }
+
+    makeCallFrame() {
+        const style = {
+            iframeStyle: {
+                position: "fixed",
+                left: "16%",
+                top: "8%",
+                width: "48%",
+                height: "90%",
+            },
+            showLeaveButton: true,
+            showFullscreenButton: true,
+            userName: this.props.username,
+        };
+        const callFrame = DailyIframe.createFrame(style);
+        this.state.callFrame = callFrame;
+    }
+
+    addListeners() {
+        this.addDisconnectListener();
+    }
+
+    addDisconnectListener() {
+        this.state.callFrame.on("left-meeting", (event) => {
+            this.state.callFrame.destroy();
+            this.cssNoVideo();
+        })
+    }
+
+    disconnect() {
+        if (this.state.callFrame !== null) {
+            this.state.callFrame.leave();
+        }
+    }
+
+    cssYesVideo() {
+        const chatFrame = document.getElementById("chat-frame");
+        const videoFrame = document.getElementById("video-frame");
+        chatFrame.setAttribute("class", "chat-frame-yes-video");
+        videoFrame.setAttribute("class", "video-frame-yes-video");
+    }
+
+    cssNoVideo() {
+        const chatFrame = document.getElementById("chat-frame");
+        const videoFrame = document.getElementById("video-frame");
+        chatFrame.setAttribute("class", "chat-frame-no-video");
+        videoFrame.setAttribute("class", "video-frame-no-video");
+    }
+}

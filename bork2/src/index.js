@@ -5,8 +5,8 @@ import * as serviceWorker from './serviceWorker';
 import {firebase, db, auth} from './services/firebase';
 
 import './index.css';
-import App from './pages/LoginV2';
-import LobbyApp from './pages/ChatV2';
+import App from './pages/Login';
+import LobbyApp from './pages/Chat';
 import Loading from './pages/Loading';
 import { setTransitions, removeTransitions } from './pages/LoginFirebase';
 
