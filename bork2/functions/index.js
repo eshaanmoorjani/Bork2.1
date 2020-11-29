@@ -614,6 +614,10 @@ async function deleteInactiveUser(inactiveUsers) {
       
         // Delete the user's database information
         const ref = await deleteUserInfoHelper(userId)
+        var chatInfo = await getChatId(userId)
+        if (chatInfo[0] !== null) {
+            await deleteChatInfo(userId, userInfo[0], userInfo[1])
+        }
 
         console.log("deleting user information")
         // Delete the inactive user's authentication status
