@@ -82,6 +82,9 @@
 .header {
   margin-top: 60px;
   margin-bottom: 0px;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
 
   font-size: 50px;
   font-weight: normal;
@@ -89,6 +92,11 @@
 }
 
 .coming-soon {
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+  
+  font-size: inherit;
   font-weight: normal;
   color: black;
 }
