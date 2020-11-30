@@ -13,7 +13,7 @@
     position: fixed;
     margin-top: 70px;
     
-    height: 90%;
+    height: 95%;
     width: 100%;
 
     display: flex;
@@ -33,9 +33,9 @@
     justify-content: center;
     flex-direction: column;
 
-    background-color:white;
+    background-color:rgb(255, 255, 255);
 
-    box-shadow: 10px 0 10px -7px #000;
+    box-shadow: 5px 0 5px -3px #000;
 }
 
 .chat-frame-yes-video {
@@ -265,7 +265,7 @@
     margin-left: auto;
     margin-right: auto;
 
-    height: 90%;
+    height: 85%;
     width: 95%;
 
     display: flex;

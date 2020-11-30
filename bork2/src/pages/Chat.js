@@ -230,6 +230,8 @@ class LobbyFrame extends Component {
         };
 
         this.handleLobbyCapacityClick = this.handleLobbyCapacityClick.bind(this);
+        this.handleLobbyIDEnter = this.handleLobbyIDEnter.bind(this);
+        this.handleLobbyIDLeave = this.handleLobbyIDLeave.bind(this);
         this.handleLobbyIDClick = this.handleLobbyIDClick.bind(this);
         this.handleParticipantsClick = this.handleParticipantsClick.bind(this);
     }
@@ -245,7 +247,7 @@ class LobbyFrame extends Component {
     misc() {
         return (
             <div class="misc-box">
-                {this.lobbyFrameButton(this.lobbyIDText(), this.handleLobbyIDClick)}
+                {this.lobbyFrameButton(this.lobbyIDText(), this.handleLobbyIDClick, "lobby-id", this.handleLobbyIDEnter, this.handleLobbyIDLeave)}
                 {this.simpleMenu()}
                 {this.lobbyFrameButton(this.lobbyCapacityText(), this.handleLobbyCapacityClick)}
             </div>
@@ -253,9 +255,33 @@ class LobbyFrame extends Component {
     }
 
     handleLobbyIDClick() {
+        function copyToClipboard(str) {
+            const el = document.createElement('textarea');
+            el.value = str;
+            el.setAttribute('readonly', '');
+            el.style.position = 'absolute';
+            el.style.left = '-9999px';
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+        };
+
         this.setState({
             showLobbyID: !this.state.showLobbyID,
         });
+        
+        copyToClipboard(this.props.lobbyID);
+    }
+
+    handleLobbyIDEnter() {
+        const button = document.getElementById("lobby-id");
+        button.innerText = this.props.lobbyID;
+    }
+
+    handleLobbyIDLeave() {
+        const button = document.getElementById("lobby-id");
+        button.innerText = this.lobbyIDText();
     }
 
     handleLobbyCapacityClick() {
@@ -271,7 +297,7 @@ class LobbyFrame extends Component {
     }
 
     lobbyIDText() {
-        return this.state.showLobbyID ? this.props.lobbyID : "Show Lobby ID";
+        return this.state.showLobbyID ? "Copied!" : "Copy Lobby ID";
     }
 
     lobbyCapacityText() {
@@ -282,7 +308,7 @@ class LobbyFrame extends Component {
         return this.state.showParticipants ? this.makeParticipants() : "Show Participants";
     }
 
-    lobbyFrameButton(text, clickHandler, id) {
+    lobbyFrameButton(text, clickHandler, id, enterHandler, leaveHandler) {
         const style = {
             height: '5%',
             width: '85%',
@@ -293,10 +319,12 @@ class LobbyFrame extends Component {
             color: 'black',
             borderColor: 'black',
             boxShadow: '2px 2px 5px -3px black',
+            textTransform: 'none',
         }
 
         return (
-            <Button className="lobby-frame-button" id={id} variant="outlined" onClick={clickHandler} style={style}>{text}</Button>
+            <Button className="lobby-frame-button" id={id} variant="outlined" style={style}
+            onClick={clickHandler} onMouseOver={enterHandler} onMouseOut={leaveHandler} >{text}</Button>
         );
     }
 
@@ -531,7 +559,7 @@ class VideoFrame extends Component {
         const style = {
             marginLeft: 'auto',
             marginRight: 'auto',
-          };
+        };
 
         return (
             <Button className="join-video-button" id="join-video-button" variant="contained" color="primary" style={style} onClick={this.joinCall}>
