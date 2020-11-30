@@ -84,7 +84,7 @@ function onClick(signInType) {
     
         const data = obj.data;
         console.log(data);
-        if (data.usernameError || data.createLobbyError || data.joinLobbyError) {
+        if (data.usernameError || data.createLobbyError || data.joinLobbyError || data.signInError) {
             renderLogin(data.usernameError, data.usernameErrorMessage, data.createLobbyError, data.createLobbyErrorMessage, data.joinLobbyError, data.joinLobbyErrorMessage);
             removeTransitions();
             setTransitions();

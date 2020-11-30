@@ -4,7 +4,7 @@ import DailyIframe from '@daily-co/daily-js';
 
 import { TextField, Button, AppBar, Menu, MenuItem } from '@material-ui/core';
 
-import { auth, db, functions } from '../services/firebase';
+import { auth, db, functions, rt_db } from '../services/firebase';
 
 import './Chat.css';
 import { throttle } from './LoginFirebase';
@@ -32,6 +32,7 @@ export default class LobbyApp extends Component {
         this.chatListener = this.chatListener.bind(this);
         this.getChatID = this.getChatID.bind(this);
         this.addAllListeners = this.addAllListeners.bind(this);
+        this.setPersistence = this.setPersistence.bind(this);
         
         this.init().then(() => {
             this.addAllListeners();
@@ -88,7 +89,7 @@ export default class LobbyApp extends Component {
                 });
             });
         });
-        window.onbeforeunload = () => {return "Are you sure you want to refresh? You will removed from this Lobby."};
+        this.setPersistence();
     }
 
     getChatID() {
@@ -105,6 +106,12 @@ export default class LobbyApp extends Component {
     }
 
     chatListener() {
+        const reloadIfLeft = (participants) => {
+            if (!(this.state.userID in participants)) {
+                window.location.reload();
+            }
+        }
+
         const ref = db.collection("chats").doc(this.state.chatID)
         ref.onSnapshot(doc => {
             if (!doc.exists) {
@@ -119,6 +126,9 @@ export default class LobbyApp extends Component {
                 querySnapshot.forEach(doc => {
                     participants[doc.data().user_id] = doc.data().username;
                 });
+
+                reloadIfLeft(participants);
+
                 this.setState({
                     participants: participants,
                     numParticipants: numParticipants,
@@ -133,6 +143,22 @@ export default class LobbyApp extends Component {
         const changeLobbyStatus = functions.httpsCallable('changeLobbyStatus')
         const status = changeLobbyStatus({});
     }
+
+    setPersistence() {
+        var presenceRef = rt_db.ref("users/" + this.state.userID + "/is_disconnected");
+        console.log("set persistence: ", this.state.userID);
+        presenceRef.onDisconnect().set(true).then(() => {
+          console.log("set to disconnected:", this.state.userID);
+        });
+      
+        presenceRef.on("value", (snapshot) => {
+          console.log("inside the weird function");
+          if (snapshot.val()) {
+            console.log("set to connected:", this.state.userID);
+            presenceRef.set(false); 
+          }
+        });
+      }
 
     // this deletes from local participants, need to delete from DATABASE
     async handleLogout() {

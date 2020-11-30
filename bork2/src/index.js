@@ -8,6 +8,7 @@ import './index.css';
 import App from './pages/Login';
 import LobbyApp from './pages/Chat';
 import Loading from './pages/Loading';
+import Mobile from './pages/Mobile';
 import { setTransitions, removeTransitions } from './pages/LoginFirebase';
 
 
@@ -39,7 +40,6 @@ export async function renderPageWithUserID(userId) {
 
   if(chatID !== "") {
     renderChat(chatID, username);
-    setPersistence(userId);
   }
   else {
     renderLogin();
@@ -56,29 +56,22 @@ export function renderLoading() {
   ReactDOM.render(<Loading />, document.getElementById("root"));
 }
 
+function renderMobile() {
+  console.log("mobile");
+  ReactDOM.render(<Mobile />, document.getElementById("root"));
+}
 
 auth.onAuthStateChanged(function(user) {
-  if(user !== null) {
+  if (window.innerWidth < 800) {
+    renderMobile();
+  } else if(user !== null) {
     renderPageWithUserID(user.uid)
-  }
-  else {
+  } else {
     renderLogin();
     removeTransitions();
     setTransitions();
   }
 });
-
-
-function setPersistence(userID) {
-  const ref = rt_db.ref("users/" + userID + "/is_disconnected")
-  ref.on("value", function(snapshot) {
-      if (snapshot.val()) {
-          ref.set(false); 
-      }
-  });
-  var presenceRef = rt_db.ref("users/" + userID + "/is_disconnected");     
-  presenceRef.onDisconnect().set(true);
-}
 
 
 // If you want your app to work offline and load faster, you can change

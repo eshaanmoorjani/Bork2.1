@@ -28,28 +28,42 @@ signInType = {
  */
 exports.signIn = functions.https.onCall(async (data, context) => {
     const userID = context.auth.uid;
-    const username = data.username;
-    const chatID = data.chatID;
-    const type = data.signInType;
+    return await realtime.ref('/users/' + userID + "/is_joining").once('value').then(async function(snapshot) {
+        if (!snapshot.exists()) {
+            await realtime.ref('/users/' + userID + "/is_joining").set(true)
+            const username = data.username;
+            const chatID = data.chatID;
+            const type = data.signInType;
 
-    const signInFunction = signInType[type];
+            const signInFunction = signInType[type];
 
-    var returnObj = {}
+            var returnObj = {}
 
-    returnObj = await verifyString(username, "username", "Username");    
-    if (returnObj.usernameError) {
-        return returnObj;
-    }
+            returnObj = await verifyString(username, "username", "Username");    
+            if (returnObj.usernameError) {
+                return returnObj;
+            }
 
-    returnObj = await verifyChatID(chatID, type);
-    if (returnObj.joinLobbyError || returnObj.createLobbyError) {
-        return returnObj;
-    }
+            returnObj = await verifyChatID(chatID, type);
+            if (returnObj.joinLobbyError || returnObj.createLobbyError) {
+                return returnObj;
+            }
 
-    returnObj.chatID = await signInFunction(userID, username, chatID);
-    returnObj.username = username;
+            returnObj.chatID = await signInFunction(userID, username, chatID);
+            returnObj.username = username;
 
-    return returnObj;
+            return returnObj;
+        }
+        else {
+            const userInfo = await getChatId(userID)
+            if(userInfo[0] === null) {
+                return {signInError: true, signInErrorMessage: "An error has occured. Please refresh the page."}
+            }
+            else {
+                return {chatID: userInfo[0], username: userInfo[1]}
+            }
+        }
+    })
 });
 
 
@@ -253,6 +267,7 @@ async function addToChatSequence(userId, chatId, username) {
     var promises = []
     promises.push(addUserToChat(userId, chatId, username))
     promises.push(addToParticipants(userId, chatId, username))
+    promises.push(realtime.ref('users/' + userId + "/is_processing").set(false))
     promises.push(realtime.ref('users/' + userId + "/is_disconnected").set(false))
     promises.push(changeNumParticipants(chatId, 1));
     await Promise.all(promises)
@@ -478,26 +493,30 @@ function chatScore(chatTags, userTags) {
 exports.removeDisconnectedUsers = functions.database.ref('/users/{userId}/is_disconnected').onWrite(async (change, context) => {
     const is_disconnected = change.after.val();
     const userId = context.params.userId;
-        if(is_disconnected) {
-            await realtime.ref('/users/' + userId + "/is_disconnected").once('value').then(async function(snapshot) {
-                console.log("HAPPENED AFTER")
-                if(snapshot.val()) {
-                    await admin.auth().deleteUser(userId).then(() => {
-                        return console.log('Deleted user account', userId, 'because of closed tab');
-                    }).catch((error) => {
-                        return console.error('Deletion of closed tab', userId, 'failed:', error);
+    await realtime.ref('/users/' + userId + "/is_processing").once('value').then(async function(cumshot) {
+        if(is_disconnected && !cumshot.val()) {
+            await realtime.ref('users/' + userId + "/is_processing").set(true)
+            return new Promise((resolve, reject) => {
+                setTimeout(async function() {
+                    await realtime.ref('/users/' + userId + "/is_disconnected").once('value').then(async function(snapshot) {
+                        if(snapshot.val()) {
+                            const userInfo = await getChatId(userId)
+                            await deleteChatInfo(userId, userInfo[0], userInfo[1])
+                            await deleteUserInfoHelper(userId)
+                            await auth.deleteUser(userId);
+                        }
+                        else {
+                            console.log("should not delete")
+                            await realtime.ref('users/' + userId + "/is_processing").set(false)
+                        }
+                        return null
                     });
-                    const userInfo = await getChatId(userId)
-                    await deleteUserInfoHelper(userId, userInfo[0], userInfo[1])
-                    await deleteChatInfo(userId, userInfo[0], userInfo[1])
-                }
-                else {
-                    console.log("should not delete")
-                }
-                return null
-            });
+                    return null
+                }, 1500)
+            })
         }
         return null
+    });
 });
 
 exports.signOut = functions.https.onCall(async (data, context) => {
@@ -586,7 +605,7 @@ async function deleteEmptyChat(chatId) {
 }
 
 // Delete inactive signed-out accounts
-exports.accountCleanup = functions.runWith({timeoutSeconds: 540, memory: '2GB'}).pubsub.schedule('every 1000 minutes').onRun(async context => {
+exports.accountCleanup = functions.runWith({timeoutSeconds: 540, memory: '2GB'}).pubsub.schedule('every 24 hours').onRun(async context => {
     const promisePool = require('es6-promise-pool');
     const PromisePool = promisePool.PromisePool;
 
