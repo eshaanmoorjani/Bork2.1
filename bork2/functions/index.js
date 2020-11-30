@@ -29,8 +29,8 @@ signInType = {
 exports.signIn = functions.https.onCall(async (data, context) => {
     const userID = context.auth.uid;
     return await realtime.ref('/users/' + userID + "/is_joining").once('value').then(async function(snapshot) {
-        if (!snapshot.exists()) {
-            await realtime.ref('/users/' + userID + "/is_joining").set(true)
+        if (!snapshot.exists() || !snapshot.val()) {
+            await setJoining(userID, true);
             const username = data.username;
             const chatID = data.chatID;
             const type = data.signInType;
@@ -41,11 +41,13 @@ exports.signIn = functions.https.onCall(async (data, context) => {
 
             returnObj = await verifyString(username, "username", "Username");    
             if (returnObj.usernameError) {
+                await setJoining(userID, false);
                 return returnObj;
             }
 
             returnObj = await verifyChatID(chatID, type);
             if (returnObj.joinLobbyError || returnObj.createLobbyError) {
+                await setJoining(userID, false);
                 return returnObj;
             }
 
@@ -66,6 +68,10 @@ exports.signIn = functions.https.onCall(async (data, context) => {
     })
 });
 
+
+async function setJoining(userID, bool) {
+    await realtime.ref('/users/' + userID + "/is_joining").set(bool);
+}
 
 /**
  * Verifies that a string is ok.

@@ -1,0 +1,26 @@
+.mobile-frame {
+    position: fixed;
+    top: 0px;
+    bottom: 0px;
+    left: 0px;
+    right: 0px;
+
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    background: linear-gradient(135deg, #A9F1DF, #FFBBBB);;
+}
+
+.mobile-text {
+    text-align: center;
+}
+
+.mobile-logo {
+    height: 30%;
+    width: 60%;
+}
