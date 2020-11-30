@@ -480,7 +480,7 @@ exports.removeDisconnectedUsers = functions.database.ref('/users/{userId}/is_dis
     await realtime.ref('/users/' + userId + "/is_processing").once('value').then(async function(cumshot) {
         if(is_disconnected && !cumshot.val()) {
             realtime.ref('users/' + userId + "/is_processing").set(true)
-            setTimeout(async function() {
+            await setTimeout(async function() {
                 await realtime.ref('/users/' + userId + "/is_disconnected").once('value').then(async function(snapshot) {
                     if(snapshot.val()) {
                         var promises = []
@@ -495,6 +495,7 @@ exports.removeDisconnectedUsers = functions.database.ref('/users/{userId}/is_dis
                     }
                     else {
                         console.log("should not delete")
+                        await realtime.ref('users/' + userId + "/is_processing").set(false)
                     }
                     return null
                 });
@@ -506,11 +507,13 @@ exports.removeDisconnectedUsers = functions.database.ref('/users/{userId}/is_dis
 });
 
 exports.deleteUserInfo = functions.https.onCall(async (data, context) => {
-    const userId = data.userId;
-    const chatId = data.chatId;
-    const username = data.username
+    const userId = context.auth.uid;
+    const userInfo = await getChatId(userId)
+    if (userInfo[0] === null) {
+        return "user was already deleted"
+    }
     await deleteUserInfoHelper(userId)
-    await deleteChatInfo(userId, chatId, username)
+    await deleteChatInfo(userId,  userInfo[0], userInfo[1])
     return "success"
 });
 
