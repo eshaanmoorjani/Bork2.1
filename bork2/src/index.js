@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 
 import * as serviceWorker from './serviceWorker';
-import {firebase, db, auth} from './services/firebase';
+import {firebase, db, rt_db, auth} from './services/firebase';
 
 import './index.css';
 import App from './pages/Login';
@@ -38,7 +38,8 @@ export async function renderPageWithUserID(userId) {
   })
 
   if(chatID !== "") {
-    renderChat(chatID, username)
+    renderChat(chatID, username);
+    setPersistence(userId);
   }
   else {
     renderLogin();
@@ -66,6 +67,18 @@ auth.onAuthStateChanged(function(user) {
     setTransitions();
   }
 });
+
+
+function setPersistence(userID) {
+  const ref = rt_db.ref("users/" + userID + "/is_disconnected")
+  ref.on("value", function(snapshot) {
+      if (snapshot.val()) {
+          ref.set(false); 
+      }
+  });
+  var presenceRef = rt_db.ref("users/" + userID + "/is_disconnected");     
+  presenceRef.onDisconnect().set(true);
+}
 
 
 // If you want your app to work offline and load faster, you can change

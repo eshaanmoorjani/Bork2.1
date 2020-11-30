@@ -5,6 +5,7 @@ admin.initializeApp();
 
 const firestore = admin.firestore();
 const realtime = admin.database();
+const auth = admin.auth()
 
 signInType = {
     soloQueue: soloQueue,
@@ -124,18 +125,18 @@ async function verifyJoinChatID(chatID) {
     }
 
     return firestore.collection("chats")
-    .where("num_participants", "<", 10).where("lobby_type", "==", "Premade").where("lobby_open", "==", false).get().then(function(querySnapshot) {
-        for (var i in querySnapshot.docs) {
-            const doc = querySnapshot.docs[i];
-            if(doc.id === chatID) {
-                return {joinLobbyError: false}
+        .where("num_participants", "<", 10).where("lobby_type", "==", "Premade").where("lobby_open", "==", false).get().then(function(querySnapshot) {
+            for (var i in querySnapshot.docs) {
+                const doc = querySnapshot.docs[i];
+                if(doc.id === chatID) {
+                    return {joinLobbyError: false}
+                }
             }
-        }
-        return {joinLobbyError: true, joinLobbyErrorMessage: "Lobby does not exist"};
-    })
-    .catch(function(error) {
-        console.log("Error: ", error);
-    });
+            return {joinLobbyError: true, joinLobbyErrorMessage: "Lobby does not exist"};
+        })
+        .catch(function(error) {
+            console.log("Error: ", error);
+        });
 }
 
 
@@ -252,7 +253,7 @@ async function addToChatSequence(userId, chatId, username) {
     var promises = []
     promises.push(addUserToChat(userId, chatId, username))
     promises.push(addToParticipants(userId, chatId, username))
-    promises.push(realtime.ref('users/' + userId + "/is_processing").set(false))
+    promises.push(realtime.ref('users/' + userId + "/is_disconnected").set(false))
     promises.push(changeNumParticipants(chatId, 1));
     await Promise.all(promises)
     await sendMessage(chatId, userId, username, -1, "user_connect", username + " has joined the pub.",);
@@ -477,36 +478,29 @@ function chatScore(chatTags, userTags) {
 exports.removeDisconnectedUsers = functions.database.ref('/users/{userId}/is_disconnected').onWrite(async (change, context) => {
     const is_disconnected = change.after.val();
     const userId = context.params.userId;
-    await realtime.ref('/users/' + userId + "/is_processing").once('value').then(async function(cumshot) {
-        if(is_disconnected && !cumshot.val()) {
-            realtime.ref('users/' + userId + "/is_processing").set(true)
-            await setTimeout(async function() {
-                await realtime.ref('/users/' + userId + "/is_disconnected").once('value').then(async function(snapshot) {
-                    if(snapshot.val()) {
-                        var promises = []
-                        const userInfo = await getChatId(userId)
-    
-                        promises.push(admin.auth().deleteUser(userId))
-                        promises.push(deleteChatInfo(userId, userInfo[0], userInfo[1]))
-
-                        await Promise.all(promises)
-                        await deleteUserInfoHelper(userId, userInfo[0], userInfo[1])
-
-                    }
-                    else {
-                        console.log("should not delete")
-                        await realtime.ref('users/' + userId + "/is_processing").set(false)
-                    }
-                    return null
-                });
+        if(is_disconnected) {
+            await realtime.ref('/users/' + userId + "/is_disconnected").once('value').then(async function(snapshot) {
+                console.log("HAPPENED AFTER")
+                if(snapshot.val()) {
+                    await admin.auth().deleteUser(userId).then(() => {
+                        return console.log('Deleted user account', userId, 'because of closed tab');
+                    }).catch((error) => {
+                        return console.error('Deletion of closed tab', userId, 'failed:', error);
+                    });
+                    const userInfo = await getChatId(userId)
+                    await deleteUserInfoHelper(userId, userInfo[0], userInfo[1])
+                    await deleteChatInfo(userId, userInfo[0], userInfo[1])
+                }
+                else {
+                    console.log("should not delete")
+                }
                 return null
-            },500)
+            });
         }
         return null
-    })
 });
 
-exports.deleteUserInfo = functions.https.onCall(async (data, context) => {
+exports.signOut = functions.https.onCall(async (data, context) => {
     const userId = context.auth.uid;
     const userInfo = await getChatId(userId)
     if (userInfo[0] === null) {
@@ -624,7 +618,7 @@ async function deleteInactiveUser(inactiveUsers) {
 
         console.log("deleting user information")
         // Delete the inactive user's authentication status
-        return admin.auth().deleteUser(userToDelete.uid).then(() => {
+        return auth.deleteUser(userToDelete.uid).then(() => {
             return console.log('Deleted user account', userToDelete.uid, 'because of inactivity');
         }).catch((error) => {
         return console.error('Deletion of inactive user account', userToDelete.uid, 'failed:', error);
@@ -636,7 +630,7 @@ async function deleteInactiveUser(inactiveUsers) {
 }
 
 async function getInactiveUsers(users = [], nextPageToken) {
-    const result = await admin.auth().listUsers(1000, nextPageToken);
+    const result = await auth.listUsers(1000, nextPageToken);
     // Find users that have not signed in in the last 30 days.
     const inactiveUsers = result.users.filter(
         user => Date.parse(user.metadata.lastSignInTime) < (Date.now() - 30 * 60 * 1000)); // 30 * 60 * 1000)); // Delete users after 30 minutes of inactivity

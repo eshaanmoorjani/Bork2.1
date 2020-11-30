@@ -4,7 +4,7 @@ import DailyIframe from '@daily-co/daily-js';
 
 import { TextField, Button, AppBar, Menu, MenuItem } from '@material-ui/core';
 
-import { auth, db, rt_db, functions } from '../services/firebase';
+import { auth, db, functions } from '../services/firebase';
 
 import './Chat.css';
 import { throttle } from './LoginFirebase';
@@ -29,14 +29,12 @@ export default class LobbyApp extends Component {
         this.init = this.init.bind(this);
         this.handleLogout = this.handleLogout.bind(this);
     
-        this.changeConnectionStatus = this.changeConnectionStatus.bind(this);
         this.chatListener = this.chatListener.bind(this);
         this.getChatID = this.getChatID.bind(this);
         this.addAllListeners = this.addAllListeners.bind(this);
         
         this.init().then(() => {
             this.addAllListeners();
-            this.changeConnectionStatus();
         });
     }
 
@@ -90,6 +88,7 @@ export default class LobbyApp extends Component {
                 });
             });
         });
+        window.onbeforeunload = () => {return "Are you sure you want to refresh? You will removed from this Lobby."};
     }
 
     getChatID() {
@@ -130,19 +129,6 @@ export default class LobbyApp extends Component {
         });
     }
 
-    /* Could put this as a cloud function? Doesn't really belong in chat.js */
-    /* Don't call in setAllListeners: this is a USER listener not a CHAT Listener */
-    changeConnectionStatus() {
-        rt_db.ref('users/' + this.state.userID + "/is_disconnected").set(false); 
-        var presenceRef = rt_db.ref("users/" + this.state.userID + "/is_disconnected");     
-        presenceRef.onDisconnect().set(true).then(() => {
-            console.log(auth.currentUser);
-            if (!auth.currentUser) {
-                alert("poo");
-            }
-        });
-    }
-
     handleLobbyStatusChange() {
         const changeLobbyStatus = functions.httpsCallable('changeLobbyStatus')
         const status = changeLobbyStatus({});
@@ -155,9 +141,9 @@ export default class LobbyApp extends Component {
             this.refs.videoFrame.disconnect();
         } 
         renderLoading();
-        const deleteInfo = functions.httpsCallable('deleteUserInfo');
+        const signOut = functions.httpsCallable('signOut');
         
-        await deleteInfo({userId: this.state.userID, chatId: this.state.chatID, username: this.props.username}).then(result => { // CORS error that wasn't there earlier
+        await signOut({userId: this.state.userID, chatId: this.state.chatID, username: this.props.username}).then(result => { // CORS error that wasn't there earlier
         })
         .catch(function (error) {
             console.log(error);
@@ -198,9 +184,9 @@ class HeaderFrame extends Component {
 
     getLobbyButtonMessage() {
         if (this.props.lobbyType === "Premade") {
-            return this.props.lobbyOpen ? "Loading..." : "Find more players!";
+            return this.props.lobbyOpen ? "Loading..." : "Find More Players";
         } else {
-            return this.props.lobbyOpen ? "Close Lobby" : "Find more players!";
+            return this.props.lobbyOpen ? "Close Lobby" : "Find More Players";
         }
     }
 }

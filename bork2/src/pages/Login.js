@@ -84,7 +84,7 @@ class FormGrid extends Component {
           </TextField>
 
           <Button className="solo-queue-button" id="solo-queue-button" variant="contained" color="primary" size="large" fullWidth={true}
-           style={this.styles.soloStyle} >Solo Queue</Button>
+           style={this.styles.soloStyle} >Join Random Lobby</Button>
 
           <Grid item class="buttons">
             {this.createLobbyButtonSet()}
