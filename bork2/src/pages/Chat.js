@@ -230,8 +230,6 @@ class LobbyFrame extends Component {
         };
 
         this.handleLobbyCapacityClick = this.handleLobbyCapacityClick.bind(this);
-        this.handleLobbyIDEnter = this.handleLobbyIDEnter.bind(this);
-        this.handleLobbyIDLeave = this.handleLobbyIDLeave.bind(this);
         this.handleLobbyIDClick = this.handleLobbyIDClick.bind(this);
         this.handleParticipantsClick = this.handleParticipantsClick.bind(this);
     }
@@ -247,7 +245,7 @@ class LobbyFrame extends Component {
     misc() {
         return (
             <div class="misc-box">
-                {this.lobbyFrameButton(this.lobbyIDText(), this.handleLobbyIDClick, "lobby-id", this.handleLobbyIDEnter, this.handleLobbyIDLeave)}
+                {this.lobbyFrameButton(this.lobbyIDText(), this.handleLobbyIDClick, "lobby-id")}
                 {this.simpleMenu()}
                 {this.lobbyFrameButton(this.lobbyCapacityText(), this.handleLobbyCapacityClick)}
             </div>
@@ -274,16 +272,6 @@ class LobbyFrame extends Component {
         copyToClipboard(this.props.lobbyID);
     }
 
-    handleLobbyIDEnter() {
-        const button = document.getElementById("lobby-id");
-        button.innerText = this.props.lobbyID;
-    }
-
-    handleLobbyIDLeave() {
-        const button = document.getElementById("lobby-id");
-        button.innerText = this.lobbyIDText();
-    }
-
     handleLobbyCapacityClick() {
         this.setState({
             showLobbyCapacity: !this.state.showLobbyCapacity,
@@ -308,7 +296,7 @@ class LobbyFrame extends Component {
         return this.state.showParticipants ? this.makeParticipants() : "Show Participants";
     }
 
-    lobbyFrameButton(text, clickHandler, id, enterHandler, leaveHandler) {
+    lobbyFrameButton(text, clickHandler, id) {
         const style = {
             height: '5%',
             width: '85%',
@@ -324,7 +312,7 @@ class LobbyFrame extends Component {
 
         return (
             <Button className="lobby-frame-button" id={id} variant="outlined" style={style}
-            onClick={clickHandler} onMouseOver={enterHandler} onMouseOut={leaveHandler} >{text}</Button>
+            onClick={clickHandler}>{text}</Button>
         );
     }
 
