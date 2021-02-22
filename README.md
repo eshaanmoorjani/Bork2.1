@@ -1,6 +1,8 @@
-# Bork2.1
-Currently developing a platform to connect users with similar tags into unique chat and video rooms. 
+# Hog.Pub
+A platform to connect players interested in playing Among Us. 
 
-Built using ReactJS and Firebase. 
+http://hog.pub/
+
+Built using ReactJS and Firebase, with Daily.co for our WebRTC. 
 
 Made by Eshaan Moorjani & Rajen Dey
